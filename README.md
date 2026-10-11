@@ -1,11 +1,11 @@
-# hexo-theme-fomalhaut · v1.0.3
+# hexo-theme-fomalhaut · v1.0.4
 
 > 一套「克隆即用」的 Hexo 卡片式博客源码。主题基于 [Butterfly 4.3.1](https://butterfly.js.org/) 深度二次开发，
 > 并把**站点配置**与**主题代码**彻底分开：改配置就能搭起自己的站，升级主题不会冲掉你自己的改动。
 
 ![hexo](https://img.shields.io/badge/Hexo-6.3.0-0e83c?style=flat-square&logo=hexo)
 ![node](https://img.shields.io/badge/Node.js-18%20%7C%2020%20%7C%2022-339933?style=flat-square&logo=nodedotjs)
-![theme](https://img.shields.io/badge/Theme-Fomalhaut%20v1.0.3-6513df?style=flat-square)
+![theme](https://img.shields.io/badge/Theme-Fomalhaut%20v1.0.4-6513df?style=flat-square)
 ![license](https://img.shields.io/badge/License-Apache--2.0-blue?style=flat-square)
 ![stars](https://img.shields.io/github/stars/fomalhaut1998/hexo-theme-fomalhaut?style=flat-square&logo=github&label=Stars)
 ![forks](https://img.shields.io/github/forks/fomalhaut1998/hexo-theme-fomalhaut?style=flat-square&logo=github&label=Forks)
@@ -36,6 +36,61 @@
 
 ## 更新日志
 
+### v1.0.4 — 美化面板预览化与导航改版（2026-10-11）
+
+这一版把「美化设置面板」从一长条滑条重做成可预览的分区，新增 5 个前端模块与 8 个回归脚本；顶栏导航抽出一份独立样式表并按设备能力降级磨砂；夜间切换改成三段小动画，整屏遮挡从 3000ms 压到约 900ms；另修一批小毛病（数字框裁切、目录连点互抢、搜索提示残留、帧率条对比度）。
+
+**面板分区与「关掉即停下」**（`source/js/modules/settings.js`、`cursor.js`、`source/js/inject/beauty-boot.js`）
+
+- 原来一长条滑条拆成「氛围特效 / 互动挂件 / 布局与部件」三块 `bf-panel`（两列网格、面板变窄自动单列），卡片不透明度与背景滤镜留在最上面；猫咪挂件（`nekoOn`）与听话鼠标（`cursorOn`）各给一个开关、默认开启，点击涟漪反过来只有显式开过才算开；
+- 关掉是真停下：`setNekoEnabled()` 清掉时钟定时器与 rAF、卸掉 pointer / rect 计算，`Cursor.setEnabled(false)` 走 `pause()` + `observer.disconnect()`，开回来再 `refresh()` + `observe()`；`beauty-boot.js` 首帧先恢复隐藏状态，避免加载瞬间闪一下。
+
+**主题色可自定义 + 预设色板整理为十一色**（`settings.js`、`source/css/site-inject.css`）
+
+- 面板加一个原生取色圈（视觉直径 24px、热区 44px、环宽 3px）：值以严格校验的六位 HEX 存 `themeCustomColor`，首帧校验不合法就回落默认青绿；
+- 预设删掉紫 / 灰 / 黑三个旧选项、补上抹茶绿，共十一色（红 / 橙 / 黄 / 抹茶 / 青绿 / 玉石绿 / 晴空蓝 / 柔靛蓝 / 雾蓝灰 / 紫罗兰 / 樱花粉），旧键自动迁移（`purple → purepurple`、`gray` / `black → darkblue`），375px 宽自动 6+5 换行；
+- 新增 `themeOnColorInk()` 按 WCAG 相对亮度算 `--on-theme` / `--on-theme-away`：按钮、选中项、目录当前项、`::selection` 与 AI 助手面板都改读它，浅色主题色上不再白字发虚。
+
+**字体与背景预览化**（新增 `source/js/modules/appearance-fonts.js`、`appearance-backgrounds.js`）
+
+- 字体：阅读 5 / 个性 3 / 代码 4 三组（含「系统默认」），正文与代码各一块实时预览；只对合法 key 请求 `document.fonts.load`、12 秒超时、最新请求胜、失败不写偏好可重试；「恢复默认」只重置两个字体键；
+- 背景：32 张壁纸 + 8 个渐变 + 7 个纯色 + 8 个在线接口全保留，一级分「壁纸 / 色彩 / 自定义」、壁纸再分四类；打开分类才给 `<img>` 赋 `src`，切换走 `Image` 预加载 + 12 秒超时 + token 取消，失败保留旧图；
+- 两个模块都是全局脚本、在 `settings.js` 之前加载，旧的 `setFont` / `setCodeFont` / `setBg` / `resetBg_` 契约不变，原来的入口照常可用。
+
+**两个新特效：萤火虫与雪花重写**（新增 `source/js/modules/fireflies.js`、`snow.js`）
+
+- 萤火虫（默认关闭）纯 CSS 呼吸与慢漂，不起 canvas / rAF / 定时器轮询：桌面 14 只、≤600px 8 只，待在底部 44vh、负层级在正文卡片之后、`pointer-events: none`，暂停靠 `data-paused`；
+- 雪花删掉 `effects.js` 里的 canvas 圆点循环，改用两张预渲染雪片图按大小 / 透明度 / 速度分层下落：dt 上限 50ms、epoch 防过期回调，只有真落到底部才抬高宽度有界的高度图，最高厚度随视口 14–30px；深色 / 后台 / 手机 / 减少动态都暂停，并与萤火虫互斥（只留最后开启的一项）。
+
+**点击涟漪**（新增 `source/js/modules/ripple.js`）
+
+- 第 4 个互动挂件、默认关闭：按下那刻才建 1 个爆发节点 + 两圈同心水纹，700ms 后连节点一起回收、同时最多 6 枚；只认主指针左键，关闭时连 `pointerdown` 监听都不挂。
+
+**顶栏导航改版**（新增 `source/css/navigation.css`）
+
+- 桌面工具区 44×44px 触控区、间距 8px、两侧留白 24px；≤800px 改 4px / 12px，≤480px 站名 20px；站名容器不再裁掉主题的霓虹光晕，只有 ≤360px 才退回省略号；
+- 磨砂按能力降级：稳定态默认关 `backdrop-filter`、只留 alpha 0.96 的底色，仅在 ≥1200px + 精细指针 + 支持 `hover:hover` 时开 6px 轻磨砂 —— 滚动时不用为合成层买单；
+- 首页与「回到顶部」的 hover 伪元素宽度改成跟随链接 100%、高度收紧 40px，图标 flex 居中（原来继承整块尺寸加固定 `line-height`，视觉总偏上）。
+
+**夜间切换与遮罩**（`source/js/modules/shell.js`、`site-inject.css`）
+
+- 夜间切换重写成三拍：日落 / 日出 450ms + 暮色与第一批星 450ms + 星夜铺满 600ms + 从点击位置圆形揭幕 350ms，原来 3000ms 的整屏遮挡压到约 900ms；面板给「关闭 / 轻 / 标准 / 华丽」四档，全部时长由本次切换自持、不再读全局变量；
+- 连点残留修掉：遮罩改由本次切换自持（不再用「取第一个 `.Cuteen_DarkSky`」的写法），第二次点击先清遮罩再瞬时切换，系统开了「减少动态」也直接瞬时；夜间壁纸用 `requestIdleCallback` 空闲预热，切过去不再空白。
+
+**一批小修**（`site-inject.css`、`source/js/inject/scroll-gap-fix.js`、`search-lazy.js`、`source/js/modules/reading.js`）
+
+- 数字框被主题限宽 50px：用 `:is(...)` 提特异性 + `max-width: none` + `min-width / flex: 0 0 76px`，三位数不再裁切；透明度数字并进同一套规则（实测输入框 76×44 CSS px，桌面与 390×844 一致）；
+- 帧率状态条四轮：紧凑状态条（桌面高 30px / 手机 28px、左下 12px + 安全区、`pointer-events: none`）+ `data-state` 着色，小字对比度 3.21 → 4.91；随后按观感回退配色，再把「琥珀」与「红」的 Lab ΔE 从 43.2 拉到 63.5；
+- 目录连点互相打架：`scroll-gap-fix` 升到 v4，加世代号 `seq`，让过期的滚动校正链立刻退出（v3 每次点击各起一条最多 3 轮的链、互不知情，轮流把页面拉回自己那边）；
+- 搜索提示改成脚本自持节点、插在命中容器之前（旧写法把提示写进容器并用属性记插没插过，容器被 instantsearch 换掉后属性还在、清理分支进不去）；`onerror` 不再被当成功吞掉，库就绪后 300ms 检查搜索框、缺失就回退。
+
+**回归脚本 5 → 13 个**（`tools/tests/`）
+
+- 新增 `beauty-switches` / `theme-color` / `appearance-fonts` / `appearance-backgrounds` / `fireflies` / `snow` / `ripple` / `navigation` 八个脚本，覆盖「开关是不是真停表」、颜色校验与旧键迁移、面板预加载的 token 取消、特效分档与暂停条件、导航触控区与磨砂降级条件；`docs/plans/` 下同步补了本轮的 9 份设计记录。
+
+**版本号**
+
+- 主题自身版本（`package.json` 的 `version`）、启动横幅（`themes/fomalhaut/scripts/events/welcome.js`）与页脚徽章 title 一起升到 `1.0.4`；上游 Butterfly 版本仍走 `scripts/butterfly-version.js`（4.3.1），两者照旧分开。
 ### v1.0.3 — 归档页卡片改版与时间轴统计（2026-10-09）
 
 这一版把 `/archives/` 从「日期 + 标题」的列表换成卡片墙（新增 3 个文件，站点级实现、不动主题源码），时间线档案页的统计口径拆细，另修一个 pjax 换页后日历热力图永远转圈的老 bug。
@@ -426,6 +481,7 @@ npx hexo clean && npx hexo generate && npx gulp
 | `kslink.css` | 友人帐「快速申请」按钮 | `/social/link/` |
 | `paperclip.css` | 侧栏作者卡的细长回形针装饰（内联 SVG，白天蓝白高光 / 夜间冰蓝夜光） | 由 `inject.head` 引入，只影响电脑端侧栏作者卡 |
 | `mobile-drawer.css` | 手机端抽屉菜单改版（面板/字标/头像/菜单/遮罩/入场动效 13 小节） | 窄屏自动生效 |
+| `navigation.css` | 顶栏导航改版（44×44px 触控区、磨砂按能力降级、站名光晕不裁切、按钮 hover 对齐） | 由 `_config.fomalhaut.yml` 的 `inject.head` 引入，配 `?v=` 缓存戳 |
 | `site-inject.css` | 站点注入样式合集（横幅公告、PC 浅色主题、侧栏加宽、列表分页、面包屑、小站资讯卡、aplayer 音量条、页脚隐藏本站项等） | 由 `_config.fomalhaut.yml` 的 `inject.head` 以 `<link>` 引入 |
 | `stats.css` | 文章统计页图表排版 | 只由 `/tags/` 页生效 |
 | `timeline-archive.css` | 「旧时光」页时间轴外观 | `/site/time/` |
@@ -442,10 +498,15 @@ npx hexo clean && npx hexo generate && npx gulp
 | `modules/reading.js` | 阅读进度条 + FPS 检测（左下角那个 FPS 数字） |
 | `modules/nav.js` | 导航栏吸顶、首屏欢迎语、侧栏「欢迎信息」卡片（腾讯位置服务）、分享按钮、「随便逛逛」 |
 | `modules/console-art.js` | 控制台字符画与版权署名 |
-| `modules/effects.js` | 页面装饰特效：雪花 / 星空 / 表情放大 |
+| `modules/effects.js` | 页面装饰特效：星空 / 表情放大（雪花已拆到 `modules/snow.js`） |
+| `modules/snow.js` | 雪花特效：两张预渲染雪片按大小 / 透明度 / 速度分层下落，厚度随视口 14–30px；深色 / 后台 / 手机 / 减少动态都暂停 |
+| `modules/fireflies.js` | 萤火虫微光：纯 CSS 呼吸与慢漂，不需要 canvas / rAF / 轮询，桌面 14 只 / ≤600px 8 只，默认关闭、与雪花互斥 |
+| `modules/ripple.js` | 点击涟漪：按下位置 1 个爆发节点 + 两圈同心水纹，700ms 后回收、同时最多 6 枚，默认关闭 |
+| `modules/appearance-fonts.js` | 字体预览面板（阅读 5 / 个性 3 / 代码 4）：`document.fonts.load` + 12 秒超时 + 最新请求胜，失败不写偏好 |
+| `modules/appearance-backgrounds.js` | 背景预览面板（32 壁纸 + 8 渐变 + 7 纯色 + 8 在线接口）：打开分类才赋 `src`，切换走 `Image` 预加载 + token 取消 |
 | `modules/cursor.js` | 鼠标相关：右键菜单、小猫咪、听话鼠标 |
 | `modules/shell.js` | 站点「外壳」行为：快捷键、夜间动画、标题恶搞、搜索框、手机滚动条 |
-| `modules/settings.js` | **美化设置面板**（Winbox），含字体 / 主题色 / 背景 / 显示偏好四节的全部交互 |
+| `modules/settings.js` | **美化设置面板**（Winbox）：卡片不透明度 / 背景滤镜 / 氛围特效 / 互动挂件 / 布局与部件 / 主题色 / 字体 / 背景（字体与背景两节的面板由 `modules/appearance-*.js` 生成） |
 | `modules/footer-time.js` | 页脚「本站已运行 X 天」计时器 + 摸鱼徽章 |
 | `data/holidays.js` | 法定休息日判断（纯数据） |
 | `data/voyager1.js` | 旅行者 1 号距离模型（纯计算），页脚那行「旅行者 1 号当前距离地球…」 |
@@ -514,8 +575,16 @@ npx hexo clean && npx hexo generate && npx gulp
 | `mobile-scrollbar.test.cjs` | 手机端自绘滚动条的读 / 写两阶段 |
 | `scroll-listeners.test.cjs` | 滚动节流、`cancel()` 与 pjax 解绑 |
 | `sw-cache.test.cjs` | Service Worker 的域名白名单、回源写缓存、二次请求吃缓存、文本与媒体 TTL 分流、`?__pr=` 探测不写缓存 |
+| `beauty-switches.test.cjs` | 美化开关（猫咪 / 听话鼠标 / 涟漪 / 萤火虫 / 雪花）关掉后是否真的停下 |
+| `theme-color.test.cjs` | 主题色预设、自定义 HEX 校验、旧键迁移与 `--on-theme` 前景色计算 |
+| `appearance-fonts.test.cjs` | 字体面板：分组、12 秒超时与「最新请求胜」、失败不写偏好 |
+| `appearance-backgrounds.test.cjs` | 背景面板：分类懒赋 `src`、预加载 token 取消、默认背景口径 |
+| `fireflies.test.cjs` | 萤火虫数量分档、负层级与暂停开关 |
+| `snow.test.cjs` | 雪花分层下落、dt 上限、厚度上限与暂停条件 |
+| `ripple.test.cjs` | 涟漪同时存在上限、节点回收与非主键忽略 |
+| `navigation.test.cjs` | 导航触控区尺寸、磨砂降级条件与站名溢出规则 |
 
-跑法：`node --test "tools/tests/*.test.cjs"`（共 119 个用例；部分脚本支持用环境变量指向 `bak/` 里的基线做前后对比）。
+跑法：`node --test "tools/tests/*.test.cjs"`（13 个脚本；部分脚本支持用环境变量指向 `bak/` 里的基线做前后对比）。
 
 ### 7.6 `themes/fomalhaut/` —— 主题本体
 
@@ -774,29 +843,36 @@ gitcalendar:
 
 | 分节 | 项目 | 作用 |
 | --- | --- | --- |
-| **一、显示偏好** | 卡片透明度 | 正文卡片背景的不透明度（0–100%） |
-| | 背景滤镜 | 对全站背景图做模糊 / 饱和度 / 对比度处理（各一个滑条 + 保存） |
-| | 星空特效（夜间模式） | 夜间背景上飘的星空粒子 |
-| | 霓虹彩虹（夜间模式） | 夜间标题的霓虹发光动画 |
-| | 帧率监测 | 左下角 FPS 数字（调试用，平时可关） |
-| | 雪花特效（白天模式） | 白天飘雪 |
-| | 右侧部件 | 右下角按钮列的显示/隐藏 |
+| **顶部** | 卡片不透明度 | 正文卡片背景的不透明度（0–100%，默认 98%，只动卡片底色） |
+| | 背景滤镜 | 对全站背景图做模糊 / 饱和度 / 对比度处理（各一个数字框 + 滑条 + 保存） |
+| **一、氛围特效** | 星空特效（夜间模式） | 夜间背景上飘的星空粒子 |
+| | 霓虹彩灯（夜间模式） | 夜间标题的霓虹发光动画 |
+| | 雪花特效（白天模式） | 白天飘雪 + 底部薄积雪，默认关闭 |
+| | 萤火虫微光 | 下方慢慢飘的微光，默认关闭；与雪花互斥，只保留最后开启的一项 |
+| | 昼夜切换 | 入夜 / 黎明的过场动画，四档：关闭 / 轻 / 标准 / 华丽 |
+| **二、互动挂件** | 猫咪挂件 | 桌面端跟着鼠标走的小猫咪（默认开启；关掉会真的停表） |
+| | 听话鼠标 | 关闭后使用系统鼠标指针（默认开启） |
+| | 帧率监测 | 左下角 FPS 状态条（默认开启，调试用） |
+| | 点击涟漪 | 按下位置的同心水纹，默认关闭、同时最多 6 枚 |
+| **三、布局与部件** | 右侧部件 | 右下角按钮列的显示 / 隐藏 |
 | | 顶栏常驻 | 滚动时导航栏是否一直吸顶 |
 | | 侧栏显隐 | 侧栏显示 / 隐藏 |
 | | 侧栏位置 | 侧栏放左边还是右边 |
-| **二、主题色设置** | 13 个预设色 | red / orange / yellow / green / puregreen / blue / heoblue / darkblue / purple / purepurple / pink / gray / black，点一下全站换色 |
-| **三、字体设置** | 常规字体 3 款 | 霞鹜文楷（默认）/ 思源宋体 / 霞鹜新晰黑，另有「系统默认」 |
-| | 代码块字体 3 款 | JetBrains Mono / Fira Code / Source Code Pro |
-| **四、背景设置** | 1 风景 · 山野 / 2 风景 · 水与森林 / 3 风景 · 更多 | 三组风景壁纸（各 8 张，走 picsum 公共 CDN） |
-| | 4 渐变色 / 5 纯色 | 免图片的渐变与纯色背景 |
-| | 6 适配手机 | 竖屏比例的背景图 |
-| | 7 壁纸 API | 每次刷新随机换一张的在线壁纸接口 |
-| | 8 自定义背景 | 自己粘贴图片链接 |
+| **四、主题色设置** | 11 个预设色 | 红 / 橙 / 黄 / 抹茶 / 青绿 / 玉石绿 / 晴空蓝 / 柔靛蓝 / 雾蓝灰 / 紫罗兰 / 樱花粉，点一下全站换色 |
+| | 自定义取色圈 | 原生调色板，值以六位 HEX 存本地，首帧校验不合法则回落默认青绿 |
+| **五、字体设置** | 阅读字体 5 款 | 霞鹜文楷Screen（默认）/ 霞鹜文楷 / 霞鹜新晰黑 / 思源宋体 / 系统默认，正文区实时预览 |
+| | 个性装饰 3 款 | 筑紫A丸 / 汉仪唐美人 / 甜甜圈海报，默认收在折叠块里 |
+| | 代码字体 4 款 | Monaco（默认）/ Consolas / Maple Mono / Hack，代码区实时预览 |
+| **六、背景设置** | 壁纸 | 8 张二次元 + 8 张风景 · 山野 + 8 张风景 · 水与森林 + 8 张适配手机（走 picsum 公共 CDN），打开分类才加载缩略图 |
+| | 色彩 | 8 个渐变色 + 7 个纯色，另有自定义纯色取色器 |
+| | 自定义 | 粘贴 HTTPS 图片链接；先预览探针再应用，失败保留旧图 |
+| | 动态壁纸 API | 收在「高级」折叠块里：每次刷新可能返回不同图片的在线接口 |
 
 **改面板本身**：
 
 - 想改**默认值**（访客没动过面板时用什么）：改 `_config.fomalhaut.yml` 的 `font` / `theme_color` / `background` 段，以及 `source/js/inject/beauty-boot.js`；
-- 想改**可选列表**（加字体、加壁纸、加主题色）：改 `source/js/modules/settings.js` 的 `FONT_LIST` / `CODE_FONT_LIST`（第 108–111 行）与面板 HTML（第 845–1050 行），新增字体的 `@font-face` 写在 `themes/fomalhaut/source/css/_custom/custom.css` 的「字体引入」一节；
+- 想加**字体**：改 `source/js/modules/appearance-fonts.js` 的 `APPEARANCE_TEXT_FONTS` / `APPEARANCE_CODE_FONTS`，新增字体的 `@font-face` 写在 `themes/fomalhaut/source/css/_custom/custom.css` 的「字体引入」一节；
+- 想加**壁纸 / 渐变 / 纯色 / 在线接口**：改 `source/js/modules/appearance-backgrounds.js` 的 `AP_BACKGROUND_CATALOG` 与 `AP_BACKGROUND_APIS`；想加 **主题色预设**：改 `source/js/modules/settings.js` 的 `themeColorPresets`；
 - 想**直接关掉面板**：`_config.fomalhaut.yml` 的 `beautify.enable: false`，然后去掉 `inject.bottom` 里 `settings.js` 那一行。
 
 ### 8.9 刷新与性能相关开关
@@ -1077,7 +1153,7 @@ npx hexo deploy            # 按 _config.yml 的 deploy 段推送
 | 评论区 | `_config.fomalhaut.yml` 的 `comments.use` + 对应系统的段（如 `twikoo.envId`） |
 | 统计 ID | `_config.fomalhaut.yml` 的 `baidu_analytics` 等；51LA 在 `source/js/51la.js` |
 | AI 助手 | `_config.fomalhaut.yml` 的 `ai_chat` 段（详见 8.10） |
-| 字体 | `themes/fomalhaut/source/css/_custom/custom.css` 的「字体引入」一节 + `source/js/modules/settings.js` 的 `FONT_LIST` |
+| 字体 | `themes/fomalhaut/source/css/_custom/custom.css` 的「字体引入」一节 + `source/js/modules/appearance-fonts.js` 的 `APPEARANCE_TEXT_FONTS` / `APPEARANCE_CODE_FONTS` |
 | 社交图标 | `_config.fomalhaut.yml` 的 `social`（格式：`名称: 链接 || 图标类名 || 动画类名`） |
 | 首页轮播 | 根 `_config.yml` 的 `swiper` 段 |
 | 首屏加载动画 | `_config.fomalhaut.yml` 的 `preloader`（样式文件在 `themes/fomalhaut/layout/includes/loading/load_style/`） |

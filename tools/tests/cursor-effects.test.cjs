@@ -8,8 +8,9 @@ const source = fs.readFileSync(path.resolve(__dirname, '../../source/js/modules/
 const catSource = source.slice(source.indexOf('/* ------------------------------ 小猫咪'), source.indexOf('/* 小猫咪 end */'));
 const cursorSource = source.slice(source.indexOf('var CURSOR;'));
 
-function setup({ cats = true, cursors = true, scroll = 1000 } = {}) {
-  const trace = [], frames = new Map(), intervals = [], observers = [];
+function setup({ cats = true, cursors = true, scroll = 1000, saved = {} } = {}) {
+  const trace = [], frames = new Map(), intervals = [], observers = [], resizeObservers = [];
+  const activeIntervals = new Map(), clearedIntervals = [], storageWrites = [];
   let nextFrame = 0, styleReads = 0, rectReads = 0, heightReads = 0, queries = 0, hitReads = 0;
   function emitter(target) {
     target.events = new Map();
@@ -27,6 +28,18 @@ function setup({ cats = true, cursors = true, scroll = 1000 } = {}) {
       emitter(this);
       this.nodeType = 1;
       this.tagName = tagName.toUpperCase();
+      // Browsers recreate the stylesheet on attachment and CSS text replacement.
+      if (this.tagName === 'STYLE') {
+        this.sheet = null;
+        Object.defineProperty(this, 'disabled', {
+          get: () => !!(this.sheet && this.sheet.disabled),
+          set: value => { if (this.sheet) this.sheet.disabled = value; }
+        });
+        Object.defineProperty(this, 'textContent', { configurable: true,
+          get: () => this._textContent || '',
+          set: value => { this._textContent = value; if (this.isConnected) this.sheet = { disabled: false }; }
+        });
+      }
       this.parentElement = null;
       this.children = [];
       this.attrs = new Map();
@@ -54,6 +67,7 @@ function setup({ cats = true, cursors = true, scroll = 1000 } = {}) {
       if (child.parentElement) child.parentElement.children.splice(child.parentElement.children.indexOf(child), 1);
       child.parentElement = this;
       this.children.push(child);
+      if (child.tagName === 'STYLE' && child.isConnected) child.sheet = { disabled: false };
       return child;
     }
     append(child) { return this.appendChild(child); }
@@ -117,8 +131,14 @@ function setup({ cats = true, cursors = true, scroll = 1000 } = {}) {
   document.getElementsByTagName = () => { throw new Error('Full-page traversal forbidden'); };
   const window = emitter({ innerHeight: 1000, scrollY: scroll });
   window.getComputedStyle = el => { styleReads++; trace.push('read:cursor'); return { cursor: el.computedCursor }; };
-  const storage = new Map([['themeColor', 'green']]);
-  const localStorage = { getItem: key => storage.get(key), setItem: (key, value) => storage.set(key, value) };
+  const storage = new Map([['themeColor', 'green'], ...Object.entries(saved)]);
+  const localStorage = new Proxy({
+    getItem: key => storage.has(key) ? storage.get(key) : null,
+    setItem: (key, value) => { storageWrites.push([key, String(value)]); storage.set(key, String(value)); }
+  }, {
+    get: (target, key) => key in target ? target[key] : storage.get(key),
+    set: (target, key, value) => { storageWrites.push([key, String(value)]); storage.set(key, String(value)); return true; }
+  });
   function requestAnimationFrame(fn) { const id = ++nextFrame; frames.set(id, fn); return id; }
   function cancelAnimationFrame(id) { frames.delete(id); }
   const fn = {};
@@ -139,24 +159,30 @@ function setup({ cats = true, cursors = true, scroll = 1000 } = {}) {
   }
   $.fn = fn; $.extend = Object.assign;
   class MutationObserver {
-    constructor(callback) { this.callback = callback; observers.push(this); }
-    observe() {}
+    constructor(callback) { this.callback = callback; this.connected = false; this.observations = []; this.disconnects = 0; observers.push(this); }
+    observe(target, options) { this.connected = true; this.observations.push({ target, options }); }
+    disconnect() { this.connected = false; this.disconnects++; }
   }
   class ResizeObserver {
-    constructor(callback) { this.callback = callback; }
-    observe() {}
+    constructor(callback) { this.callback = callback; this.connected = false; resizeObservers.push(this); }
+    observe() { this.connected = true; }
+    disconnect() { this.connected = false; }
   }
   const ctx = vm.createContext({ window, document, localStorage, $, jQuery: $, requestAnimationFrame, cancelAnimationFrame,
-    setInterval: callback => { intervals.push(callback); return intervals.length; }, MutationObserver, ResizeObserver,
+    setInterval: callback => { intervals.push(callback); activeIntervals.set(intervals.length, callback); return intervals.length; },
+    clearInterval: id => { clearedIntervals.push(id); activeIntervals.delete(id); }, MutationObserver, ResizeObserver,
     btf: { scrollToDest: () => { window.scrollY = 0; } } });
   window.btf = ctx.btf;
   if (cats) vm.runInContext(catSource, ctx);
   if (cursors) vm.runInContext(cursorSource, ctx);
   const tick = () => { const pending = [...frames.values()]; frames.clear(); for (const callback of pending) callback(); };
   const settle = () => { for (let i = 0; frames.size && i < 200; i++) tick(); assert.equal(frames.size, 0, 'Animation must settle'); };
-  return { ctx, trace, frames, intervals, root, body, rope, document, window, $, Element, tick, settle,
+  return { ctx, trace, frames, intervals, activeIntervals, clearedIntervals, observers, storage, storageWrites,
+    root, body, rope, document, window, $, Element, tick, settle,
     cursor: ctx.CURSOR, cat: () => document.querySelector('.neko'),
-    mutation: records => observers.forEach(observer => observer.callback(records)),
+    mutation: records => observers.filter(observer => observer.connected).forEach(observer => observer.callback(records)),
+    resize: () => resizeObservers.filter(observer => observer.connected).forEach(observer => observer.callback([])),
+    clock: () => [...activeIntervals.values()].forEach(callback => callback()),
     height: value => { docHeight = value; },
     metrics: () => ({ styleReads, rectReads, heightReads, queries, hitReads }) };
 }
@@ -713,4 +739,278 @@ test('cat keeps bottom clock, no-scroll boundary, resize, PJAX and click-through
   e.window.emit('scroll'); e.document.hidden = true; e.document.emit('visibilitychange');
   assert.equal(e.frames.size, 0);
   e.document.hidden = false; e.document.emit('visibilitychange'); e.settle();
+});
+
+// Toggle contracts: setters own runtime state; only the settings UI owns persistence.
+function listenerCounts(e) {
+  return [e.document, e.window].map(target => [...target.events].map(([name, handlers]) => [name, handlers.length]));
+}
+
+function countNodes(e, predicate) {
+  const walk = node => (node.nodeType === 1 && predicate(node) ? 1 : 0) +
+    (node.children || []).reduce((sum, child) => sum + walk(child), 0);
+  return walk(e.root);
+}
+
+for (const savedValue of [undefined, '1', 'false']) {
+  test('effect toggles initialize enabled unless storage is exactly zero: ' + String(savedValue), () => {
+    const saved = savedValue === undefined ? {} : { nekoOn: savedValue, cursorOn: savedValue };
+    const e = setup({ saved }); e.settle();
+    assert.equal(e.ctx.nekoEnabled, true);
+    assert.equal(typeof e.ctx.setNekoEnabled, 'function');
+    assert.equal(e.cursor.enabled, true);
+    assert.equal(typeof e.cursor.setEnabled, 'function');
+    assert.equal(e.root.classList.contains('beauty-neko-off'), false);
+    assert.notEqual(e.cursor.scr.disabled, true);
+    assert.notEqual(e.cursor.layer.style.display, 'none');
+    assert.equal(e.activeIntervals.size, 1);
+    assert.equal(e.cursor.observer.connected, true);
+    assert.deepEqual(e.storageWrites, [], 'initialization does not save preferences');
+  });
+}
+
+for (const offEffect of ['cat', 'cursor']) {
+  test('effect stored flags are independent when only ' + offEffect + ' is disabled', () => {
+    const e = setup({ saved: { nekoOn: offEffect === 'cat' ? '0' : '1', cursorOn: offEffect === 'cursor' ? '0' : '1' } });
+    e.settle();
+    assert.equal(e.ctx.nekoEnabled, offEffect !== 'cat');
+    assert.equal(e.cursor.enabled, offEffect !== 'cursor');
+    assert.equal(e.activeIntervals.size, offEffect === 'cat' ? 0 : 1);
+    assert.equal(e.cursor.observer.connected, offEffect !== 'cursor');
+    if (offEffect === 'cat') {
+      move(e, e.body); e.settle();
+      assert.equal(e.cursor.cursor.classList.contains('hidden'), false);
+      assert.equal(e.root.classList.contains('beauty-neko-off'), true);
+    } else {
+      e.window.scrollY = 1500; e.window.emit('scroll'); e.settle();
+      assert.equal(e.cat().style.top, '625px');
+      assert.equal(e.cursor.layer.style.display, 'none');
+    }
+    assert.deepEqual(e.storageWrites, []);
+  });
+}
+
+test('effect toggles honor disabled startup without frames, clocks or observed mutations', () => {
+  const e = setup({ saved: { nekoOn: '0', cursorOn: '0' } });
+  assert.equal(e.ctx.nekoEnabled, false);
+  assert.equal(e.cursor.enabled, false);
+  assert.equal(e.root.classList.contains('beauty-neko-off'), true, 'root class also hides the rope');
+  if (e.cat()) assert.equal(e.cat().style.display, 'none');
+  assert.equal(e.cursor.scr.disabled, true);
+  assert.equal(e.cursor.layer.style.display, 'none');
+  assert.equal(e.frames.size, 0);
+  assert.equal(e.activeIntervals.size, 0);
+  assert.equal(!!e.window.__nekoClockTimer, false);
+  assert.equal(e.cursor.observer.connected, false);
+  move(e, e.body); e.window.emit('scroll'); e.resize();
+  e.mutation([{ target: e.root, type: 'attributes', attributeName: 'data-theme' }]);
+  assert.equal(e.frames.size, 0);
+  e.ctx.setNekoEnabled(true); e.cursor.setEnabled(true); e.settle();
+  assert.equal(e.cat().style.display, 'block');
+  assert.equal(e.activeIntervals.size, 1);
+  assert.equal(e.cursor.observer.connected, true);
+  assert.equal(e.cursor.scr.disabled, false);
+  assert.notEqual(e.cursor.layer.style.display, 'none');
+  move(e, e.body, 240, 340); e.settle();
+  assert.equal(e.cursor.layer.style.transform, 'translate3d(232px, 332px, 0)');
+  assert.deepEqual(e.storageWrites, [], 'enabling does not overwrite stored off preferences');
+  assert.equal(e.ctx.localStorage.nekoOn, '0');
+  assert.equal(e.ctx.localStorage.cursorOn, '0');
+});
+
+test('cursor toggle immediately cancels pending work, disables rules and disconnects observer', () => {
+  const e = setup({ cats: false });
+  move(e, e.body); e.settle(); move(e, e.body, 500, 600);
+  assert.equal(e.frames.size, 1);
+  const observer = e.cursor.observer, rules = e.cursor.scr, layer = e.cursor.layer;
+  e.cursor.setEnabled(false);
+  assert.equal(e.cursor.enabled, false);
+  assert.equal(e.frames.size, 0);
+  assert.equal(rules.disabled, true);
+  assert.equal(layer.style.display, 'none');
+  assert.equal(observer.connected, false);
+  assert.ok(observer.disconnects > 0);
+  assert.equal(e.cursor.cursor.classList.contains('hidden'), true);
+  assert.equal(e.cursor.scr, rules);
+  assert.equal(rules.isConnected, true, 'retain stylesheet for later refresh');
+  assert.deepEqual(e.storageWrites, []);
+});
+
+test('disabled cursor stylesheet stays disabled after reattachment and CSS text replacement', () => {
+  const e = setup({ cats: false, saved: { cursorOn: '0' } });
+  const rules = e.cursor.scr, initialSheet = rules.sheet;
+  rules.remove(); e.cursor.refresh();
+  assert.notEqual(rules.sheet, initialSheet);
+  assert.equal(rules.disabled, true, 'disable the newly attached stylesheet, not a detached style');
+  e.ctx.localStorage.setItem('themeColor', 'pink');
+  const attachedSheet = rules.sheet; e.cursor.refresh();
+  assert.notEqual(rules.sheet, attachedSheet);
+  assert.equal(rules.disabled, true, 'CSS text replacement must not restore the custom pointer');
+  assert.equal(e.frames.size, 0);
+  assert.equal(e.cursor.observer.connected, false);
+  assert.equal(e.cursor.layer.style.display, 'none');
+});
+
+test('cursor retained input listeners are inert while disabled and resume normally', () => {
+  const e = setup({ cats: false });
+  const button = e.body.appendChild(new e.Element('button'));
+  move(e, button); e.settle(); e.cursor.setEnabled(false);
+  const pos = JSON.stringify(e.cursor.pos), target = e.cursor.target, cache = e.cursor.pointerCache;
+  const metrics = e.metrics(), classes = e.cursor.cursor.className;
+  e.trace.length = 0;
+  for (let i = 0; i < 10; i++) {
+    move(e, button, 700, 800);
+    e.document.emit('mouseover', { target: button });
+    e.document.emit('mouseout', { target: button, relatedTarget: e.body });
+    e.document.emit('mouseenter'); e.document.emit('mousedown'); e.document.emit('mouseup');
+    e.document.emit('mouseleave'); e.window.emit('blur');
+    e.window.emit('scroll'); e.window.emit('resize');
+    e.document.hidden = true; e.document.emit('visibilitychange');
+    e.document.hidden = false; e.document.emit('visibilitychange');
+    e.document.emit('load', { target: new e.Element('link') });
+    e.mutation([{ target: button, type: 'attributes', attributeName: 'class' }]);
+  }
+  assert.equal(e.frames.size, 0);
+  assert.equal(JSON.stringify(e.cursor.pos), pos, 'off movement does not update tracking');
+  assert.equal(e.cursor.target, target);
+  assert.equal(e.cursor.pointerCache, cache);
+  assert.equal(e.cursor.cursor.className, classes);
+  assert.deepEqual(e.metrics(), metrics);
+  assert.deepEqual(e.trace, [], 'off input has no rendering side effects');
+  e.cursor.setEnabled(true); move(e, button, 300, 400); e.settle();
+  assert.equal(e.cursor.cursor.classList.contains('hidden'), false);
+  assert.equal(e.cursor.cursor.classList.contains('hover'), true);
+  e.document.emit('mousedown'); assert.equal(e.cursor.cursor.classList.contains('active'), true);
+  e.document.emit('mouseup'); assert.equal(e.cursor.cursor.classList.contains('active'), false);
+});
+
+test('cursor theme refresh and PJAX cannot reactivate disabled effects; re-enable refreshes latest style', () => {
+  const e = setup({ cats: false }); move(e, e.body); e.settle();
+  e.cursor.setEnabled(false);
+  const rules = e.cursor.scr, layer = e.cursor.layer, cursor = e.cursor.cursor, listeners = listenerCounts(e);
+  e.ctx.localStorage.setItem('themeColor', 'pink');
+  for (let i = 0; i < 10; i++) { e.cursor.refresh(); e.document.emit('pjax:complete'); }
+  assert.equal(e.cursor.enabled, false);
+  assert.equal(rules.disabled, true);
+  assert.equal(layer.style.display, 'none');
+  assert.equal(e.cursor.observer.connected, false);
+  assert.equal(e.frames.size, 0);
+  assert.equal(e.cursor.scr, rules); assert.equal(e.cursor.layer, layer); assert.equal(e.cursor.cursor, cursor);
+  assert.deepEqual(listenerCounts(e), listeners);
+  e.ctx.localStorage.setItem('themeColor', 'blue');
+  e.cursor.setEnabled(true); e.settle();
+  assert.equal(e.cursor.scr, rules);
+  assert.equal(rules.disabled, false);
+  assert.match(rules.textContent, /74%2C%20156%2C%20199/);
+  assert.equal(e.cursor.observer.connected, true);
+  const custom = e.body.appendChild(new e.Element()); custom.computedCursor = 'pointer';
+  move(e, custom); e.settle(); custom.computedCursor = 'auto';
+  e.mutation([{ target: custom, type: 'attributes', attributeName: 'style' }]);
+  assert.equal(e.frames.size, 1, 'reconnected observer wakes one frame');
+  e.settle(); assert.equal(e.cursor.cursor.classList.contains('hover'), false);
+  assert.deepEqual(e.storageWrites, [['themeColor', 'pink'], ['themeColor', 'blue']]);
+});
+
+test('cat toggle cancels animation and clears clock interval; off events and clicks do nothing', () => {
+  const e = setup({ cursors: false }); e.settle();
+  const cat = e.cat(), timer = e.window.__nekoClockTimer;
+  e.window.emit('scroll'); assert.equal(e.frames.size, 1);
+  e.ctx.setNekoEnabled(false);
+  assert.equal(e.ctx.nekoEnabled, false);
+  assert.equal(e.root.classList.contains('beauty-neko-off'), true);
+  assert.equal(cat.style.display, 'none');
+  assert.equal(e.frames.size, 0);
+  assert.equal(e.activeIntervals.size, 0);
+  assert.ok(e.clearedIntervals.includes(timer), 'clearInterval receives the running clock handle');
+  assert.equal(!!e.window.__nekoClockTimer, false);
+  const metrics = e.metrics(); e.trace.length = 0;
+  move(e, e.body, 1140, 420); e.window.emit('scroll'); e.window.emit('resize'); e.resize();
+  e.window.emit('mouseout', { relatedTarget: null });
+  e.document.hidden = true; e.document.emit('visibilitychange');
+  e.document.hidden = false; e.document.emit('visibilitychange');
+  e.document.emit('click', { clientX: 1140, clientY: 420 });
+  cat.emit('click.nekoScroll'); e.rope.emit('click.nekoScroll'); e.clock();
+  assert.equal(e.window.scrollY, 1000, 'disabled cat and rope cannot scroll to top');
+  assert.equal(e.frames.size, 0);
+  assert.deepEqual(e.metrics(), metrics);
+  assert.deepEqual(e.trace, []);
+  assert.deepEqual(e.storageWrites, []);
+});
+
+test('cat re-enable restores current scroll visibility, bounds and one fresh clock', () => {
+  const e = setup({ cursors: false }); e.settle(); const cat = e.cat();
+  e.ctx.setNekoEnabled(false); e.window.scrollY = 1500; e.window.emit('scroll');
+  e.ctx.setNekoEnabled(true); e.settle();
+  assert.equal(e.ctx.nekoEnabled, true);
+  assert.equal(e.root.classList.contains('beauty-neko-off'), false);
+  assert.equal(e.cat(), cat);
+  assert.equal(cat.style.display, 'block');
+  assert.equal(cat.style.top, '625px'); assert.equal(e.rope.style.height, '675px');
+  assert.equal(e.activeIntervals.size, 1);
+  assert.ok(e.activeIntervals.has(e.window.__nekoClockTimer));
+  move(e, e.body, 1140, 650); e.settle();
+  assert.equal(cat.classList.contains('hoverOn'), true, 'restored cat refreshes real hover bounds');
+  e.ctx.setNekoEnabled(false); e.window.scrollY = 0;
+  e.ctx.setNekoEnabled(true); e.settle();
+  assert.equal(cat.style.display, 'none', 'enabled cat stays hidden at top of page');
+  assert.equal(cat.style.top, '-50px'); assert.equal(e.rope.style.height, '0px');
+  assert.equal(e.activeIntervals.size, 1);
+  e.window.scrollY = 2000; e.window.emit('scroll'); e.settle();
+  assert.equal(cat.classList.contains('showMsg'), true);
+  cat.setAttribute('data-msg', 'stale'); e.clock();
+  assert.match(cat.getAttribute('data-msg'), /^\d{2}:\d{2}:\d{2}$/);
+  assert.deepEqual(e.storageWrites, []);
+});
+
+test('cat PJAX while disabled keeps replacement nodes hidden and does not restart clock', () => {
+  const e = setup({ cursors: false }); e.settle(); e.ctx.setNekoEnabled(false);
+  e.cat().remove(); e.rope.remove();
+  const rope = e.body.appendChild(new e.Element()); rope.id = 'myscoll';
+  e.window.scrollY = 1500;
+  const listeners = listenerCounts(e);
+  for (let i = 0; i < 10; i++) e.document.emit('pjax:complete');
+  assert.equal(e.root.classList.contains('beauty-neko-off'), true);
+  if (e.cat()) assert.equal(e.cat().style.display, 'none');
+  assert.equal(e.frames.size, 0); assert.equal(e.activeIntervals.size, 0);
+  rope.emit('click.nekoScroll');
+  assert.equal(e.window.scrollY, 1500);
+  assert.deepEqual(listenerCounts(e), listeners);
+  e.ctx.setNekoEnabled(true); e.settle();
+  assert.equal(e.cat().style.display, 'block');
+  assert.equal(e.cat().style.top, '625px'); assert.equal(rope.style.height, '675px');
+  assert.equal(rope.events.get('click.nekoScroll').length, 1);
+  assert.equal(e.cat().events.get('click.nekoScroll').length, 1);
+  assert.equal(e.activeIntervals.size, 1);
+  assert.equal(countNodes(e, el => el.classList.contains('neko')), 1);
+  e.cat().emit('click.nekoScroll'); assert.equal(e.window.scrollY, 0, 'cat click binding resumes');
+  e.window.scrollY = 1500; rope.emit('click.nekoScroll');
+  assert.equal(e.window.scrollY, 0, 'rope click binding resumes');
+});
+
+test('repeated effect toggles retain single nodes, once-bound listeners and at most one loop per effect', () => {
+  const e = setup(); e.settle();
+  const cat = e.cat(), rules = e.cursor.scr, layer = e.cursor.layer, cursor = e.cursor.cursor;
+  const listeners = listenerCounts(e), observer = e.cursor.observer;
+  for (let i = 0; i < 20; i++) {
+    e.ctx.setNekoEnabled(false); e.cursor.setEnabled(false);
+    e.ctx.setNekoEnabled(false); e.cursor.setEnabled(false);
+    assert.equal(e.frames.size, 0); assert.equal(e.activeIntervals.size, 0);
+    e.ctx.setNekoEnabled(true); e.cursor.setEnabled(true);
+    e.ctx.setNekoEnabled(true); e.cursor.setEnabled(true);
+    move(e, e.body, 200 + i, 300); e.window.emit('scroll');
+    assert.ok(e.frames.size <= 2, 'one pending frame per enabled effect');
+    assert.equal(e.activeIntervals.size, 1);
+    e.settle();
+  }
+  assert.equal(e.cat(), cat); assert.equal(e.cursor.scr, rules);
+  assert.equal(e.cursor.layer, layer); assert.equal(e.cursor.cursor, cursor);
+  assert.equal(e.cursor.observer, observer); assert.equal(e.observers.length, 1);
+  assert.deepEqual(listenerCounts(e), listeners);
+  assert.equal(cat.events.get('click.nekoScroll').length, 1);
+  assert.equal(e.rope.events.get('click.nekoScroll').length, 1);
+  assert.equal(countNodes(e, el => el.classList.contains('neko')), 1);
+  assert.equal(countNodes(e, el => el.id === 'cursor-position'), 1);
+  assert.equal(countNodes(e, el => el.id === 'cursor'), 1);
+  assert.equal(countNodes(e, el => el.tagName === 'STYLE'), 1);
+  assert.deepEqual(e.storageWrites, []);
 });

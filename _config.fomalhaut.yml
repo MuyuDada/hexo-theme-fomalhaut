@@ -1206,7 +1206,7 @@ inject:
     - <style id="rightSide"></style> # 侧边栏
     - <style id="transPercent"></style> # 透明度调节
     - <style id="bgFilterParam"></style> # 背景滤镜
-    - <span id="fps"></span> # 帧率检测
+    - <span id="fps" aria-hidden="true"></span> # 帧率检测（纯装饰，读屏不播报）
     - <style id="defineBg">:root{--default-bg:url(https://picsum.photos/id/1015/1920/1080);--darkmode-bg:url(https://picsum.photos/id/1044/1920/1080);--mobileday-bg:url(https://picsum.photos/id/1018/1920/1080);--mobilenight-bg:url(https://picsum.photos/id/1039/1920/1080);}</style> # 默认背景（内联兜底：即使 fomal.js 未执行，首屏也有背景图；运行时会被 fomal.js 覆盖）
     # 注意：夜间那张的地址必须与 source/js/modules/settings.js 的 resetBg_() 逐字一致 ——
     # 运行时覆盖前浏览器已按这里的值下过一份，URL 不一致就会同一张图下两份。
@@ -1219,7 +1219,9 @@ inject:
     # 上面那些空的 <style id="themeColor"></style> / #rightSide / #transPercent / #bgFilterParam
     # / #defineBg / #menu_shadow / #nav-display / #aside-show / #aside-pos 是"运行时空槽"：
     # 由右下角美化面板的 JS 在运行时往里写 CSS，不能删、不能挪位置。
-    - <link rel="stylesheet" href="/css/site-inject.css?v=20261004q">
+    - <link rel="stylesheet" href="/css/site-inject.css?v=20261015-fps4">
+    # 导航磨砂底色与工具区间距（独立覆盖；保留主题导航显示/折叠逻辑）
+    - <link rel="stylesheet" href="/css/navigation.css?v=20261011-nav3">
     # ── 手机端抽屉菜单改版（站点独立样式，不改主题源码）────────────────────────
     # source/css/mobile-drawer.css：#sidebar-menus 的层级 / 统计胶囊 / 图标底衬 /
     # 手风琴二级菜单 / 极光底色 / 深色适配，配色全部由 --theme-color 派生。
@@ -1261,7 +1263,7 @@ inject:
     # 回滚：删掉下面这两行即可（不需要清 public/）。
     - <script src="/js/inject/ping-route-boot.js"></script> # 延时探测参数（必须在 ping-route.js 之前执行）
     - <script src="/js/inject/ping-route.js"></script> # 公告栏线路延时徽标
-    - <script src="/js/inject/beauty-boot.js"></script> # 美化模块首屏预置（原内联 beautyBoot）
+    - <script src="/js/inject/beauty-boot.js?v=20261015-solid3"></script> # 美化模块首屏预置（原内联 beautyBoot）
     - <script src="/js/inject/right-menu-state-boot.js"></script> # 侧栏「右键模式」按钮状态同步
     # ── 首页副标题打字机「丝滑版」（站点独立脚本 + 样式，不改主题源码）────────────
     # 主题 subtitle.pug 调 Typed.js 时是 typeSpeed:150 的逐字硬蹦；source/js/inject/typewriter.js
@@ -1293,8 +1295,11 @@ inject:
     # source/js/inject/archive-page.js 负责结构：只读主题渲染好的 .article-sort，三层守卫
     #   （容器是 #archive/#category/#tag 之一 + .article-sort 恰好 1 个 + 条目数 ≥ 3），
     #   全部通过才加 .ar-ready；任一环节失败整块失效、退回主题原样。
-    # scripts/archive-index.js 在构建期往归档页 </head> 前插一段 id="ar-index" 的 JSON
-    #   （每篇的标题/链接/日期/分类/字数/阅读分钟）；脚本据此补分类与阅读时长，
+    # scripts/archive-index.js 在构建期往归档页正文根 <div id="archive"> 里插一段
+    #   id="ar-index" 的 JSON（每篇的标题/链接/日期/分类/字数/阅读分钟）。
+    #   放正文而不是 </head>：head 不参与主题 pjax 换页（只换 <title>），放 head 时
+    #   「硬刷新过别的页面 → pjax 点进归档页」读不到索引、年度分布柱状图会消失。
+    #   脚本据此补分类与阅读时长，
     #   没有这段 JSON 时卡片照常渲染、只是少了分类与时长。数据构建期算好，页面零额外请求。
     # 改 css/js 记得把下面两个 ?v= 一起提版本。回滚：删掉下面两行即可
     # （配置备份 bak/20261012-archive-cards/before/_config.fomalhaut.yml）。
@@ -1327,13 +1332,18 @@ inject:
     - <script defer src="/js/data/voyager1.js"></script> # 旅行者1号距离模型（页脚计时器依赖）
     - <script defer src="/js/data/holidays.js"></script> # 法定休息日判断（页脚计时器依赖）
     - <script defer src="/js/modules/console-art.js"></script> # 控制台字符画
-    - <script defer src="/js/modules/shell.js?v=20261005-animation1"></script> # 快捷键拦截/夜间动画/恶搞标题/搜索框修复/手机滚动条
-    - <script defer src="/js/modules/effects.js?v=20261004q"></script> # 雪花/星空/表情放大
-    - <script defer src="/js/modules/reading.js?v=20261005-animation1"></script> # 阅读进度条/FPS
+    - <script defer src="/js/modules/shell.js?v=20261011-stage3"></script> # 快捷键拦截/夜间动画/恶搞标题/搜索框修复/手机滚动条
+    - <script defer src="/js/modules/snow.js?v=20261010-snow1"></script> # 自然雪片与底部薄积雪
+    - <script defer src="/js/modules/effects.js?v=20261010-snow1"></script> # 星空/表情放大
+    - <script defer src="/js/modules/reading.js?v=20261015-fps2"></script> # 阅读进度条/FPS
     - <script defer src="/js/modules/nav.js?v=20261005-scroll1"></script> # 导航栏标题/首屏欢迎语/随便逛逛/分享
-    - <script defer src="/js/modules/cursor.js?v=20261005-hover1"></script> # 小猫咪/右键菜单/听话鼠标
-    - <script defer src="/js/modules/footer-time.js"></script> # 页脚计时器
-    - <script defer src="/js/modules/settings.js?v=20261005-animation1"></script> # 美化模块（右下角齿轮设置面板，最大的一块）
+    - <script defer src="/js/modules/cursor.js?v=20261015-fps2"></script> # 小猫咪/右键菜单/听话鼠标
+    - <script defer src="/js/modules/footer-time.js?v=20261006"></script> # 页脚计时器
+    - <script defer src="/js/modules/appearance-fonts.js?v=20261010-preview1"></script> # 字体共用预览与加载保护
+    - <script defer src="/js/modules/appearance-backgrounds.js?v=20261011-bgflash1"></script> # 背景图库/预览与加载保护
+    - <script defer src="/js/modules/fireflies.js?v=20261010-fireflies1"></script> # 萤火虫微光（默认关闭，低密度）
+    - <script defer src="/js/modules/ripple.js?v=20261014-ripple1"></script> # 点击涟漪（第 4 个互动挂件，默认关闭，跟随主题色）
+    - <script defer src="/js/modules/settings.js?v=20261015-custom1"></script> # 美化模块（右下角齿轮设置面板，最大的一块）
     - <script defer src="/js/fomal.js"></script> # 站点主引导：模块地图 + 控制台策略 + 全局入口清单
     - <script defer src="/js/wechat-qr.js"></script> # 微信二维码点击弹层展示（同页灯箱，不跳转/不下载）
     - <script defer src="/js/festival.js"></script> # 节日提醒卡片（左上角通知）
@@ -1341,8 +1351,8 @@ inject:
     - <script defer src="/js/stats.js?v=20261005"></script> # 文章统计页（/tags/）：emoji 标题拆成分节头 + 三张 echarts 跟随主题色/明暗模式
     - <script defer src="/js/footer-music.js?v=20261005"></script> # 页脚「猜你想看」右下空位补一条「听点音乐」→ /life/music/（八音盒）
     - <script defer src="/js/pjax-guard.js?v=20261005"></script> # 修 pjax 选择器不匹配：/tags/ 图表容器 id 导致换页退回整页刷新 + 加载遮罩一直转圈
-    - <script defer src="/js/inject/search-lazy.js?v=20261004"></script> # Algolia 搜索按需加载：空闲预取 + 点开才执行（省 88KB 压缩流量 / 277KB 解析，见 source/js/inject/search-lazy.js）
-    - <script src="/js/inject/scroll-gap-fix.js"></script> # 锚点跳转补偿：常驻顶栏留 70px
+    - <script defer src="/js/inject/search-lazy.js?v=20261011b"></script> # Algolia 搜索按需加载：空闲预取 + 点开才执行（省 88KB 压缩流量 / 277KB 解析，见 source/js/inject/search-lazy.js）
+    - <script src="/js/inject/scroll-gap-fix.js?v=20261011"></script> # 锚点跳转补偿：常驻顶栏留 70px
     - <script src="/js/inject/webinfo-card.js"></script> # 小站资讯卡：KPI 数字滚动 + 运行天数
     - <script src="/js/inject/ft-ad-extra.js"></script> # 页脚友链补一个「广告位招租」
     - <script src="/js/inject/pc-local-link.js"></script> # 版权卡「文章链接」显示当前域名

@@ -21,6 +21,8 @@
   function def(v, dv) { return (v == null || v === "" || v === "undefined" || v === "null") ? dv : v; }
   function tag(id, txt) { var el = document.getElementById(id); if (el) el.textContent = txt; }
   var SAME = ";--darkmode-bg:";
+  // 新增互动偏好：首帧就隐藏关闭的挂件（猫咪由 deferred 脚本创建）。
+  d.classList.toggle('beauty-neko-off', ls('nekoOn') === '0');
   // 1) 自定义壁纸
   var bg = def(ls("blogbg"), "default").replace(/^\s+|\s+$/g, "");
   if (bg !== "default" && /^(#|url\(|linear-gradient|radial-gradient|https?:)/.test(bg)) {
@@ -32,9 +34,24 @@
   if (def(ls("bgFilterOn"), "1") === "0") { tag("bgFilterParam", ":root{--bg-filter:none;}"); }
   else { var bfv = ls("bgFilterVal"); if (bfv) { tag("bgFilterParam", ":root{--bg-filter:" + bfv + ";}"); } }
   // 4) 主题色
-  var cmap = { red: "rgb(239, 90, 90)", orange: "rgb(228, 149, 66)", yellow: "rgb(194, 205, 90)", purple: "rgb(205, 90, 195)", purepurple: "rgb(147, 90, 205)", blue: "rgb(102, 204, 255)", puregreen: "rgb(90, 205, 130)", green: "rgb(57, 197, 187)", pink: "rgb(237, 112, 155)", black: "rgb(45, 45, 45)", darkblue: "rgb(97, 100, 159)", heoblue: "rgb(66, 90, 239)", gray: "rgb(150, 150, 150)" };
+  var cmap = { red: "rgb(239, 90, 90)", orange: "rgb(215, 146, 77)", yellow: "rgb(196, 166, 74)", green: "rgb(57, 197, 187)", puregreen: "rgb(77, 175, 135)", blue: "rgb(74, 156, 199)", heoblue: "rgb(97, 106, 209)", matcha: "rgb(102, 179, 77)", darkblue: "rgb(113, 133, 156)", purepurple: "rgb(147, 90, 205)", pink: "rgb(237, 112, 155)" };
   var tc = def(ls("themeColor"), "green");
-  if (cmap[tc]) { tag("themeColor", ":root{--theme-color:" + cmap[tc] + " !important}"); }
+  if (tc === "purple") tc = "purepurple";
+  else if (tc === "gray" || tc === "black") tc = "darkblue";
+  var custom = ls("themeCustomColor");
+  var color = tc === "custom" && /^#[0-9a-f]{6}$/i.test(custom || "") ? custom :
+    (Object.prototype.hasOwnProperty.call(cmap, tc) ? cmap[tc] : cmap.green);
+  tag("themeColor", ":root{--theme-color:" + color + " !important}");
+  // 4b) 主题色实底上的前景色（首帧就得有，否则浅色预设会先闪一下白字；算法与 settings.js 一致）
+  var lin = function (v) { v /= 255; return v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); };
+  var ch = String(color).match(/(\d+)/g) || [];
+  var L = ch.length >= 3 ? 0.2126 * lin(+ch[0]) + 0.7152 * lin(+ch[1]) + 0.0722 * lin(+ch[2]) : 0;
+  d.style.setProperty("--on-theme", L > 0.19 ? "#141a1c" : "#ffffff");
+  // 4b-2) 渐变按钮（公告栏下载按钮）要往「远离前景色」的方向调，否则深色那头会把字吃掉
+  d.style.setProperty("--on-theme-away", L > 0.19 ? "#ffffff" : "#000000");
+  // 4c) 实底图标块（右侧工具条那排 38×38）现在直接用主题色原色 + 白图标 + 轻微投影
+  //     （见 source/css/site-inject.css 的 #rightside 块，2026-10-15 第三版），
+  //     不再需要单独的 --theme-solid 计算。hover 仍是主题自带的浅橙 #FF7242。
   // 5) 字体
   var ft = def(ls("font"), "LXGW");
   if (ft === "default") {

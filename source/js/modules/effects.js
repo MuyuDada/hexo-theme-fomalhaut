@@ -6,7 +6,7 @@
  *        以及别的脚本会直接调全局函数，所以本文件里的声明必须留在全局作用域。
  * ----------------------------------------------------------------------------
  * 包含的模块（括号内为拆分前在 fomal.js 里的行号）：
- *   · 雪花特效（270-377）—— 冬天全屏飘雪 canvas（#snow），带风力摇曳和落地堆积
+ *   · 自然落雪由 modules/snow.js 管理（#snow），本文件保留星空与表情放大
  *   · 星空特效（381-435）—— 首页夜空星星 + 随机流星（#universe）
  *   · 表情放大（439-500）—— 点击正文里的 emoji，原地放大再看一眼
  * ----------------------------------------------------------------------------
@@ -19,144 +19,7 @@
  * ========================================================================== */
 
 /* ------------------------------ 雪花特效 ------------------------------ */
-/* 原 fomal.js 270-377 行，原样搬运，未改逻辑 */
-/* 雪花特效 start */
-if ((navigator.userAgent.match(/(phone|pad|pod|iPhone|iPod|ios|iPad|Android|Mobile|BlackBerry|IEMobile|MQQBrowser|JUC|Fennec|wOSBrowser|BrowserNG|WebOS|Symbian|Windows Phone)/i))) {
-  // 移动端不显示
-} else {
-  // document.write('<canvas id="snow" style="position:fixed;top:0;left:0;width:100%;height:100%;z-index:-2;pointer-events:none"></canvas>');
-
-  window && (() => {
-    let e = {
-      flakeCount: 50, // 雪花数目
-      minDist: 150,   // 最小距离
-      color: "255, 255, 255", // 雪花颜色
-      size: 1.5,  // 雪花大小
-      speed: .5,  // 雪花速度
-      opacity: .7,    // 雪花透明度
-      stepsize: .5    // 步距
-    };
-    const t = window.requestAnimationFrame || window.mozRequestAnimationFrame || window.webkitRequestAnimationFrame || window.msRequestAnimationFrame || function (e) {
-      window.setTimeout(e, 1e3 / 60)
-    }
-      ;
-    window.requestAnimationFrame = t;
-    const i = document.getElementById("snow"),
-      n = i.getContext("2d"),
-      o = e.flakeCount;
-    let a = -100,
-      d = -100,
-      s = [];
-    i.width = window.innerWidth,
-      i.height = window.innerHeight;
-    /* ---- 画布不可见就不画 → 2026-10-05 起改为「不可见就彻底停掉 rAF」----
-     * 和星空（dark()）同一套思路。美化面板关掉雪花后，settings.js 只是把 #snow 的
-     * style.display 设成 none；深色模式（[data-theme="dark"] #snow）和手机端也只在
-     * CSS 里隐藏。
-     * 2026-10-04 的第一版只是「不可见就跳过绘制」，rAF 仍然每帧回到这里一次
-     * （每帧一次 getComputedStyle + 一个闭包调用），默认设置（雪花关闭）下仍属白干。
-     * 2026-10-05 改成：一旦发现不可见，直接 return 且不再排下一帧，循环真正归零；
-     * 恢复不靠轮询，而是靠下面 snowInvalidate 挂的那些回调（MutationObserver /
-     * resize / pjax:complete）——状态一变就重新问一次可见性，可见就重新起循环。
-     * 注意不要在这里加「锁 30fps」之类的降频：雪花的观感全靠 60fps，降帧会明显卡顿。
-     * 判定用 getComputedStyle 而不是 offsetParent：#snow 是 position: fixed，
-     * offsetParent 恒为 null。
-     */
-    let snowOn = null, snowRunning = false, startSnow = null;
-    const snowVisible = () => {
-      if (snowOn === null) snowOn = window.getComputedStyle(i).display !== "none";
-      return snowOn;
-    };
-    const snowInvalidate = () => {
-      snowOn = null;
-      if (!snowRunning && startSnow) startSnow();
-    };
-    new MutationObserver(snowInvalidate).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme", "class", "style"] });
-    new MutationObserver(snowInvalidate).observe(i, { attributes: true, attributeFilter: ["style"] });
-    window.addEventListener("resize", snowInvalidate, false);
-    document.addEventListener("pjax:complete", snowInvalidate);
-    const h = () => {
-      if (!snowVisible()) { snowRunning = false; return; }
-      snowRunning = true;
-      n.clearRect(0, 0, i.width, i.height);
-      const r = e.minDist;
-      for (let t = 0; t < o; t++) {
-        let o = s[t];
-        const h = a,
-          w = d,
-          m = o.x,
-          c = o.y,
-          p = Math.sqrt((h - m) * (h - m) + (w - c) * (w - c));
-        if (p < r) {
-          const e = (h - m) / p,
-            t = (w - c) / p,
-            i = r / (p * p) / 2;
-          o.velX -= i * e,
-            o.velY -= i * t
-        } else
-          o.velX *= .98,
-            o.velY < o.speed && o.speed - o.velY > .01 && (o.velY += .01 * (o.speed - o.velY)),
-            o.velX += Math.cos(o.step += .05) * o.stepSize;
-        n.fillStyle = "rgba(" + e.color + ", " + o.opacity + ")",
-          o.y += o.velY,
-          o.x += o.velX,
-          (o.y >= i.height || o.y <= 0) && l(o),
-          (o.x >= i.width || o.x <= 0) && l(o),
-          n.beginPath(),
-          n.arc(o.x, o.y, o.size, 0, 2 * Math.PI),
-          n.fill()
-      }
-      t(h)
-    }
-      , l = e => {
-        e.x = Math.floor(Math.random() * i.width),
-          e.y = 0,
-          e.size = 3 * Math.random() + 2,
-          e.speed = 1 * Math.random() + .5,
-          e.velY = e.speed,
-          e.velX = 0,
-          e.opacity = .5 * Math.random() + .3
-      }
-      ;
-    document.addEventListener("mousemove", (e => {
-      a = e.clientX,
-        d = e.clientY
-    }
-    )),
-      window.addEventListener("resize", (() => {
-        i.width = window.innerWidth,
-          i.height = window.innerHeight
-      }
-      )),
-      (() => {
-        for (let t = 0; t < o; t++) {
-          const t = Math.floor(Math.random() * i.width)
-            , n = Math.floor(Math.random() * i.height)
-            , o = 3 * Math.random() + e.size
-            , a = 1 * Math.random() + e.speed
-            , d = .5 * Math.random() + e.opacity;
-          s.push({
-            speed: a,
-            velX: 0,
-            velY: a,
-            x: t,
-            y: n,
-            size: o,
-            stepSize: Math.random() / 30 * e.stepsize,
-            step: 0,
-            angle: 180,
-            opacity: d
-          })
-        }
-        startSnow = h;
-        h()
-      }
-      )()
-  }
-  )();
-}
-
-/* 雪花特效 end */
+/* 落雪与薄积雪由 snow.js 独立管理；这里不再创建第二个动画循环。 */
 
 /* ------------------------------ 星空特效 ------------------------------ */
 /* 原 fomal.js 381-435 行，原样搬运，未改逻辑 */

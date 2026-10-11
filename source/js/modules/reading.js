@@ -105,6 +105,12 @@ var __fpsMonitor = (function () {
     if (useRaf) nativeCancel.call(window, id);
     else window.clearTimeout(id);
   }
+  // 展示层单独排版；采样频率、阈值和启动/停止生命周期保持不变。
+  // 状态色不再内联：只写 data-state（good/warn/low），颜色由 site-inject.css 一处定义。
+  function readout(value, status, state) {
+    return '<span class="fps-label">FPS</span><span class="fps-value">' + value + '</span>' +
+      '<span class="fps-state" data-state="' + state + '">' + status + '</span>';
+  }
   function write(output) {
     var node = document.getElementById('fps');
     if (!node) { lastNode = null; return; }
@@ -137,14 +143,14 @@ var __fpsMonitor = (function () {
         frame++;
         if (now - lastTime > 1000) {
           var fps = Math.round(frame * 1000 / (now - lastTime));
-          var kd;
-          if (fps <= 5) kd = '<span style="color:#bd0000">卡成ppt</span>';
-          else if (fps <= 15) kd = '<span style="color:red">电竞级帧率</span>';
-          else if (fps <= 25) kd = '<span style="color:orange">有点难受</span>';
-          else if (fps < 35) kd = '<span style="color:#9338e6">不太流畅</span>';
-          else if (fps <= 45) kd = '<span style="color:#08b7e4">还不错哦</span>';
-          else kd = '<span style="color:#39c5bb">十分流畅</span>';
-          write('FPS:' + fps + ' ' + kd);
+          var status, state;
+          if (fps <= 5) { status = '极低'; state = 'low'; }
+          else if (fps <= 15) { status = '卡顿'; state = 'low'; }
+          else if (fps <= 25) { status = '偏低'; state = 'warn'; }
+          else if (fps < 35) { status = '一般'; state = 'warn'; }
+          else if (fps <= 45) { status = '顺畅'; state = 'good'; }
+          else { status = '流畅'; state = 'good'; }
+          write(readout(fps, status, state));
           frame = 0;
           lastTime = now;
         }
@@ -155,7 +161,7 @@ var __fpsMonitor = (function () {
   document.addEventListener('visibilitychange', function () {
     suspend();
     if (enabled && !document.hidden) {
-      write('FPS:采样中');
+      write(readout('—', '采样', 'good'));
       schedule();
     }
   });
@@ -164,7 +170,7 @@ var __fpsMonitor = (function () {
       if (enabled) return;
       enabled = true;
       reset();
-      write('FPS:采样中');
+      write(readout('—', '采样', 'good'));
       schedule();
     },
     stop: function () {

@@ -97,6 +97,8 @@ test('reset defaults executes the real reset function and resumes FPS after off'
   };
   Object.assign(h.ctx, { FONT_DEFAULT: 'default', CODE_FONT_DEFAULT: 'default',
     initItem() { h.store.set('fpson', '1'); }, setFont() {}, setCodeFont() {}, setColor() {},
+    // Interaction and appearance resets are separate collaborators; FPS assertions stay real.
+    applyInteractionSettings() {}, resetBgFilter() {}, resetTrans() {},
     resetBg_() {}, changeLight() {}, fomalNotify() {} });
   const resetSource = settings.slice(settings.indexOf('function reset() {'), settings.indexOf('// 量一次'));
   vm.runInContext(resetSource, h.ctx); h.ctx.reset();

@@ -60,6 +60,38 @@ comments: false
 
 <!-- endtimeline -->
 
+<!-- timeline 2026-10-10 -->
+
+1. 美化面板分区：原来的滑条堆拆成「氛围特效 / 互动挂件 / 布局与部件」三块 `bf-panel`，两列网格、面板变窄时自动单列
+2. 关掉即真正停下：猫咪挂件（`nekoOn`）与听话鼠标（`cursorOn`）各一个开关、默认开启；关闭时清掉时钟定时器与 `requestAnimationFrame`、断开 `MutationObserver`、指针热路径提前返回，不再「关了还在算」
+3. 主题色支持自定义（`settings.js`）：面板新增原生取色圈（视觉直径 24px、热区 44px、环宽 3px），值以严格校验的六位 HEX 存进 `themeCustomColor`，首帧校验不合法就回落默认青绿
+4. 预设色板整理为十一色：删掉紫 / 灰 / 黑三个旧选项、补上抹茶绿；旧键自动迁移（`purple → purepurple`、`gray` / `black → darkblue`），375px 宽自动 6+5 换行
+5. 字体设置预览化（新增 `source/js/modules/appearance-fonts.js`）：阅读 5 / 个性 3 / 代码 4 三组，正文与代码各一块实时预览；只对合法 key 请求 `document.fonts.load`、12 秒超时、最新请求胜、失败不写偏好可重试；「恢复默认」只重置两个字体键
+6. 背景设置预览化（新增 `source/js/modules/appearance-backgrounds.js`）：32 张壁纸 + 8 个渐变 + 7 个纯色 + 8 个 API 图全保留；图库 / 色彩 / 自定义一级，图库再分四类，打开分类才给 `<img>` 赋 `src`；切换走 `Image` 预加载 + 12 秒超时 + token 取消，失败保留旧图
+7. 萤火虫微光（新增 `fireflies.js`，默认关闭）：纯 CSS 呼吸与慢漂，不起 canvas / rAF / 定时器轮询；桌面 14 只、≤600px 8 只，待在底部 44vh、负层级在正文卡片之后，暂停靠 `data-paused`
+8. 雪花重写（新增 `snow.js`）：删掉 `effects.js` 里的 canvas 圆点循环，改用两张预渲染雪片图按大小 / 透明度 / 速度分层下落，dt 上限 50ms、epoch 防过期回调；只有真落到底部才抬高宽度有界的高度图，最高厚度随视口 14–30px，深色 / 后台 / 手机 / 减少动态都暂停
+
+<!-- endtimeline -->
+
+<!-- timeline 2026-10-11 -->
+
+1. 导航条改版（新增 `source/css/navigation.css`）：桌面工具区 44×44px 触控区、间距 8px、两侧留白 24px；≤800px 改 4px / 12px，≤480px 站名 20px；站名容器不再裁掉主题的霓虹光晕，只有 ≤360px 才退回省略号
+2. 导航磨砂按能力降级：稳定态默认关 `backdrop-filter`、只留 alpha 0.96 的底色，仅在 ≥1200px + 精细指针 + 支持 `hover:hover` 时开 6px 轻磨砂 —— 滚动时不再为合成层买单
+3. 按钮 hover 对齐：首页与「回到顶部」的伪元素宽度改成跟随链接 100%、高度收紧 40px，图标用 flex 居中（原来继承整块尺寸加固定 `line-height`，视觉总偏上）
+4. 搜索模块四修（`search-lazy.js`）：「正在加载搜索…」提示改成脚本自持节点、插在命中容器之前（旧写法把提示写进容器并用属性记插没插过，容器被 instantsearch 换掉后属性还在、清理分支进不去）；`onerror` 不再被当成功吞掉，库就绪后 300ms 检查搜索框、缺失就回退
+5. 目录连点互相打架 → `scroll-gap-fix.js` 升到 v4：加世代号 `seq`，让过期的滚动校正链立刻退出（v3 每次点击各起一条最多 3 轮的链、互不知情，轮流把页面拉回自己那边）
+6. 夜间切换改成三拍小剧场（`shell.js`，默认「标准」档）：日落 / 日出 450ms + 暮色与第一批星 450ms + 星夜铺满 600ms + 从点击位置圆形揭幕 350ms，原来 3000ms 的整屏遮挡压到约 900ms；面板给四档（关闭 / 轻 / 标准 / 华丽）
+7. 修夜间遮罩残留：连续点击时遮罩改由本次切换自持（不再用「取第一个 `.Cuteen_DarkSky`」的写法），第二次点击先清掉遮罩再瞬时切换；夜间壁纸用 `requestIdleCallback` 空闲预热
+8. 数字框被主题限宽 50px：用 `:is(...)` 提特异性 + `max-width:none` + `min-width / flex: 0 0 76px`，三位数不再裁切；透明度数字并进同一套规则（实测输入框 76×44 CSS px，桌面与 390×844 一致）
+9. 帧率状态条四轮打磨：紧凑状态条（桌面高 30px / 手机 28px、左下 12px + 安全区）+ `data-state` 着色，小字对比度从 3.21 提到 4.91；随后按反馈回退配色，再把「琥珀」与「红」的 Lab ΔE 从 43.2 拉到 63.5，两档一眼能分
+10. 主题色前景统一：新增 `themeOnColorInk()`，按 WCAG 相对亮度算 `--on-theme` / `--on-theme-away`，按钮、选中项、目录当前项与 `::selection` 都改读它
+11. 点击涟漪（新增 `ripple.js`，第 4 个互动挂件、默认关闭）：按下那刻才建 1 个爆发节点 + 两圈同心水纹，700ms 后连节点回收、同时最多 6 枚；关闭时连 `pointerdown` 监听都不挂
+12. 回归脚本从 5 个加到 13 个：新增 `beauty-switches` / `theme-color` / `appearance-fonts` / `appearance-backgrounds` / `fireflies` / `snow` / `ripple` / `navigation`，`fomal.js` 的模块地图同步补上 `ripple.js`
+
+13. 主题版本升到 v1.0.4：根 README 顶部标题与徽章、`package.json`、`package-lock.json` 根 version，连同 `themes/fomalhaut/` 下的 `package.json` / `README` / `welcome.js` / `footer.pug` 一起从 1.0.3 提到 1.0.4；README 更新日志补 v1.0.4 一节，文件地图补 `navigation.css` 与 `appearance-fonts` / `appearance-backgrounds` / `fireflies` / `snow` / `ripple` 五个模块，回归脚本从 5 个加到 13 个
+
+<!-- endtimeline -->
+
 <!-- timeline 2026-10 -->
 
 1. 全站图片与字体外链改走公共 CDN（jsDelivr），不再依赖作者自建对象存储

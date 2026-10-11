@@ -10,8 +10,14 @@
  *   两者都得在构建期补数据，客户端没法凭空得到（不加额外网络请求是硬要求）。
  *
  * 做法：注册一个 after_render:html 过滤器，在归档页（page.archive 为真，含分页）
- *   </head> 前插入一行：
+ *   正文内容根（<div id="archive">）的开标签之后插入一行：
  *     <script type="application/json" id="ar-index">{"v":1,"posts":{"/posts/xxxx.html":{...}}}</script>
+ *   为什么不放 </head> 前（2026-10-09 修，别改回去）：主题的 pjax 换页只同步
+ *   themes/fomalhaut/layout/includes/third-party/pjax.pug 里 pjaxSelectors 命中的元素，
+ *   head 里只换 <title>。索引放 head 时，「先硬刷新过任意非归档页 → 点链接进归档页」
+ *   这条路径读不到它，年度分布柱状图会整块消失（再刷一次才回来，用户 2026-10-09 报的 bug）。
+ *   放进 #body-wrap 子树（#archive 是它的后代）就能随换页一起到达：pjax 的
+ *   executeScripts 只重建「无 type / type=text/javascript」的脚本，application/json 原样保留。
  *   内容是全站每篇文章的 { t 标题, p 路径, d 日期, c 分类, w 字数, r 阅读分钟 }。
  *   阅读时长直接复用 hexo-wordcount-fomal 的口径（中文 300 字/分、英文 160 词/分，
  *   与该插件 min2read 默认参数一致），所以和文章页顶部「阅读时长」显示的数字是同源的。
@@ -78,6 +84,23 @@ function firstCategory(post) {
   return name;
 }
 
+/** 正文内容根的 id：归档页 archive，分类/标签页 category / tag（目前只处理归档页）。 */
+const CONTENT_ROOT_IDS = ['archive', 'category', 'tag'];
+
+/**
+ * 正文内容根开标签的结束位置（插在它后面就等于插进会被 pjax 换页的 #body-wrap 子树）；
+ * 找不到返回 -1。只从 #body-wrap 之后开始找，免得命中侧栏里的同名 id。
+ */
+function contentRootEnd(html) {
+  const from = html.indexOf('id="body-wrap"');
+  const scope = from === -1 ? html : html.slice(from);
+  for (let i = 0; i < CONTENT_ROOT_IDS.length; i++) {
+    const m = new RegExp('<div[^>]*\\bid=["\']' + CONTENT_ROOT_IDS[i] + '["\'][^>]*>').exec(scope);
+    if (m) return (from === -1 ? 0 : from) + m.index + m[0].length;
+  }
+  return -1;
+}
+
 hexo.extend.filter.register('after_render:html', function (html, data) {
   try {
     const page = data && data.page;
@@ -101,6 +124,9 @@ hexo.extend.filter.register('after_render:html', function (html, data) {
     // 放在 <script type="application/json"> 里：写 '</script' 会提前闭合标签
     const json = JSON.stringify({ v: 1, posts: posts }).replace(/<\//g, '<\\/');
     const tag = '<script type="application/json" id="' + INDEX_ID + '">' + json + '</script>';
+    const at = contentRootEnd(html);
+    if (at !== -1) return html.slice(0, at) + tag + html.slice(at);
+    // 兜底：正文根没找到时退回旧位置（head），至少首次进页可用
     return html.indexOf('</head>') !== -1
       ? html.replace('</head>', tag + '</head>')
       : html + tag;

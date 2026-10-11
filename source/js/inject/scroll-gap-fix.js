@@ -6,19 +6,28 @@
  *   配置里仍是同步 <script src>（没有加 defer/async），执行时机与原来的内联写法完全一样。
  * ----------------------------------------------------------------------------
  * 修复：点目录跳转后标题被常驻顶栏遮住（主题 utils.js:123 只在向上跳时减 70px）。
+ * v4 做法：在 v3 基础上加「世代号」取消机制（见下），其余不变。
  * v3 做法：① 在 document 捕获阶段接管所有「href 以 # 开头且目标存在」的点击（pjax 换页后依然有效），
  * 滚到「元素顶端 - 70px」，等滚动停下再实测位置，因懒加载图片/布局变动偏离就再校正（最多 3 次）；
  * ② 兜住 btf.scrollToDest，让回顶/直达底部等直调点也预留同样高度（经边界收敛后行为不变）；
  * ③ 解析锚点用 getElementById → getElementsByName → 百分号编码归一化比对，编码不一致也能命中。
+ * 【v4 修的是什么】连点两个目录项（如第 1 节、第 3 节来回点几次）后，手停了页面还在上下横跳：
+ * v3 每次点击都会起一条「滚过去 → 等停下 → 量位置 → 还偏就再滚」的校正链，链与链互不知情。
+ * 它们先后停稳，各自量到「我的目标不在 70px 处」，于是轮流把页面拉回自己那边，最多 3 轮/链。
+ * v4 给每次点击发一个世代号 seq：链内每步都先确认自己仍是最新世代，过期的链立刻退出，
+ * 只有最后点的那条链有权校正。控制台 __scrollGapFix.stale 可看到被作废的旧链次数。
  * 另有 CSS 兜底（inject.head 的 scroll-gap-css）：JS 不跑时原生跳转也留 70px。
  * ========================================================================== */
 
 (function () {
-  var VER = "v3";
+  var VER = "v4";
   var GAP = 70; // 顶栏常驻高度约 58~60px，与主题向上跳预留的 70px 一致
   var MAX_TRY = 3;
+  // 世代号：每次点击 +1。校正链带着自己的号跑，发现号变了就立刻退出，
+  // 避免「上一条链等滚动停下后，又把页面拉回它自己的目标」造成来回横跳。
+  var seq = 0;
   // 自查入口：控制台输入 __scrollGapFix 可见 {v, gap, hits, patched}，点一次目录 hits 就 +1
-  window.__scrollGapFix = { v: VER, gap: GAP, hits: 0, patched: false };
+  window.__scrollGapFix = { v: VER, gap: GAP, hits: 0, stale: 0, patched: false };
 
   function maxScroll() {
     var doc = document.documentElement;
@@ -47,9 +56,10 @@
       window.addEventListener(ev, function () { userMoved = true; }, { once: true, passive: true });
     });
   }
-  function settle(cb) {
+  function settle(cb, my) {
     var last = window.pageYOffset, still = 0, t0 = Date.now();
     var iv = setInterval(function () {
+      if (my !== seq) { clearInterval(iv); try { window.__scrollGapFix.stale++; } catch (e0) {} return; }
       if (userMoved) { clearInterval(iv); return; }
       var y = window.pageYOffset;
       if (Math.abs(y - last) < 1) still++; else still = 0;
@@ -58,13 +68,15 @@
     }, 120);
   }
   // 滚到位后实测标题位置，偏离就再滚一次（懒加载图片、布局变动都能兜住）
-  function alignTo(el, tries) {
+  function alignTo(el, tries, my) {
+    if (my !== seq) return; // 已经有更新的点击接管了，这条链作废
     goto(targetTop(el));
     settle(function () {
+      if (my !== seq) return;
       if (userMoved) return;
       var diff = Math.round(el.getBoundingClientRect().top) - GAP;
-      if (tries > 1 && Math.abs(diff) > 2) alignTo(el, tries - 1);
-    });
+      if (tries > 1 && Math.abs(diff) > 2) alignTo(el, tries - 1, my);
+    }, my);
   }
   // 宽容解析目标锚点：id → name → 对 [id]/[name] 做百分号编码归一化比对
   function byId(id) {
@@ -107,8 +119,9 @@
     e.stopPropagation(); // 压住主题绑在 .toc-content 上的老监听（它只在向上跳时减 70px）
     patchBtf();          // pjax 换页后 btf 若被重建，这里即时补一次
     armUserAbort();
+    var my = ++seq; // 新一代：此前所有校正链就此作废
     try { window.__scrollGapFix.hits++; } catch (e5) {}
-    alignTo(el, MAX_TRY);
+    alignTo(el, MAX_TRY, my);
     if (window.innerWidth < 900 && window.mobileToc && window.mobileToc.close) window.mobileToc.close();
   }
   function patchBtf() {
@@ -132,5 +145,5 @@
   window.addEventListener("load", init);
   document.addEventListener("pjax:complete", init);
   document.addEventListener("pjax:success", init);
-  console.log("%c[scroll-gap-fix] " + VER + " 已生效：目录跳转预留 " + GAP + "px（顶栏高度），自查可用 __scrollGapFix", "color:#00dab9;font-weight:bold");
+  console.log("%c[scroll-gap-fix] " + VER + " 已生效：目录跳转预留 " + GAP + "px（顶栏高度），自查可用 __scrollGapFix（stale = 被作废的旧校正链次数）", "color:#00dab9;font-weight:bold");
 })();
