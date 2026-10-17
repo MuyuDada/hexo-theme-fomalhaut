@@ -99,6 +99,22 @@ comments: false
 
 <!-- endtimeline -->
 
+<!-- timeline 2026-10-19 -->
+
+1. **站点身份换成真实信息**：标题「Muyuの小窝」、作者 MuyuDada、真实头像与邮箱、社交链接（GitHub / B站 / 邮箱 / RSS），关于页整页重写（个人介绍、做的小东西、本站跑在哪、技术栈、关于本站、找到我）
+2. **搜索从 Algolia 换成本地索引**：Algolia 一直没建索引，搜索框点了没结果；改用 `hexo-generator-search` 生成的 `/search.xml`，并补上主题里缺失的 `local-search.js` 前端
+3. **评论从 Twikoo 换成 Waline**：自建 `comment.muyudada.dpdns.org`，支持登录、昵称邮箱必填、微博 / B站 / Bmoji 三套表情
+4. **补齐三个缺失页面**：留言板 `/comments/`、打赏 `/sponsor/`（支付宝 / 微信 / 爱发电 + 打赏名单）、`/llms.txt`（给 LLM 爬虫的纯文本索引，带 UTF-8 BOM）
+5. **友人帐增强**：每张卡加访问延迟徽标（`fetch(no-cors)` 探测，5 秒超时，≤2000ms 绿 / 更慢橙 / 超时红，并发 4）、站点预览图（thum.io 自动截图）、站内申请向导；友链数据换成 11 位真实朋友 + 技术站 + 工具站三组
+6. **分类快捷导航条**（新增 `scripts/category-bar.js` + `source/js/inject/category-bar.js` + `source/css/category-bar.css`）：首页 / 归档 / 分类 / 标签 / 统计页顶部一排分类胶囊，横向滚动 + 两侧渐隐 + 当前项居中，滚轮可横向滚
+7. **标签关系图**（新增 `scripts/tag-graph.js` + `source/js/tag-graph.js` + `source/css/tag-graph.css`）：按标签两两共现建图，阈值自适应（边少于 8 条就降到 1），节点按文章数缩放、按主题色分三档配色
+8. **贡献日历接真实数据**：从占位的自建仓库换成 `github-contributions-api.jogruber.de`，`gitcalendar.js` 新增 `git_normalize()` 把扁平数据转成 53 周 × 7 天
+9. **全站去占位**：外观面板的占位随机图换成 12 张本地 AVIF（6 横 6 竖），默认封面、侧栏卡背景、灯笼、画廊、两篇文章封面全部换掉；README 与主题 `package.json` 里的示例账号名也清干净
+10. **默认背景改成随机图 API**：桌面/桌面夜间/手机/手机夜间分别指向 `t.alcy.cc` 的 `/pc` `/ys` `/mp` `/moe`，每次加载换一张；本地 12 张仍留在面板里当固定选项
+11. 导航「网站」分组新增「打赏」，页脚补 `/sponsor/` 与 `/llms.txt` 入口，页脚友链图改成读 `_data/link.yml` 第一组
+
+<!-- endtimeline -->
+
 {% endtimeline %}
 
 {% note info flat %}

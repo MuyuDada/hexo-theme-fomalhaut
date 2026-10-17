@@ -301,6 +301,9 @@ function prewarmNightWallpaper() {
     if (url.charAt(0) === '"' || url.charAt(0) === "'") url = url.slice(1);
     if (url.slice(-1) === '"' || url.slice(-1) === "'") url = url.slice(0, -1);
     if (!url) return;
+    // 2026-10-19：默认夜间背景改成随机图 API 后，预热就没意义了 —— 302 不带缓存头，
+    // 真到切夜间时浏览器会重新请求、拿到的是另一张图。外链一律不预热，只预热本地壁纸。
+    if (url.charAt(0) !== '/' && url.indexOf(location.origin) !== 0) return;
     var img = new Image();
     img.decoding = 'async';
     img.src = url;

@@ -404,7 +404,9 @@ test('old engine is removed while stars/emoji survive, and deferred snow loads o
   assert.ok(snow >= 0 && snow < effectsIndex && effectsIndex < settings, 'controller exists before both consumers');
   assert.equal(scripts.filter(m => m[1].startsWith('/js/modules/snow.js')).length, 1);
   for (const i of [snow, effectsIndex]) {
-    assert.match(scripts[i][0], /\bdefer\b/); assert.match(scripts[i][1], /[?&]v=20261010-snow1(?:&|$)/);
+    assert.match(scripts[i][0], /\bdefer\b/);
+    // 只要求带 ?v= 缓存版本戳，不锁死具体值（版本戳会随发布整体前移）。
+    assert.match(scripts[i][1], /[?&]v=\d{8}-[\w-]+(?:&|$)/);
   }
   assert.match(config, /<canvas\b[^>]*id=["']snow["']/);
 });
@@ -489,7 +491,20 @@ test('retained canvas CSS is fixed/negative-z/pointer-transparent and reduced mo
   });
   assert.ok(blocks.some(block => /#snow\s*\{[^}]*display\s*:\s*none\s*!important/.test(block)), 'CSS independently suppresses snow under reduced-motion');
   const config = read('_config.fomalhaut.yml');
-  assert.match(config, /settings\.js\?v=20261010-snow1/); assert.match(config, /site-inject\.css\?v=20261010-snow1/);
+  // 语义：这两个资源必须带着「不早于雪景上线（2026-10-10）」的缓存版本戳，
+  // 否则回访用户拿的是旧 CSS/JS。版本戳后来又被整体前移过（现在是 20261015-*），
+  // 所以这里比对「日期前缀 ≥ 20261010」而不是写死某一个字符串。
+  const versionOf = (file, urlPattern) => {
+    const match = config.match(urlPattern);
+    assert.ok(match, file + ' 注入行存在');
+    return match[1];
+  };
+  const stamp = value => Number(String(value).match(/^(\d{8})/)[1]);
+  const settingsVersion = versionOf('settings.js', /settings\.js\?v=([^"'\s]+)/);
+  const cssVersion = versionOf('site-inject.css', /site-inject\.css\?v=([^"'\s]+)/);
+  for (const [file, version] of [['settings.js', settingsVersion], ['site-inject.css', cssVersion]]) {
+    assert.ok(stamp(version) >= 20261010, file + ' 缓存版本不早于雪景上线：' + version);
+  }
 });
 
 

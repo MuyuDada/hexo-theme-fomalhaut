@@ -10,6 +10,13 @@ const code = fs.readFileSync(modulePath, 'utf8');
 // Independent original template, API declarations and setters copied from the pre-change snapshot.
 // Provenance: bak/20261010-appearance-preview/before/source/js/modules/settings.js.
 // Intentionally embedded so tests work in a clean checkout; never generated from the implementation.
+//
+// v1.0.5 起本测试的「壁纸清单」部分不再逐字对齐 legacy 快照：旧快照里的 32 张
+// picsum 占位图已被本站真实素材替换（6 桌面 + 6 手机 AVIF + 2 张随机 API 入口），
+// 分类也从 anime/landscape/pets/mobile 四个收成 desktop/mobile 两个。
+// 保留 legacy 快照仍然有用 —— 渐变/纯色 15 条、8 个动态 API 的 id 与 URL、
+// 以及 resetBg_/setBg 两个 setter 的实现都没变，测试继续拿它们当独立基准。
+// 壁纸清单改为断言「本地素材 + 随机 API」这条新契约，见下方 expectedWallpapers。
 const legacy = [
   "<h2>四、背景设置</h2>",
   "",
@@ -143,11 +150,13 @@ const legacy = [
   "function resetBg_() {",
   "  var el = document.getElementById(\"defineBg\");",
   "  if (!el) return;",
+  // v1.0.5：settings.js 的 resetBg_() 四个默认值已换成随机图 API（与 _config.fomalhaut.yml
+  // 的 <style id="defineBg"> 逐字一致），这里跟着同步，保持「用真实 setter、不另写 mock」的初衷。
   "  el.innerText = `:root{",
-  "    --default-bg: url(https://picsum.photos/id/1015/1920/1080);",
-  "    --darkmode-bg:url(https://picsum.photos/id/1044/1920/1080);",
-  "    --mobileday-bg: url(https://picsum.photos/id/1018/1920/1080);",
-  "    --mobilenight-bg: url(https://picsum.photos/id/1039/1920/1080);",
+  "    --default-bg: url(https://t.alcy.cc/pc);",
+  "    --darkmode-bg:url(https://t.alcy.cc/ys);",
+  "    --mobileday-bg: url(https://t.alcy.cc/mp);",
+  "    --mobilenight-bg: url(https://t.alcy.cc/moe);",
   "  }`;",
   "}",
   "function setBg(s) {",
@@ -239,16 +248,36 @@ test('classic module does not access DOM, images, storage or lexical API values 
   assert.equal(h.ctx.appearanceBackgroundApiValue('bingDayBg'),'url(https://example.com/runtime.jpg)');
 });
 
-test('catalog exactly preserves legacy thumbnail/full URLs, colors, gradients, and runtime APIs',()=>{
+// v1.0.5 的壁纸清单契约：每个分类 1 个随机 API 入口 + 6 张本地 AVIF。
+// 顺序即面板里的显示顺序，随机入口排第一（最常用的选项放最前面）。
+const WALLPAPER_CATEGORIES = [{id:'desktop',name:'桌面壁纸',random:'https://t.alcy.cc/pc'},
+                              {id:'mobile',name:'手机壁纸',random:'https://t.alcy.cc/mp'}];
+const LOCAL_WALLPAPERS = n => Array.from({length:6},(_,i)=>`/assets/wallpaper/${n}-${i+1}.avif`);
+const expectedWallpapers = WALLPAPER_CATEGORIES.flatMap(c=>[
+  {thumb:c.random,value:`url(${c.random})`},
+  ...LOCAL_WALLPAPERS(c.id).map(src=>({thumb:src,value:`url(${src})`}))
+]);
+
+test('catalog exactly preserves legacy colors, gradients, and runtime APIs',()=>{
   const h=harness();h.installApis();
-  const expectedImages=Array.from(legacyPanel.matchAll(/background-image:url\(([^)]+)\).*onclick="changeBg\('([^']+)'\)/g),m=>({thumb:m[1],value:m[2]}));
   const expectedColors=Array.from(legacyPanel.matchAll(/onclick="changeBg\('((?:linear-gradient|#)[^']+)'\)/g),m=>m[1]);
-  assert.equal(expectedImages.length,32);assert.equal(expectedColors.length,15);
-  assert.deepEqual(plain(h.ctx.AP_BACKGROUND_CATALOG.filter(x=>x.kind==='image').map(({thumb,value})=>({thumb,value}))),expectedImages);
+  assert.equal(expectedColors.length,15);
   assert.deepEqual(plain(h.ctx.AP_BACKGROUND_CATALOG.filter(x=>x.kind!=='image').map(x=>x.value)),expectedColors);
   const expectedApiIds=Array.from(legacyPanel.matchAll(/onclick="changeBg\('\$\{(\w+)\}'\)/g),m=>m[1]);
   assert.deepEqual(plain(h.ctx.AP_BACKGROUND_APIS.map(x=>x.id)),expectedApiIds);
   for(const id of expectedApiIds)assert.equal(h.ctx.appearanceBackgroundApiValue(id),legacy.match(new RegExp('^let '+id+' = "([^"]+)";','m'))[1]);
+});
+
+test('catalog wallpapers are the local AVIF set plus one random API entry per category',()=>{
+  const h=harness();
+  assert.deepEqual(plain(h.ctx.AP_BACKGROUND_CATEGORIES.map(({id,name})=>({id,name}))),
+    WALLPAPER_CATEGORIES.map(({id,name})=>({id,name})));
+  assert.deepEqual(plain(h.ctx.AP_BACKGROUND_CATALOG.filter(x=>x.kind==='image').map(({thumb,value})=>({thumb,value}))),expectedWallpapers);
+  // 每个分类的条目 id 唯一、category 正确，且没有残留的在线占位图（picsum 已全部下线）。
+  const images=h.ctx.AP_BACKGROUND_CATALOG.filter(x=>x.kind==='image');
+  assert.equal(new Set(images.map(x=>x.id)).size,images.length);
+  for(const item of images)assert.ok(WALLPAPER_CATEGORIES.some(c=>c.id===item.category),item.id);
+  assert.doesNotMatch(JSON.stringify(plain(h.ctx.AP_BACKGROUND_CATALOG)),/picsum/i);
 });
 
 test('markup has empty lazy wallpaper grids and accessible real tabs, with no API image loads',()=>{
@@ -256,7 +285,7 @@ test('markup has empty lazy wallpaper grids and accessible real tabs, with no AP
   assert.doesNotMatch(html,/<img|background-image|w=400|bing.biturl.top/);
   assert.match(html,/<details/);assert.match(html,/动态链接刷新可能返回不同图片/);
   h.mount();const panel=h.document.ids.get('ap-background-panel');
-  assert.equal(panel.querySelectorAll('[data-ap-bg-main]').length,3);assert.equal(panel.querySelectorAll('[data-ap-bg-category]').length,4);
+  assert.equal(panel.querySelectorAll('[data-ap-bg-main]').length,3);assert.equal(panel.querySelectorAll('[data-ap-bg-category]').length,WALLPAPER_CATEGORIES.length);
   for(const button of [...panel.querySelectorAll('[data-ap-bg-main]'),...panel.querySelectorAll('[data-ap-bg-category]')]){
     assert.equal(button.tagName,'BUTTON');assert.ok(h.document.ids.has(button.getAttribute('aria-controls')));assert.ok(['true','false'].includes(button.getAttribute('aria-pressed')));
   }
@@ -265,11 +294,12 @@ test('markup has empty lazy wallpaper grids and accessible real tabs, with no AP
 
 test('init only populates visible initial category, then categories load on demand once',()=>{
   const h=harness();h.mount();h.ctx.initAppearanceBackgrounds();
-  assert.equal(h.document.ids.get('ap-bg-category-anime').children.length,8);
-  for(const name of ['landscape','pets','mobile'])assert.equal(h.document.ids.get('ap-bg-category-'+name).children.length,0);
-  assert.equal(h.images.length,0);assert.equal(h.document.imageSources.filter(s=>s.includes('w=400')).length,8);
-  h.ctx.showAppearanceBackgroundCategory('mobile');assert.equal(h.document.ids.get('ap-bg-category-anime').hidden,true);
-  assert.equal(h.document.ids.get('ap-bg-category-mobile').hidden,false);assert.equal(h.document.ids.get('ap-bg-category-mobile').children.length,8);
+  assert.equal(h.document.ids.get('ap-bg-category-desktop').children.length,7);
+  assert.equal(h.document.ids.get('ap-bg-category-mobile').children.length,0);
+  // 7 张分类缩略图 + 1 张「当前背景」预览图（默认背景也有预览）。
+  assert.equal(h.images.length,0);assert.equal(h.document.imageSources.length,8);
+  h.ctx.showAppearanceBackgroundCategory('mobile');assert.equal(h.document.ids.get('ap-bg-category-desktop').hidden,true);
+  assert.equal(h.document.ids.get('ap-bg-category-mobile').hidden,false);assert.equal(h.document.ids.get('ap-bg-category-mobile').children.length,7);
   const count=h.document.imageSources.length;h.ctx.showAppearanceBackgroundCategory('mobile');assert.equal(h.document.imageSources.length,count);
   h.ctx.showAppearanceBackgroundTab('custom');assert.equal(h.document.ids.get('ap-bg-main-wallpaper').hidden,true);
 });
@@ -304,14 +334,19 @@ test('error and timeout retain CSS/storage, expose retry, and detach handlers/sr
 
 test('default restore preserves all four mode URLs without creating thumbnail Images on homepage',async()=>{
   const h=harness();assert.equal(await h.ctx.restoreAppearanceBackground(),true);
-  for(const name of ['home_bg.webp','dark_mode.webp?w=1920&fmt=webp&q=86','snow.webp','mb8.webp'])assert.ok(h.bg().includes(name));
+  // 默认背景自 v1.0.5 起是随机图 API，四个模式各用一个端点（桌面/桌面夜间/手机/手机夜间）。
+  for(const name of ['t.alcy.cc/pc','t.alcy.cc/ys','t.alcy.cc/mp','t.alcy.cc/moe'])assert.ok(h.bg().includes(name),name);
   assert.equal(h.images.length,0);assert.equal(h.document.imageSources.length,0);assert.equal(h.storage.get('blogbg'),'default');
 });
 
 test('failed legacy HTTP restore keeps preference and displays default with no selected stale wallpaper',async()=>{
   const saved='url(http://example.com/legacy.jpg)',h=harness({blogbg:saved});h.mount();h.ctx.initAppearanceBackgrounds();
-  const restore=h.ctx.restoreAppearanceBackground();assert.match(h.bg(),/home_bg.webp/);assert.equal(h.document.ids.get('ap-bg-current-name').textContent,'默认背景');
+  // 恢复流程是「先同步上屏、再后台探针」：保存的值（含 http 老链接）立刻生效，不等图片加载。
+  const restore=h.ctx.restoreAppearanceBackground();assert.match(h.bg(),/example\.com\/legacy\.jpg/);
+  assert.equal(h.document.ids.get('ap-bg-current-name').textContent,'自定义图片');
   h.images[0].error();assert.equal(await restore,false);assert.equal(h.storage.get('blogbg'),saved);assert.equal(h.ctx.apBackgroundState.current,'default');
+  // 探针失败后退回默认背景（随机图 API），并且不把「已选中」标记留给那张加载失败的图。
+  assert.match(h.bg(),/t\.alcy\.cc\/pc/);assert.equal(h.document.ids.get('ap-bg-current-name').textContent,'默认背景');
   assert.equal(h.document.ids.get('ap-background-panel').querySelectorAll('[data-ap-bg-id]').some(b=>b.getAttribute('aria-pressed')==='true'),false);
   const retry=h.ctx.retryAppearanceBackground();h.images[1].load();assert.equal(await retry,true);assert.match(h.bg(),/http:\/\/example.com/);assert.equal(h.storage.get('blogbg'),saved);
 });
@@ -369,8 +404,8 @@ test('strict URL/color/gradient validation blocks credentials, script protocols 
 
 test('catalog image and runtime API metadata use ids and checked state, unknown IDs do nothing',async()=>{
   const h=harness();h.installApis();h.mount();h.ctx.initAppearanceBackgrounds();
-  let pending=h.ctx.selectAppearanceBackground('anime-1');h.images[0].load();assert.equal(await pending,true);
-  let button=h.document.ids.get('ap-bg-category-anime').children[0];assert.equal(button.getAttribute('aria-pressed'),'true');assert.equal(button.querySelector('.ap-bg-check').hidden,false);assert.equal(h.document.ids.get('ap-bg-current-name').textContent,'二次元 01');
+  let pending=h.ctx.selectAppearanceBackground('desktop-1');h.images[0].load();assert.equal(await pending,true);
+  let button=h.document.ids.get('ap-bg-category-desktop').children[1];assert.equal(button.getAttribute('aria-pressed'),'true');assert.equal(button.querySelector('.ap-bg-check').hidden,false);assert.equal(h.document.ids.get('ap-bg-current-name').textContent,'桌面 01');
   pending=h.ctx.selectAppearanceBackgroundApi('picsum');h.images[1].load();assert.equal(await pending,true);
   button=h.document.ids.get('ap-background-panel').querySelector('[data-ap-bg-id="api-picsum"]');assert.equal(button.getAttribute('aria-pressed'),'true');assert.equal(button.querySelector('.ap-bg-check').hidden,false);assert.match(h.document.ids.get('ap-bg-current-meta').textContent,/刷新可能/);
   assert.equal(await h.ctx.selectAppearanceBackground('nope'),false);assert.equal(await h.ctx.selectAppearanceBackgroundApi('nope'),false);
@@ -385,11 +420,11 @@ test('global cancel settles pending work; post-reset init syncs default metadata
 });
 
 test('default preview follows actual theme and mobile breakpoint without eager homepage requests',async()=>{
-  for(const [theme,width,file] of [['light',769,'id/1015/1920/1080'],['dark',769,'id/1044/1920/1080'],['light',768,'id/1018/1920/1080'],['dark',768,'id/1039/1920/1080']]){
+  for(const [theme,width,file] of [['light',769,'t.alcy.cc/pc'],['dark',769,'t.alcy.cc/ys'],['light',768,'t.alcy.cc/mp'],['dark',768,'t.alcy.cc/moe']]){
     const h=harness({}, {theme,width});await h.ctx.restoreAppearanceBackground();
     assert.equal(h.document.imageSources.length,0);assert.equal(h.observers.length,0);assert.equal(h.listeners.size,0);
     h.mount();h.ctx.initAppearanceBackgrounds();
-    assert.equal(h.document.ids.get('ap-bg-current-preview').children[0].src,'https://picsum.photos/'+file);
+    assert.equal(h.document.ids.get('ap-bg-current-preview').children[0].src,'https://'+file);
     assert.equal(h.observers.length,1);assert.equal(h.listeners.size,1);
     assert.doesNotMatch(h.ctx.appearanceBackgroundMarkup(),/<h2/);
   }
@@ -401,10 +436,10 @@ test('mounted default preview updates on theme/resize and avoids duplicate regis
   h.ctx.initAppearanceBackgrounds();assert.equal(h.document.imageSources.length,initial);assert.equal(h.observers.length,1);
   assert.deepEqual(plain(h.observers[0].options),{attributes:true,attributeFilter:['data-theme']});
   h.document.documentElement.setAttribute('data-theme','dark');h.observers[0].fn();
-  assert.match(h.document.ids.get('ap-bg-current-preview').children[0].src,/id\/1044\//);
+  assert.match(h.document.ids.get('ap-bg-current-preview').children[0].src,/t\.alcy\.cc\/ys/);
   const darkCount=h.document.imageSources.length;h.window.innerWidth=800;h.listeners.get('resize')();assert.equal(h.document.imageSources.length,darkCount);
-  h.window.innerWidth=768;h.listeners.get('resize')();assert.match(h.document.ids.get('ap-bg-current-preview').children[0].src,/id\/1039\//);
-  h.document.documentElement.setAttribute('data-theme','light');h.observers[0].fn();assert.match(h.document.ids.get('ap-bg-current-preview').children[0].src,/id\/1018\//);
+  h.window.innerWidth=768;h.listeners.get('resize')();assert.match(h.document.ids.get('ap-bg-current-preview').children[0].src,/t\.alcy\.cc\/moe/);
+  h.document.documentElement.setAttribute('data-theme','light');h.observers[0].fn();assert.match(h.document.ids.get('ap-bg-current-preview').children[0].src,/t\.alcy\.cc\/mp/);
   await h.ctx.changeAppearanceBackground('#123456');const solidCount=h.document.imageSources.length;h.window.innerWidth=1024;h.listeners.get('resize')();assert.equal(h.document.imageSources.length,solidCount);assert.equal(h.storage.get('blogbg'),'#123456');
 });
 

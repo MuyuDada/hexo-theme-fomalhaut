@@ -1,0 +1,70 @@
+/*!
+ * tag-graph.css —— 「标签关系图」容器样式（站点独立样式，不改主题源码）
+ * ---------------------------------------------------------------------------
+ * 作用页：/tags/（文章统计页）里的 #tag-graph 区块。
+ * 只负责容器外观与标题说明；图本身由 echarts 画在 canvas 里，配色在 JS 里按主题色算。
+ * 配色全部由 --theme-color / --font-color / --card-bg 派生，深浅两模式自动适配。
+ *
+ * 卸载：删掉 _config.fomalhaut.yml inject.head 里的引入行即可。
+ * 仓库路径：source/css/tag-graph.css
+ */
+
+.tag-graph {
+  --tg-line: color-mix(in srgb, var(--font-color) 12%, transparent);
+  --tg-soft: color-mix(in srgb, var(--font-color) 5%, transparent);
+  --tg-dim: color-mix(in srgb, var(--font-color) 58%, transparent);
+  --tg-glass: color-mix(in srgb, var(--card-bg, #fff) 70%, transparent);
+
+  position: relative;
+  max-width: 1100px;
+  margin: 6px auto 0;
+  padding: 10px 14px 6px;
+  border: 1px solid var(--tg-line);
+  border-radius: 16px;
+  background: var(--tg-glass);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  overflow: hidden;
+}
+
+/* 说明行：标签数 / 连线数 / 共现阈值 / 操作提示 */
+.tag-graph .tag-graph-meta {
+  margin: 2px 0 6px;
+  padding: 0 2px;
+  color: var(--tg-dim);
+  font-size: 12px;
+  line-height: 1.7;
+  text-align: center;
+}
+
+/* 图表画布容器：高度由 pug 内联样式给（460px），这里只兜底 */
+.tag-graph #tag-graph-chart {
+  width: 100%;
+  min-height: 320px;
+}
+
+/* echarts 还没画出来时给一点占位感（画完后 canvas 会盖住，不用刻意移除） */
+.tag-graph #tag-graph-chart:empty::after {
+  content: '标签关系图加载中…';
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 320px;
+  color: var(--tg-dim);
+  font-size: 13px;
+}
+
+@media (max-width: 768px) {
+  .tag-graph {
+    padding: 8px 8px 4px;
+    border-radius: 12px;
+  }
+
+  .tag-graph #tag-graph-chart {
+    height: 380px !important;
+  }
+
+  .tag-graph .tag-graph-meta {
+    font-size: 11px;
+  }
+}

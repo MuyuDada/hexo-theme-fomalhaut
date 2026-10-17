@@ -77,3 +77,67 @@ trans($time = 0.28s)
       box-shadow: 0 4px 8px 0px rgba(0, 0, 0, 0.1), 0 2px 4px 0px rgba(0, 0, 0, 0.1), 0 4px 8px 0px rgba(0, 0, 0, 0.1), 0 8px 16px 0px rgba(0, 0, 0, 0.1)
     .info .title
       color: #ff5722
+// ---------------------------------------------------------------------------
+// 友人帐卡片增强（2026-10-19，对齐 Firefly-yuan 的 FriendCard）
+// 新增两样东西：右上角的「访问延时」徽章、卡片的悬停浮起。
+// 延时徽章由 source/js/friend-latency.js 探测后写入文案与状态类：
+//   .is-good（< 2000ms，绿） / .is-warn（≥ 2000ms，橙） / .is-bad（超时，红）
+// 没探测（JS 未加载 / 被禁用）时徽章不显示，不影响卡片本身。
+// ---------------------------------------------------------------------------
+.friend-card
+  position: relative
+  trans()
+  &:hover
+    transform: translateY(-4px)
+
+  // 预览图上的渐变遮罩，让右上角徽章在任何截图上都读得清
+  .img
+    position: relative
+    &::after
+      content: ''
+      position: absolute
+      inset: 0
+      pointer-events: none
+      background: linear-gradient(180deg, rgba(0, 0, 0, .35) 0%, rgba(0, 0, 0, 0) 42%)
+
+  .friend-latency
+    position: absolute
+    top: 22px
+    right: 14px
+    z-index: 2
+    padding: 2px 8px
+    border-radius: 999px
+    font-size: 11px
+    line-height: 1.6
+    font-weight: 600
+    letter-spacing: .3px
+    color: #fff
+    background: rgba(0, 0, 0, .45)
+    backdrop-filter: blur(4px)
+    -webkit-backdrop-filter: blur(4px)
+    pointer-events: none
+    opacity: 0
+    transform: translateY(-4px)
+    transition: opacity .3s ease, transform .3s ease
+    &.is-good, &.is-warn, &.is-bad
+      opacity: 1
+      transform: translateY(0)
+    &.is-good
+      background: rgba(34, 160, 90, .92)
+    &.is-warn
+      background: rgba(226, 142, 30, .92)
+    &.is-bad
+      background: rgba(214, 66, 66, .92)
+
+  // mini-link 分组不渲染预览图，徽章位置要往上挪
+  &.mini-link
+    .friend-latency
+      top: 8px
+
+@media screen and (max-width: 768px)
+  .friend-card
+    .friend-latency
+      font-size: 10px
+      padding: 1px 6px
+      top: 18px
+      right: 10px

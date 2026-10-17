@@ -341,6 +341,32 @@ comments: false
     .cf-meta-time { font-size: 11.5px; }
     .cf-badge { max-width: 100% !important; }
   }
+
+  /* 数据源未就绪时的说明块（脚本成功拉到 data.json 后会被移除） */
+  .cf-fallback {
+    margin: 22px 0 6px;
+    padding: 22px 24px;
+    border: 1px dashed color-mix(in srgb, var(--font-color) 22%, transparent);
+    border-radius: 14px;
+    background: color-mix(in srgb, var(--card-bg, #fff) 62%, transparent);
+    text-align: center;
+  }
+  .cf-fallback-icon { font-size: 30px; line-height: 1; margin-bottom: 10px; }
+  .cf-fallback-title { margin: 0 0 8px; font-size: 15px; font-weight: 600; color: var(--font-color); }
+  .cf-fallback-desc {
+    margin: 0 auto 6px;
+    max-width: 620px;
+    font-size: 13px;
+    line-height: 1.85;
+    color: color-mix(in srgb, var(--font-color) 66%, transparent);
+  }
+  .cf-fallback-desc code {
+    padding: 1px 5px;
+    border-radius: 4px;
+    background: color-mix(in srgb, var(--font-color) 8%, transparent);
+    font-size: 12px;
+  }
+  .cf-fallback-desc a { color: var(--theme-color, #39c5bb); }
 </style>
 
 <div class="cf-meta">
@@ -360,10 +386,25 @@ comments: false
 </div>
 
 <div id="hexo-circle-of-friends-root"></div>
+<!-- 数据源没配好时给个说明，别让页面看起来像坏了。脚本拉到数据会自动把它藏掉。 -->
+<div id="cf-fallback" class="cf-fallback">
+  <div class="cf-fallback-icon">🛰️</div>
+  <p class="cf-fallback-title">朋友圈数据还没接上</p>
+  <p class="cf-fallback-desc">
+    这里靠 <code>hexo-circle-of-friends</code> 的 GitHub Action 每 6 小时生成一份 <code>data.json</code>，
+    页面再从 CDN 读它。现在数据源还没准备好，所以下面暂时是空的。
+  </p>
+  <p class="cf-fallback-desc">
+    想先逛逛的话：<a href="/social/link/">友人帐</a> 里有全部友链，
+    <a href="/comments/">留言板</a> 也能找到我。
+  </p>
+</div>
 <script>
     let UserConfig = {
         // 数据源：仓库里的静态 data.json（由 GitHub Action 每 6 小时生成，经 jsDelivr 国内 CDN 分发）
-        private_api_url: 'https://cdn.jsdmirror.com/gh/yourname/hexo-circle-of-friends@main/data.json?',
+        // 换成自己的仓库：fork hexo-circle-of-friends → 配好 friend.json 与 Action → 把下面的
+        // 「用户名/仓库名」改成你的。没配之前页面会显示上面那段说明，不会白屏。
+        private_api_url: 'https://cdn.jsdmirror.com/gh/MuyuDada/hexo-circle-of-friends@main/data.json?',
         // 点击加载更多时，一次最多加载几篇文章，默认10
         page_turning_number: 12,
         // 头像加载失败时，默认头像地址
@@ -385,7 +426,7 @@ comments: false
    不接管、不重排引擎的卡片结构，纯附加；任何一步失败都静默跳过，不影响页面本身。
    ========================================================== */
 window.__cfDash = function () {
-  var URLS = "https://cdn.jsdmirror.com/gh/yourname/hexo-circle-of-friends@main/data.json?";
+  var URLS = "https://cdn.jsdmirror.com/gh/MuyuDada/hexo-circle-of-friends@main/data.json?";
   var CF = { keys: {}, keysByFloor: {}, textByFloor: {} };
 
   function hostname(u) {
@@ -524,6 +565,9 @@ window.__cfDash = function () {
       build();
       tidyFooter();
       fillDash(j.statistical_data);
+      // 数据拿到了，把「数据还没接上」的说明块收掉
+      var fb = document.getElementById("cf-fallback");
+      if (fb && j && (j.article_data || []).length) fb.parentNode.removeChild(fb);
     })
     .catch(function () { /* 拿不到数据时角标只是不出现，页面照常 */ });
 };

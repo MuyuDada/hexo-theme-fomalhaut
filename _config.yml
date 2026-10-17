@@ -3,13 +3,13 @@
 ## Source: https://github.com/hexojs/hexo/
 
 # Site
-title: Demo
-subtitle:
-description: "一个基于 Hexo + Fomalhaut 主题的演示站点"
-keywords: "Hexo,Butterfly,Fomalhaut,博客,主题,卡片式UI"
-author: Demo
+title: Muyuの小窝
+subtitle: 永远相信美好的事情即将发生
+description: "永远相信美好的事情即将发生"
+keywords: "Hexo,Butterfly,Fomalhaut,博客,Muyu,小窝"
+author: MuyuDada
 language: zh-CN
-timezone: ""
+timezone: "Asia/Shanghai"
 
 # abbrlink config
 abbrlink:
@@ -149,6 +149,8 @@ deploy:
 #   indexName: your_index_name
 
 # hexo-algoliasearch(可以匹配内容)
+# 注：本站搜索走 hexo-generator-search 的本地索引（见 _config.fomalhaut.yml 的 local_search），
+#     这段 Algolia 配置只是保留给「想改用 Algolia 云端索引」的人，不填也能正常构建。
 algolia:
   appId: "YOUR_ALGOLIA_APP_ID"
   apiKey: "YOUR_ALGOLIA_SEARCH_KEY"
@@ -169,7 +171,7 @@ algolia:
 # hexo-butterfly-swiper
 # see https://akilar.top/posts/8e1264d1/
 swiper:
-  enable: false # 开关（需要自建 gitcalendar 数据仓库，见 README「GitHub 贡献日历」）
+  enable: false # 开关（首页轮播图；本站用卡片列表，不开）
   priority: 1 #过滤器优先权
   enable_page: / # 应用页面
   timemode: date #date/updated
@@ -209,7 +211,7 @@ baidusitemap:
 # 主动推送百度，被百度收录
 baidu_url_submit:
   count: 10 # 提交最新的10个链接
-  host: https://example.com # 百度站长平台中注册的域名
+  host: https://muyudada.dpdns.org # 百度站长平台中注册的域名
   token: YOUR_BAIDU_TOKEN # 秘钥，百度站长平台 > 推送接口 > 接口调用地址中token字段
   path: baidu_urls.txt # 文本文档的地址， 新链接会保存在此文本文档里，不用改
 
@@ -246,9 +248,12 @@ gitcalendar:
   #   name: content
   #   index: 0
   # simplemode: true
-  user: yourname # git用户名
-  apiurl: "https://gitcalendar.example.com" # 你的 gitcalendar 服务地址
-  jsonurl: "https://cdn.jsdelivr.net/gh/yourname/gitcalendar-data@main/data.json" # 方案B：GitHub Action 定时更新的数据
+  user: MuyuDada # git用户名
+  # apiurl 是旧方案（自建 akilar gitcalendar 服务），本站不用；留着只为兼容插件读取
+  apiurl: "https://github-contributions-api.jogruber.de/v4/MuyuDada?y=last"
+  # 实际请求的是 jsonurl：一个返回 {contributions:[{date,count}], total:{lastYear}} 的公开接口
+  # 数据形状由 source/js/gitcalendar.js 里的 git_normalize() 转成日历需要的「53 周 × 7 天」
+  jsonurl: "https://github-contributions-api.jogruber.de/v4/MuyuDada?y=last"
   minheight:
     pc: 320px #桌面端最小高度
     mibile: 0px #移动端最小高度

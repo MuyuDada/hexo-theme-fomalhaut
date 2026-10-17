@@ -1,14 +1,14 @@
-# hexo-theme-fomalhaut · v1.0.4
+# hexo-theme-fomalhaut · v1.0.5
 
 > 一套「克隆即用」的 Hexo 卡片式博客源码。主题基于 [Butterfly 4.3.1](https://butterfly.js.org/) 深度二次开发，
 > 并把**站点配置**与**主题代码**彻底分开：改配置就能搭起自己的站，升级主题不会冲掉你自己的改动。
 
 ![hexo](https://img.shields.io/badge/Hexo-6.3.0-0e83c?style=flat-square&logo=hexo)
 ![node](https://img.shields.io/badge/Node.js-18%20%7C%2020%20%7C%2022-339933?style=flat-square&logo=nodedotjs)
-![theme](https://img.shields.io/badge/Theme-Fomalhaut%20v1.0.4-6513df?style=flat-square)
+![theme](https://img.shields.io/badge/Theme-Fomalhaut%20v1.0.5-6513df?style=flat-square)
 ![license](https://img.shields.io/badge/License-Apache--2.0-blue?style=flat-square)
-![stars](https://img.shields.io/github/stars/fomalhaut1998/hexo-theme-fomalhaut?style=flat-square&logo=github&label=Stars)
-![forks](https://img.shields.io/github/forks/fomalhaut1998/hexo-theme-fomalhaut?style=flat-square&logo=github&label=Forks)
+![stars](https://img.shields.io/github/stars/MuyuDada/hexo-theme-fomalhaut?style=flat-square&logo=github&label=Stars)
+![forks](https://img.shields.io/github/forks/MuyuDada/hexo-theme-fomalhaut?style=flat-square&logo=github&label=Forks)
 
 [界面预览](#六界面预览) · [快速开始](#五快速开始约-10-分钟) · [功能配置](#八主要功能怎么配) · [写文章](#九怎么开始写文章) · [文件地图](#七目录结构与文件地图) · [常见改动](#十最常改的地方速查)
 
@@ -35,6 +35,68 @@
 ---
 
 ## 更新日志
+
+### v1.0.5 — 站点身份落定与三处补齐（2026-10-19）
+
+这一版把「示例站」变成「真实在跑的站」，并对照 [Firefly-yuan](https://github.com/MuyuDada/Firefly-yuan) 补了三块此前缺的能力：分类快捷导航条、标签关系图、友人帐增强。同时把全站 200 多处 `Demo` / `yourname` / `example.com` / `picsum` 占位换成真实值或本地资源。
+
+**站点身份**（`_config.yml`、`_config.fomalhaut.yml`）
+
+- 标题改「Muyuの小窝」、作者 MuyuDada、时区 `Asia/Shanghai`、关键词与描述换成真实文案；
+- 头像换成真实 GIF（`source/assets/avatar.gif`），社交改为 GitHub / B站 / 邮箱 / RSS 四项，侧栏作者卡按钮指向真实仓库，公告卡文案与入口全部重写；
+- 关于页整页重写为六节：关于我、我做的小东西、本站跑在哪、技术栈&框架、关于本站、找到我；线路卡的实时延迟徽标由 `source/js/inject/about-route-probe.js` 运行时探测，**不写死任何 ping / TTFB 数值**（本机到各线路的握手耗时波动极大，写死会立刻过期）。
+
+**搜索与评论**（`_config.fomalhaut.yml`、`themes/fomalhaut/source/js/search/`）
+
+- Algolia 一直没建索引（`algolia_search.enable` 开着但点搜索框没结果），改走 `hexo-generator-search` 生成的 `/search.xml`：`algolia_search.enable: false` / `local_search.enable: true`；
+- 补上主题里缺失的前端 `themes/fomalhaut/source/js/search/local-search.js`（此前该目录只有 `algolia.js`，这也是本地搜索一直没启用的原因之一）；
+- 评论从 Twikoo 切到 Waline，指向自建 `https://comment.muyudada.dpdns.org/`，开了登录、昵称邮箱必填、微博 / B站 / Bmoji 三套表情。
+
+**三个补齐的页面**
+
+- `/comments/` 留言板：页头光晕 + 三张提示卡（文章留言 / 友链 / 私信），评论区由主题自动渲染；
+- `/sponsor/` 打赏：支付宝、微信、爱发电三张卡 + 打赏名单 + 空态，二维码在 `source/assets/sponsor/`；
+- `/llms.txt`：`scripts/llms-txt.js` 生成，站点简介 + 11 个关键页面 + 最近 20 篇文章；**响应带 UTF-8 BOM**，因为静态托管或 Windows 编辑器对无 BOM 的 `.txt` 会按 ANSI/GBK 解码，中文直接乱码。
+
+**分类快捷导航条**（新增 `scripts/category-bar.js`、`source/js/inject/category-bar.js`、`source/css/category-bar.css`）
+
+- 构建期在首页 / 归档 / 分类 / 标签 / 统计页的 `#content-inner` **开标签之前**插入 `#category-bar`：首页图标胶囊 + 归档胶囊（带总篇数）+ 分类胶囊 + 「更多」；
+- 插在 `main` 之前而不是里面：`main.layout` 是 flex **行**容器，塞进去会变成第三个 flex item，被压成内容宽度还会吃到 `.layout > div:first-child` 的卡片内边距；`#body-wrap` 是 flex column，放在 `main` 前面才能自然占满一行。另外 `#body-wrap` 是 pjax 的替换单元，放外面也不会残留高亮；
+- `.category-bar` 必须显式写 `width: 100%`：flex column 里**左右 `margin: auto` 会让 flex item 变成 shrink-to-fit**，只写 `max-width` 的话导航条只有内容那么宽；
+- 行为层按路径点亮当前项、滚轮映射为横向滚动（到头放行页面滚动）、两侧渐隐提示、当前项居中；幂等标记 `data-cb-ready`，同时监听 `DOMContentLoaded` 与 `pjax:complete`；
+- 分类链接用 `cat.path` 时踩过坑：hexo 给的是不带前导斜杠的 `categories/开始使用/`，直接用会变成相对当前页的链接，现逐段 `encodeURIComponent` 并补前导 `/`。
+
+**标签关系图**（新增 `scripts/tag-graph.js`、`source/js/tag-graph.js`、`source/css/tag-graph.css`）
+
+- 构建期助手 `tag_graph_data` 从文章标签两两共现建图，**阈值自适应**：先数 ≥2 次的边，不足 8 条就降到 1（小站否则整张图没有一条边）；
+- 前端读 `#tag-graph-data` 的 JSON 渲染，节点大小按 `sqrt(文章数/最大值)` 缩放、按文章数分「高频 / 常用 / 低频」三档配色（从 `--theme-color` 派生色相偏移），换主题色自动重绘；
+- 脚本**没有写在 pug 里**：主题 pjax 只替换 `#body-wrap` 内 DOM，页面内 `<script>` 不会重新执行，「首页 pjax 点进 /tags/」时画不出来。
+
+**友人帐增强**（`themes/fomalhaut/layout/includes/page/flink_style/volantis.pug`、`source/js/friend-latency.js`、`source/_data/link.yml`）
+
+- 原来只有 `class_name` 命中三个写死字符串才渲染带截图的大卡，其余全走 `mini-link`；现改为按分组字段 `i.mini` 分流，大卡加 `data-friend-link` 与延迟徽标占位；
+- 延迟探测：`fetch(mode:'no-cors')` + 5 秒 `AbortController` 超时，≤2000ms 绿 / 更慢橙 / 超时红；并发上限 4、每 120ms 放行一个、优先 `requestIdleCallback`；已探测的卡打 `data-latency-done`，pjax 回来不重复打请求；
+- 友链数据换成 11 位真实朋友 + 技术站 + 工具站三组（工具站用 `mini: true`），友人帐正文补「本站信息」与「加入本站友链」互换原则、提交模板、截图接口说明。
+
+**贡献日历接真实数据**（`_config.yml`、`source/js/gitcalendar.js`）
+
+- 从占位的自建数据仓库换成 `https://github-contributions-api.jogruber.de/v4/MuyuDada?y=last`；
+- `gitcalendar.js` 新增 `git_normalize()`：把该 API 的扁平 `{contributions:[{date,count,level}]}` 转成脚本原本需要的「53 周 × 7 天」二维数组（回溯到 53 周前、逐日查表、缺失填 0），已是二维数组则原样返回。
+
+**全站去占位**
+
+- 外观面板的 32 张 picsum 占位壁纸换成 12 张本地 AVIF（`source/assets/wallpaper/`，6 横 6 竖），分类从「二次元 / 风景 / 萌宠 / 手机」改为「桌面壁纸 / 手机壁纸」，渐变与纯色保留；
+- 默认封面（原来 256 行 picsum）换成 12 条本地壁纸；`custom.css` 的侧栏卡背景、`lantern.css` 的灯笼背景、画廊页 54 张图、两篇文章封面全部换成本地资源；
+- **默认背景改成随机图 API**：`--default-bg` = `https://t.alcy.cc/pc`（横屏）、`--darkmode-bg` = `/ys`（二次元）、`--mobileday-bg` = `/mp`（竖屏）、`--mobilenight-bg` = `/moe`（萌图），每次加载换一张；本地 12 张壁纸仍留在 `source/assets/wallpaper/` 当固定选项；
+- `README.md`、`themes/fomalhaut/package.json`、`themes/fomalhaut/README.md` 里的 `fomalhaut1998` 与 `yourname` 清干净；`api/` 与 `functions/` 两个 AI 代理的 CORS 白名单改成 `muyudada.dpdns.org`；
+- **`_config.yml` 的 `url` 与 `deploy.repository` 仍是占位**（按需求保留），所以 `sitemap.xml` / `atom.xml` / `llms.txt` 里的绝对链接仍是 `https://example.com/...`。
+
+**顺手修掉的坑**
+
+- 页脚 `.ft-img-group` 原来 8 个硬编码占位（example.com + picsum 头像 + 4 个「广告位招租」），改成读 `_data/link.yml` 第一组前 8 位；
+- 页脚链接补 `/sponsor/` 与 `/llms.txt`，导航「网站」分组新增「打赏」；
+- 朋友圈页在数据源 404 时补了一个说明块（`#cf-fallback`），拿到数据就自动移除，不再是一片空白；
+- **改 `.styl` 后必须 `npx hexo clean` 再 `generate`**：增量构建不会重编 stylus，只改 styl 会看到旧样式（这次踩过一次）。
 
 ### v1.0.4 — 美化面板预览化与导航改版（2026-10-11）
 
@@ -215,8 +277,8 @@
 
 **来源背景**：作者从 2022 年起用 Butterfly 4.3.1 搭建个人博客，三年间持续魔改，把散落在配置与主题里的大量改动逐步抽成独立文件；2026-10 做了一次完整的重构（内部代号「屎山重构」），把 2973 行的单文件 `fomal.js` 拆成模块、把配置里的 26 段内联样式与脚本抽成独立文件，最终整理为 **v1.0.0** 开源。
 
-> ⚠️ **示例数据说明**：仓库里的站点名（Demo）、域名（example.com）、头像、友链、文章、统计 ID 全部是占位示例；
-> 图片与字体走公共 CDN（jsDelivr / picsum.photos），不依赖任何私人服务，克隆后开箱即可运行。
+> 📌 **站点现状**：本仓库同时是「Muyuの小窝」（https://muyudada.dpdns.org/）的运行源码，`_config.yml` 与 `_config.fomalhaut.yml` 里填的是真实站点信息（标题、作者、头像、社交、评论、打赏、友链）。
+> 想拿它搭自己的站，按[第五章](#五快速开始约-10-分钟)把这几处换成你自己的即可；图片资源（头像、壁纸、打赏码）都在 `source/assets/` 本地，不依赖任何私人图床。
 
 ---
 
@@ -323,7 +385,7 @@ v1.0.0 是一次结构性重写，主要变化：
 ### 1. 克隆并安装依赖
 
 ```bash
-git clone https://github.com/fomalhaut1998/hexo-theme-fomalhaut.git my-blog
+git clone https://github.com/MuyuDada/hexo-theme-fomalhaut.git my-blog
 cd my-blog
 npm install          # 或 npm ci（有 package-lock.json，更快更稳）
 ```
@@ -475,6 +537,7 @@ npx hexo clean && npx hexo generate && npx gulp
 | `aside-calendar.css` | 侧栏「日历卡 + 倒计时卡」外观 | 只作用 `#aside-calendar` / `#aside-countdown`，配 `js/aside-calendar.js` |
 | `archive-page.css` | 归档页卡片改版外观（年度分布柱、年份胶囊、年份章节、卡片栅格） | 选择器全部以 `.ar-ready` 开头，只影响 `/archives/`、`/categories/*`、`/tags/*` |
 | `avatar-glow.css` | 侧栏头像呼吸灯（颜色跟随主题色） | 全站侧栏生效 |
+| `category-bar.css` | 分类快捷导航条外观（胶囊、横向滚动、两侧渐隐、「更多」分隔） | 选择器全部以 `.category-bar` / `.cb-` 开头，由 `inject.head` 引入，配 `scripts/category-bar.js` + `js/inject/category-bar.js` |
 | `census.css` | 网站统计页看板排版 | 只由 `/site/census/` 页面 `<link>` 引入 |
 | `coin.css` | 投币按钮样式 | 文章底部「投喂」区 |
 | `gitcalendar.css` | GitHub 贡献日历底色与格子 | `#git_container`，配 `js/gitcalendar.js` |
@@ -484,8 +547,9 @@ npx hexo clean && npx hexo generate && npx gulp
 | `navigation.css` | 顶栏导航改版（44×44px 触控区、磨砂按能力降级、站名光晕不裁切、按钮 hover 对齐） | 由 `_config.fomalhaut.yml` 的 `inject.head` 引入，配 `?v=` 缓存戳 |
 | `site-inject.css` | 站点注入样式合集（横幅公告、PC 浅色主题、侧栏加宽、列表分页、面包屑、小站资讯卡、aplayer 音量条、页脚隐藏本站项等） | 由 `_config.fomalhaut.yml` 的 `inject.head` 以 `<link>` 引入 |
 | `stats.css` | 文章统计页图表排版 | 只由 `/tags/` 页生效 |
+| `tag-graph.css` | 标签关系图卡片外观（玻璃卡、说明行、加载占位） | 只作用 `#tag-graph`，配 `js/tag-graph.js` + `scripts/tag-graph.js` |
 | `timeline-archive.css` | 「旧时光」页时间轴外观 | `/site/time/` |
-| `twikoo.css` | Twikoo 评论区美化（表单/列表/按钮统一到主题色） | 全站评论，配 `comments.use: Twikoo` |
+| `twikoo.css` | Twikoo 评论区美化（表单/列表/按钮统一到主题色） | 全站引入；**本站评论已切到 Waline**（`comments.use: Waline`），这份样式只在改回 Twikoo 时生效 |
 | `typewriter.css` | 首页副标题打字机观感 | 配 `js/inject/typewriter.js` |
 
 ### 7.3 `source/js/` —— 站点级脚本，各管什么
@@ -503,7 +567,7 @@ npx hexo clean && npx hexo generate && npx gulp
 | `modules/fireflies.js` | 萤火虫微光：纯 CSS 呼吸与慢漂，不需要 canvas / rAF / 轮询，桌面 14 只 / ≤600px 8 只，默认关闭、与雪花互斥 |
 | `modules/ripple.js` | 点击涟漪：按下位置 1 个爆发节点 + 两圈同心水纹，700ms 后回收、同时最多 6 枚，默认关闭 |
 | `modules/appearance-fonts.js` | 字体预览面板（阅读 5 / 个性 3 / 代码 4）：`document.fonts.load` + 12 秒超时 + 最新请求胜，失败不写偏好 |
-| `modules/appearance-backgrounds.js` | 背景预览面板（32 壁纸 + 8 渐变 + 7 纯色 + 8 在线接口）：打开分类才赋 `src`，切换走 `Image` 预加载 + token 取消 |
+| `modules/appearance-backgrounds.js` | 背景预览面板（12 壁纸 + 1 随机横屏 + 1 随机竖屏 + 8 渐变 + 7 纯色 + 8 在线接口）：打开分类才赋 `src`，切换走 `Image` 预加载 + token 取消 |
 | `modules/cursor.js` | 鼠标相关：右键菜单、小猫咪、听话鼠标 |
 | `modules/shell.js` | 站点「外壳」行为：快捷键、夜间动画、标题恶搞、搜索框、手机滚动条 |
 | `modules/settings.js` | **美化设置面板**（Winbox）：卡片不透明度 / 背景滤镜 / 氛围特效 / 互动挂件 / 布局与部件 / 主题色 / 字体 / 背景（字体与背景两节的面板由 `modules/appearance-*.js` 生成） |
@@ -529,6 +593,8 @@ npx hexo clean && npx hexo generate && npx gulp
 | `pjax-guard.js` | 修 pjax 选择器不匹配导致的「换页退回整页刷新」与「加载遮罩一直转圈」 |
 | `wechat-qr.js` | 社交二维码点击 → 同页灯箱展示（不跳转不下载） |
 | `kslink.js` | 友人帐「快速申请」表单填充 |
+| `friend-latency.js` | 友人帐每张卡的访问延迟徽标：`fetch(mode:'no-cors')` 探测 + 5 秒 `AbortController` 超时，≤2000ms 绿 / 更慢橙 / 超时红；并发上限 4、每 120ms 放行一个，pjax 换页自动重跑 |
+| `tag-graph.js` | 标签关系图渲染：读 `#tag-graph-data` 的 JSON、按主题色派生三档配色、按文章数缩放节点，换主题色自动重绘 |
 | `coin.js` | 投币音效与动画 |
 | `footer-music.js` | 页脚「猜你想看」补一条「听点音乐」→ `/life/music/` |
 | `51la.js` | 51LA 统计与灵雀监控初始化 |
@@ -546,6 +612,7 @@ npx hexo clean && npx hexo generate && npx gulp
 | `ping-route.js` + `ping-route-boot.js` | 公告栏里每条部署线路的实时延迟徽标（boot 文件放可调参数 initialDelay / stagger） |
 | `about-route-probe.js` | 关于页线路卡右下角的「实时延迟」徽标 |
 | `archive-page.js` | 归档页卡片改版行为层：只读 `.article-sort` 重排成统计条 + 年份跳转 + 可折叠年份章节 + 卡片栅格（三层守卫 + 幂等，降级不改排版） |
+| `category-bar.js` | 分类快捷导航条行为层：按路径点亮当前项、横向滚轮映射、两侧渐隐提示、当前项居中；pjax 换页自动重跑 |
 | `pc-local-link.js` | 版权卡「文章链接」显示当前访问域名（而不是写死主域名） |
 | `right-menu-state-boot.js` | 侧栏「右键模式」按钮的状态同步 |
 | `ft-ad-extra.js` | 页脚友链补一个「广告位招租」（靠 `a[title="广告位招租"]` 存在才生效） |
@@ -555,7 +622,10 @@ npx hexo clean && npx hexo generate && npx gulp
 | 文件 | 负责的功能 |
 | --- | --- |
 | `ai-chat-inject.js` | 往每个页面 `</body>` 前注入 `window.AI_CHAT_CONFIG` 与 `/js/ai-chat.js` |
-| `archive-index.js` | 给归档页 `</head>` 前插一段 `ar-index` JSON（全站每篇的标题/路径/日期/分类/字数/阅读分钟），供归档页卡片显示分类与阅读时长 |
+| `archive-index.js` | 给归档页 `#archive` 内插一段 `ar-index` JSON（全站每篇的标题/路径/日期/分类/字数/阅读分钟），供归档页卡片显示分类与阅读时长 |
+| `category-bar.js` | 给首页/归档/分类/标签/统计页的 `#content-inner` 开标签**之前**插入分类快捷导航条（`#category-bar`），分类名按长度排序并做 URL 编码 |
+| `llms-txt.js` | 生成 `/llms.txt`（带 UTF-8 BOM）：站点简介 + 11 个关键页面 + 最近 20 篇文章，给 LLM 爬虫看的纯文本索引 |
+| `tag-graph.js` | 注册 `tag_graph_data` 模板助手：从文章标签两两共现建图（阈值自适应，边少于 8 条就降到 1），输出节点 + 连线 JSON |
 | `gallery-pager.js` | 相册自动分页（生成 `/box/gallery/wallpaper/p2.html` 这类分页） |
 | `magnet-local-links.js` | 修 `hexo-magnet-fomal` 首页小冰磁贴跳到外站的问题 |
 | `post-copyright-local-link.js` | 修文章版权卡「文章链接」写死主域名的问题 |
@@ -578,13 +648,13 @@ npx hexo clean && npx hexo generate && npx gulp
 | `beauty-switches.test.cjs` | 美化开关（猫咪 / 听话鼠标 / 涟漪 / 萤火虫 / 雪花）关掉后是否真的停下 |
 | `theme-color.test.cjs` | 主题色预设、自定义 HEX 校验、旧键迁移与 `--on-theme` 前景色计算 |
 | `appearance-fonts.test.cjs` | 字体面板：分组、12 秒超时与「最新请求胜」、失败不写偏好 |
-| `appearance-backgrounds.test.cjs` | 背景面板：分类懒赋 `src`、预加载 token 取消、默认背景口径 |
+| `appearance-backgrounds.test.cjs` | 背景面板：分类懒赋 `src`、预加载 token 取消、默认背景口径（四个模式各指向一个随机图 API）、站内相对路径 `/assets/wallpaper/*.avif` 不被 URL 校验误杀 |
 | `fireflies.test.cjs` | 萤火虫数量分档、负层级与暂停开关 |
 | `snow.test.cjs` | 雪花分层下落、dt 上限、厚度上限与暂停条件 |
 | `ripple.test.cjs` | 涟漪同时存在上限、节点回收与非主键忽略 |
 | `navigation.test.cjs` | 导航触控区尺寸、磨砂降级条件与站名溢出规则 |
 
-跑法：`node --test "tools/tests/*.test.cjs"`（13 个脚本；部分脚本支持用环境变量指向 `bak/` 里的基线做前后对比）。
+跑法：`node --test "tools/tests/*.test.cjs"`（13 个脚本；部分脚本支持用环境变量指向 `bak/` 里的基线做前后对比）。v1.0.5 起 13 个脚本全部为 0 失败（441 个断言）。
 
 ### 7.6 `themes/fomalhaut/` —— 主题本体
 
@@ -639,12 +709,13 @@ cover:
   aside_enable: true    # 侧栏文章卡片显示封面
   archives_enable: true # 归档页显示封面
   default_cover:        # 文章没写 cover 时从这里随机取一张
-    - https://picsum.photos/id/1015/1200/675
-    - https://picsum.photos/id/1018/1200/675
+    - /assets/wallpaper/desktop-1.avif
+    - /assets/wallpaper/desktop-2.avif
+    - /assets/wallpaper/mobile-1.avif
 ```
 
 - 单篇文章想指定封面：在文章 Front-matter 写 `cover: 图片链接`。
-- `cover.default_cover` 现在填的是**固定的 picsum 图片 ID**（不是随机 seed），所以每次刷新不会变图、也不会出现奇怪内容。换成你自己的图床地址即可。
+- `cover.default_cover` 现在填的是**站点自带的 12 张壁纸**（`source/assets/wallpaper/`，6 张横屏 + 6 张竖屏，AVIF 格式），不依赖任何外部图床。换成你自己的图片即可。
 
 ### 8.3 主题色与暗色模式
 
@@ -715,14 +786,34 @@ aside:
 ```yaml
 comments:
   use:
-    - Twikoo               # ★ 在这里切换用哪个
+    - Waline               # ★ 在这里切换用哪个（本站当前用 Waline）
   text: true               # 显示「评论」二字
   lazyload: true           # 滚动到评论区才加载（开了之后评论数会失效）
   count: false             # 文章顶部显示评论数
   card_post_count: false   # 首页卡片显示评论数
 ```
 
-#### Twikoo 完整配置（推荐，无需后端服务器）
+#### Waline 配置（本站当前用法）
+
+```yaml
+waline:
+  serverURL: https://comment.muyudada.dpdns.org/   # ← 就这一处必填，指向你自己的 Waline 服务端
+  bg:                                              # 评论区背景，留空走主题卡片
+  pageview: false                                  # 浏览量统计（需要服务端支持）
+  option:
+    lang: zh-CN
+    login: enable                                  # 允许第三方登录
+    requiredMeta: [nick, mail]                     # 昵称与邮箱必填
+    emoji:                                         # 三套表情（走 unpkg）
+      - https://unpkg.com/@waline/emojis@1.2.0/weibo
+      - https://unpkg.com/@waline/emojis@1.2.0/bilibili
+      - https://unpkg.com/@waline/emojis@1.2.0/bmoji
+```
+
+Waline 服务端自己部署（Vercel / Docker / 自建服务器都行，见 <https://waline.js.org/>），拿到地址填进 `serverURL` 即可。
+`option` 会原样透传给 `Waline.init()`，官方文档里的参数都能写。
+
+#### Twikoo 配置（不想自己部署服务端可以选它）
 
 1. **部署 Twikoo 服务端**（三选一）：
    - **Vercel 一键部署**（最省事）：打开 <https://twikoo.js.org/quick-start.html> → 点「Vercel 部署」→ 登录 Vercel → 一路 Next → 部署完把首页那张图里的地址复制下来；
@@ -738,21 +829,20 @@ twikoo:
   option:                                # 透传给 Twikoo 初始化，如 lang、path
 ```
 
-3. **打开评论区**：把上面的 `comments.use` 设成 `Twikoo`。
+3. **打开评论区**：把上面的 `comments.use` 改回 `Twikoo`。
 4. **（可选）美化**：仓库已带 `source/css/twikoo.css`，由 `_config.fomalhaut.yml` 的 `inject.head` 引入，把表单/列表/按钮统一到主题色。不需要就在 `inject.head` 里删掉那一行。
 5. **（可选）首页显示最新评论**：把 `aside.card_newest_comment.enable` 设为 `true`。
 
-> 其他评论系统的参数（`waline` / `valine` / `giscus` …）在同一个配置文件的 `comments` 段下方，键名与官方文档一致，照填即可。
+> 其他评论系统的参数（`valine` / `giscus` …）在同一个配置文件的 `comments` 段下方，键名与官方文档一致，照填即可。
 
 ### 8.6 搜索
 
 ```yaml
-local_search:            # 方案 A：本地搜索，零后端、零 Key
+local_search:            # 方案 A：本地搜索，零后端、零 Key（本站当前用法）
   enable: true
-  preload: false
+  preload: true
   top_n_per_article: 1
   unescape: false
-  trigger: auto          # auto = 点开搜索才拉取（更快）；manual = 手动
 
 algolia_search:          # 方案 B：Algolia 云搜索（内容多时更快、支持全文高亮）
   enable: false
@@ -760,7 +850,10 @@ algolia_search:          # 方案 B：Algolia 云搜索（内容多时更快、�
     per_page: 10
 ```
 
-用 Algolia 还要在根 `_config.yml` 补上应用信息（否则构建时报错）：
+本地搜索靠 `hexo-generator-search`（已在 `package.json` 里）生成 `/search.xml`，前端脚本是 `themes/fomalhaut/source/js/search/local-search.js`。
+两个开关都关掉时，顶栏不会出现搜索按钮。
+
+用 Algolia 还要在根 `_config.yml` 补上应用信息：
 
 ```yaml
 algolia:
@@ -777,6 +870,7 @@ algolia:
 ```
 
 改完执行 `npx hexo algolia` 推送索引，再 `npx hexo generate`。仓库里 `source/js/inject/search-lazy.js` 会让 Algolia 的资源延后到点开搜索才加载。
+**注意**：不推索引也能正常构建（`hexo-algoliasearch` 只在 `hexo algolia` 命令里读这些键），但搜索会没有结果 —— 本站之前就是踩了这个坑，所以切到了本地搜索。
 
 ### 8.7 网站统计
 
@@ -825,16 +919,20 @@ var site_id = 'YOUR_BAIDU_SITE_ID'              // 站点 ID
 
 #### ⑤ GitHub 贡献日历
 
-根 `_config.yml` 里的 `gitcalendar` 段（**默认已关闭**，因为它需要你自己搭数据源）：
+根 `_config.yml` 里的 `gitcalendar` 段（本站已接上公开数据源，无需自建服务）：
 
 ```yaml
 gitcalendar:
-  enable: true                       # 想用就改成 true
+  enable: true
   enable_page: /site/census/
-  user: yourname                     # GitHub 用户名
-  apiurl: "https://gitcalendar.example.com"   # 自建的 gitcalendar 服务
-  jsonurl: "https://cdn.jsdelivr.net/gh/yourname/gitcalendar-data@main/data.json" # 或 GitHub Action 定时产出的 JSON
+  user: MuyuDada                     # GitHub 用户名
+  apiurl: "https://gitcalendar.example.com"   # 旧方案（自建 akilar 服务），插件只读不用，留着兼容
+  jsonurl: "https://github-contributions-api.jogruber.de/v4/MuyuDada?y=last"  # 实际请求的数据源
 ```
+
+- `jsonurl` 指向的 [github-contributions-api](https://github-contributions-api.jogruber.de/) 返回扁平的 `{ contributions: [{date,count,level}], total }`；
+  `source/js/gitcalendar.js` 里的 `git_normalize()` 会把它转成插件要的「53 周 × 7 天」二维数组，所以两种数据格式都能用。
+- 换成你自己的用户名，只要把 `user` 和 `jsonurl` 里的 `MuyuDada` 一起替换即可。
 
 ### 8.8 美化设置面板（每一项都干什么）
 
@@ -863,7 +961,7 @@ gitcalendar:
 | **五、字体设置** | 阅读字体 5 款 | 霞鹜文楷Screen（默认）/ 霞鹜文楷 / 霞鹜新晰黑 / 思源宋体 / 系统默认，正文区实时预览 |
 | | 个性装饰 3 款 | 筑紫A丸 / 汉仪唐美人 / 甜甜圈海报，默认收在折叠块里 |
 | | 代码字体 4 款 | Monaco（默认）/ Consolas / Maple Mono / Hack，代码区实时预览 |
-| **六、背景设置** | 壁纸 | 8 张二次元 + 8 张风景 · 山野 + 8 张风景 · 水与森林 + 8 张适配手机（走 picsum 公共 CDN），打开分类才加载缩略图 |
+| **六、背景设置** | 壁纸 | 顶部两张是**随机图 API**（横屏 / 竖屏），下面 6 张桌面 + 6 张手机壁纸（`source/assets/wallpaper/`，AVIF，全部本地），打开分类才加载缩略图 |
 | | 色彩 | 8 个渐变色 + 7 个纯色，另有自定义纯色取色器 |
 | | 自定义 | 粘贴 HTTPS 图片链接；先预览探针再应用，失败保留旧图 |
 | | 动态壁纸 API | 收在「高级」折叠块里：每次刷新可能返回不同图片的在线接口 |
@@ -931,12 +1029,12 @@ ai_chat:
 3. 请求打到 `api/chat/completions.js`（Vercel）或 `functions/api/chat/completions.js`（Cloudflare Pages），由它在服务端读环境变量再去请求服务商。
 
 代理函数自带：每 IP 限流、`max_tokens` 上限（`MAX_TOKENS_CAP = 8192`）、CORS 白名单。
-白名单默认放行 `example.com`，改法：
+白名单默认放行 `muyudada.dpdns.org` 及其全部子域，换域名时的改法：
 
 ```bash
 # 方式一：直接改两个常量（api/chat/completions.js 与 functions/api/chat/completions.js 都要改）
-const DEFAULT_ORIGINS = 'https://example.com,https://www.example.com'
-const DEFAULT_SUFFIXES = 'example.com'
+const DEFAULT_ORIGINS = 'https://muyudada.dpdns.org,https://www.muyudada.dpdns.org'
+const DEFAULT_SUFFIXES = 'muyudada.dpdns.org'
 
 # 方式二：不改代码，用环境变量覆盖
 AI_PROXY_ORIGINS=https://your-domain.com
@@ -968,15 +1066,19 @@ AI_PROXY_ALLOW_SUFFIXES=your-domain.com
 **友人帐怎么加人**：编辑 `source/_data/link.yml`：
 
 ```yaml
-- class_name: 小伙伴们🍭
+- class_name: 常来常往🍔
   class_desc: 交换友链请在友人帐页面留言
   link_list:
     - name: 示例站点
       link: https://example.com/
       avatar: https://example.com/avatar.jpg   # 建议 100x100 以内
       descr: 一句话介绍
-      siteshot: https://example.com/shot.jpg   # 可选，站点截图
+      siteshot: https://example.com/shot.jpg   # 可选，站点截图；不写则自动用 thum.io 抓取
 ```
+
+> 某个分组想用小卡片（不带截图）就在分组里写 `mini: true`，见 `link.yml` 的「工具站🔧」分组。
+> 页面上的**访问延时徽章**由 `source/js/friend-latency.js` 提供：对每张 `.friend-card` 用 `fetch(no-cors)` 探测，
+> 5 秒超时，≤2000ms 绿、更快更好，超时标 `Timeout`；并发上限 4，pjax 换页后自动重跑。
 
 友人帐有三种样式，改 `flink_style: volantis`（可选 `butterfly` / `volantis` / `flexcard`）。
 不需要的页面：删掉对应目录，再去 `menu:` 里去掉菜单项。
@@ -1017,6 +1119,46 @@ a.github-badge(target='_blank' href='https://hexo.io/' style='margin-inline:5px'
 
 两个引入行在 `_config.fomalhaut.yml` 的 `inject.head`（`archive-page.css` / `archive-page.js`，带 `?v=` 缓存戳，改完记得提版本）。
 **回滚**：删掉那两行，归档页立刻回到主题原样——样式与脚本都带 `.ar-ready` 守卫，缺一不可；`scripts/archive-index.js` 只影响归档页的 `</head>`，留着也不会对别的页面产生输出。
+
+### 8.14 分类快捷导航条（首页 / 归档 / 分类 / 标签）
+
+一排横向滚动的分类胶囊，插在 `#content-inner` **开标签之前**（在正文卡片之上，占满整行）。
+
+插在这个位置而不是 `main` 里面，是因为 `main.layout` 是 `display: flex` 的**行**容器：导航条塞进去会变成第三个 flex item，被压成内容宽度、还吃到 `.layout > div:first-child` 的卡片内边距。`#body-wrap` 本身是 flex column，把导航条放在 `main` 前面才能自然占满一行；顺带一提 `#body-wrap` 正是 pjax 的替换单元，放外面也不会残留上一次的高亮。
+
+对应地，`source/css/category-bar.css` 的 `.category-bar` **必须显式写 `width: 100%`** —— flex column 里左右 `margin: auto` 会让 flex item 变成 shrink-to-fit，只写 `max-width: 1200px` 的话导航条只有内容那么宽（踩过，实测只有 465px）。
+
+| 想改什么 | 去哪儿改 |
+| --- | --- |
+| 显示在哪些页面 | `scripts/category-bar.js` 的 `shouldInject(page)`（判 `page.__index` / `page.archive` / `page.category` / `page.tag` / `page.type === 'echarts'`） |
+| 胶囊顺序 | 同文件 `buildBar()`，默认按分类名长度再按中文排序 |
+| 外观（圆角、间距、渐隐宽度、配色） | `source/css/category-bar.css`（顶部一组 `--cb-*` 变量，全部从 `--theme-color` 派生） |
+| 行为（当前项点亮、滚轮横滚、居中） | `source/js/inject/category-bar.js` |
+
+三个文件分别在 `scripts/`、`source/css/`、`source/js/inject/`，引入行在 `inject.head`（`category-bar.css` / `category-bar.js`）。
+**注意**：`scripts/` 下的同名 `category-bar.js` 是**构建期**插件，`source/js/inject/category-bar.js` 是**浏览器端**脚本，两者不是同一个东西，改之前先看清楚路径。
+
+### 8.15 标签关系图（`/tags/`）
+
+在「文章统计」页的标签云与分类饼图之间插一张关系图：节点是标签、连线是两个标签同时出现在同一篇文章里的次数。
+
+- 数据：`scripts/tag-graph.js` 注册的 `tag_graph_data` 助手，构建期算好塞进 `#tag-graph-data` 的 JSON；
+- 渲染：`source/js/tag-graph.js` 读那段 JSON 用 ECharts 画图（ECharts 走 jsDelivr，缺失时脚本自己动态补一个 `<script>`）；
+- 阈值：默认只画「共现 ≥ 2 次」的边，**边少于 8 条自动降到 1** —— 文章少的站否则整张图一条线都没有；
+- 配色：按文章数分「高频（≥5）/ 常用（≥2）/ 低频」三档，从 `--theme-color` 派生色相偏移，换主题色会通过 `MutationObserver` 自动重绘；
+- 节点上限：`tag_graph_data({maxNodes: 40})`，标签特别多时可以调大。
+
+### 8.16 留言板 / 打赏 / llms.txt
+
+| 页面 | 源文件 | 说明 |
+| --- | --- | --- |
+| `/comments/` 留言板 | `source/comments/index.md` | 正文是普通 Markdown + 一段作用域 `<style>`，评论区由主题按 `comments.use` 自动渲染 |
+| `/sponsor/` 打赏 | `source/sponsor/index.md` | 三张打赏卡（支付宝 / 微信 / 爱发电）+ 打赏名单；二维码在 `source/assets/sponsor/`，名单直接在正文里加 `.sp-item` 即可 |
+| `/llms.txt` | `scripts/llms-txt.js` | 构建期 generator，输出站点简介 + 关键页面 + 最近 20 篇文章 |
+
+文章底部的「投喂」按钮由 `_config.fomalhaut.yml` 的 `reward` 段控制：`enable: true` 才出现，`QR_code` 里两条分别是微信与支付宝的图与文案。
+`llms.txt` 的**关键页面清单**在 `scripts/llms-txt.js` 的 `keyPages()` 里，加页面时同步加一条；`RECENT_POSTS_COUNT` 控制最近文章条数。
+文件开头写入的 `\ufeff` 是 **UTF-8 BOM**，别删：静态托管或 Windows 编辑器对无 BOM 的 `.txt` 会按 ANSI/GBK 解码，中文直接乱码。
 
 ---
 
@@ -1262,16 +1404,16 @@ npx hexo clean && npx hexo generate && npx gulp
 ## ⭐ Star 历史
 
 <p align="center">
-  <a href="https://star-history.com/#fomalhaut1998/hexo-theme-fomalhaut&Timeline">
+  <a href="https://star-history.com/#MuyuDada/hexo-theme-fomalhaut&Timeline">
     <picture>
-      <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=fomalhaut1998/hexo-theme-fomalhaut&type=Timeline&theme=dark" />
-      <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=fomalhaut1998/hexo-theme-fomalhaut&type=Timeline" />
-      <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=fomalhaut1998/hexo-theme-fomalhaut&type=Timeline" width="100%" />
+      <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=MuyuDada/hexo-theme-fomalhaut&type=Timeline&theme=dark" />
+      <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=MuyuDada/hexo-theme-fomalhaut&type=Timeline" />
+      <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=MuyuDada/hexo-theme-fomalhaut&type=Timeline" width="100%" />
     </picture>
   </a>
 </p>
 
-> 上图来自 [star-history.com](https://star-history.com/#fomalhaut1998/hexo-theme-fomalhaut&Timeline)，实时更新；顶部那两枚 Stars / Forks 徽章也是实时数据。
+> 上图来自 [star-history.com](https://star-history.com/#MuyuDada/hexo-theme-fomalhaut&Timeline)，实时更新；顶部那两枚 Stars / Forks 徽章也是实时数据。
 
 感谢每一位点过星星、提过 Issue、发过 PR 的朋友 🍭
 

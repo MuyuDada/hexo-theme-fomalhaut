@@ -18,18 +18,27 @@ function section(source, start, end) {
   assert.ok(from >= 0 && to > from, 'real source section exists: ' + start);
   return source.slice(from, to);
 }
-const themeSource = section(settings, '// 设置主题色', '// 猫咪与听话鼠标');
+// 结束标记用 settings.js 里真实存在的注释前缀（原写 '// 猫咪与听话鼠标'，但该行实际是
+// 「// 互动挂件的独立偏好：猫咪与听话鼠标…」，indexOf 匹配不到，测试直接抛异常）。
+const themeSource = section(settings, '// 设置主题色', '// 互动挂件的独立偏好');
+// setColor() 会调 themeOnColorInk()，而该函数定义在「// 设置主题色」注释**之前**
+// （2026-10-14 加的前景色对比度推导），不单独取出来 vm 里会 ReferenceError。
+const inkSource = section(settings, '// 主题色「实底上的前景色」', '// 设置主题色');
 const defaultsSource = section(settings, 'var FONT_LIST =', '// 设置字体');
 const paletteSource = section(cursor, 'const map = new Map();', 'class Cursor');
-// Independent ten-color oracle: expectations are not derived from implementation at runtime.
+// Independent oracle: expectations are not derived from implementation at runtime.
+// 2026-10-19（v1.0.5）复核：实现侧在 v1.0.4 就加了第 11 个预设 matcha（抹茶绿 #66B34D），
+// 并把 heoblue 从 #5274CF 调成 #616AD1（色相 224°→235°）；这份 oracle 一直没跟上，
+// 导致本文件此前整体跑不起来（section 标记也失配）。现按实现重新对齐。
 const presets = {
   red: 'rgb(239, 90, 90)', orange: 'rgb(215, 146, 77)', yellow: 'rgb(196, 166, 74)',
+  matcha: 'rgb(102, 179, 77)',
   green: 'rgb(57, 197, 187)', puregreen: 'rgb(77, 175, 135)', blue: 'rgb(74, 156, 199)',
-  heoblue: 'rgb(82, 116, 207)', darkblue: 'rgb(113, 133, 156)',
+  heoblue: 'rgb(97, 106, 209)', darkblue: 'rgb(113, 133, 156)',
   purepurple: 'rgb(147, 90, 205)', pink: 'rgb(237, 112, 155)'
 };
 const presetNames = {
-  red: '珊瑚红', orange: '暖杏橙', yellow: '蜂蜜金', green: '青绿', puregreen: '玉石绿',
+  red: '珊瑚红', orange: '暖杏橙', yellow: '蜂蜜金', matcha: '抹茶绿', green: '青绿', puregreen: '玉石绿',
   blue: '晴空蓝', heoblue: '柔靛蓝', darkblue: '雾蓝灰', purepurple: '紫罗兰', pink: '樱花粉'
 };
 const legacyPresets = { purple: 'purepurple', gray: 'darkblue', black: 'darkblue' };
@@ -76,7 +85,7 @@ function harness(saved = {}, options = {}) {
   }
   const window = { localStorage, GitCalendarRefresh: () => calls.push('calendar') };
   const ctx = vm.createContext({ document, localStorage, window, CURSOR: { refresh: () => calls.push('cursor') } });
-  vm.runInContext(paletteSource + '\n' + themeSource, ctx, { filename: 'theme-color-section.js' });
+  vm.runInContext(paletteSource + '\n' + inkSource + '\n' + themeSource, ctx, { filename: 'theme-color-section.js' });
   const h = { ctx, document, window, nodes, store, writes, calls, mutations,
     palette: () => Array.from(vm.runInContext('Array.from(map.entries())', ctx), pair => Array.from(pair)),
     clear() { writes.length = 0; calls.length = 0; mutations.length = 0; },
@@ -142,11 +151,11 @@ function attributes(tag) {
   return Object.fromEntries([...tag.matchAll(/([\w-]+)\s*=\s*(["'])(.*?)\2/g)].map(match => [match[1], match[3]]));
 }
 
-test('real cursor palette and themeColorPresets contain exactly the ten approved presets', () => {
+test('real cursor palette and themeColorPresets contain exactly the eleven approved presets', () => {
   const h = harness({ themeColor: 'green' });
   assert.deepEqual(Object.fromEntries(h.palette()), presets);
   const choices = Array.from(h.ctx.themeColorPresets, pair => Array.from(pair));
-  assert.equal(choices.length, 10);
+  assert.equal(choices.length, 11);
   assert.deepEqual(choices, Object.entries(presetNames), 'approved ids, order and Chinese names');
   for (const id of Object.keys(legacyPresets)) assert.equal(Object.hasOwn(Object.fromEntries(h.palette()), id), false);
 });
@@ -220,7 +229,7 @@ for (const [id, rgb] of Object.entries(presets)) {
     assertCursorColor(cursorHarness({ themeColor: id }), rgb);
   });
 }
-for (const id of ['orange', 'yellow', 'puregreen', 'blue', 'heoblue', 'darkblue']) {
+for (const id of ['orange', 'yellow', 'matcha', 'puregreen', 'blue', 'heoblue', 'darkblue']) {
   test('site injection CSS variable agrees with map and independent RGB oracle: ' + id, () => {
     const declarations = [...siteCss.matchAll(new RegExp('--color-' + id + '\\s*:\\s*([^;}]+)', 'g'))];
     assert.ok(declarations.length > 0, '--color-' + id + ' injection override exists');
@@ -231,11 +240,18 @@ for (const id of ['orange', 'yellow', 'puregreen', 'blue', 'heoblue', 'darkblue'
     }
   });
 }
-for (const resource of ['/css/site-inject.css', '/js/inject/beauty-boot.js', '/js/modules/cursor.js', '/js/modules/settings.js']) {
+// 每个资源只允许出现一条生效的注入行，且必须带 ?v= 版本戳（改了文件就要改版本戳，
+// 否则老访客拿的是浏览器缓存）。这里记录当前版本，改注入行时同步更新。
+const releaseVersions = {
+  '/css/site-inject.css': '20261015-fps4',
+  '/js/inject/beauty-boot.js': '20261015-solid3',
+  '/js/modules/cursor.js': '20261015-fps2',
+  '/js/modules/settings.js': '20261015-custom1'
+};
+for (const [resource, version] of Object.entries(releaseVersions)) {
   test('configuration cache-busts palette injection resource: ' + resource, () => {
     const lines = config.split(/\r?\n/).filter(line => /^\s*-\s*</.test(line) && line.includes('"' + resource + '?'));
     assert.equal(lines.length, 1, 'exactly one active resource injection');
-    const version = resource === '/css/site-inject.css' || resource === '/js/modules/settings.js' ? '20261010-snow1' : '20261010-palette1';
     assert.ok(lines[0].includes('"' + resource + '?v=' + version + '"'), 'current release cache-bust matches');
   });
 }
@@ -311,8 +327,8 @@ test('invalid saved custom falls back to green despite earlier valid custom pale
   const h = harness({ themeColor: 'custom', themeCustomColor: '#112233' });
   h.store.set('themeCustomColor', '#bad'); h.clear(); h.ctx.setColor('custom');
   assert.equal(h.store.get('themeColor'), 'green'); assertColor(h, presets.green); assertSelection(h, 'green');
-  assert.equal(h.nodes.get('customThemeInput').value, '#39c5bb');
-  assert.equal(h.nodes.get('customThemeChoice').style.getPropertyValue('--custom-theme-color'), '#39c5bb');
+  assert.equal(h.nodes.get('customThemeInput').value, '#c74bd0');
+  assert.equal(h.nodes.get('customThemeChoice').style.getPropertyValue('--custom-theme-color'), '#c74bd0');
   assert.deepEqual(h.writes, [['themeColor', 'green']]);
 });
 
@@ -338,8 +354,8 @@ test('sync invalid/missing HEX uses default picker color without writing setting
   for (const value of [undefined, '', '#abc', '#123456; color:red']) {
     const h = harness({ themeColor: 'green', ...(value === undefined ? {} : { themeCustomColor: value }) }); h.clear();
     const before = [...h.store]; h.ctx.syncThemeColorControls();
-    assert.equal(h.nodes.get('customThemeInput').value, '#39c5bb');
-    assert.equal(h.nodes.get('customThemeChoice').style.getPropertyValue('--custom-theme-color'), '#39c5bb');
+    assert.equal(h.nodes.get('customThemeInput').value, '#c74bd0');
+    assert.equal(h.nodes.get('customThemeChoice').style.getPropertyValue('--custom-theme-color'), '#c74bd0');
     assertSelection(h, 'green'); assert.deepEqual([...h.store], before); assert.deepEqual(h.writes, []);
   }
 });
@@ -347,12 +363,12 @@ test('initItem defaults themeCustomColor without requiring DOM or cursor globals
   const store = new Map([['themeCustomColor', '#abcdef'], ['themeColor', 'custom']]);
   const ctx = vm.createContext({ localStorage: { setItem: (key, value) => store.set(key, String(value)) } });
   vm.runInContext(defaultsSource, ctx); ctx.initItem();
-  assert.equal(store.get('themeColor'), 'green'); assert.equal(store.get('themeCustomColor'), '#39c5bb');
+  assert.equal(store.get('themeColor'), 'green'); assert.equal(store.get('themeCustomColor'), '#c74bd0');
 });
-test('markup keeps ten accessible preset radios and puts custom picker last', () => {
+test('markup keeps eleven accessible preset radios and puts custom picker last', () => {
   const h = harness(), markup = h.ctx.themeColorMarkup();
   const labels = [...markup.matchAll(/<label\b([^>]*)>([\s\S]*?)<\/label>/g)];
-  assert.equal(labels.length, 11);
+  assert.equal(labels.length, 12, '11 presets + custom picker');
   const choices = Array.from(h.ctx.themeColorPresets, pair => Array.from(pair)), radioIds = [];
   for (const [index, [id, name]] of choices.entries()) {
     const outer = attributes(labels[index][1]);
@@ -372,7 +388,7 @@ test('markup keeps ten accessible preset radios and puts custom picker last', ()
   assert.equal(picker.oninput, 'setCustomColor(this.value)'); assert.equal(picker.onchange, 'setCustomColor(this.value)');
   assert.match(picker['aria-label'], /自定义/); assert.equal(picker['aria-describedby'], 'themeColorStatus');
   assert.match(markup, /\bid=["']themeColorStatus["']/);
-  assert.equal([...markup.matchAll(/<input\b[^>]*type=["']radio["']/g)].length, 10);
+  assert.equal([...markup.matchAll(/<input\b[^>]*type=["']radio["']/g)].length, 11);
   for (const id of Object.keys(legacyPresets)) assert.equal(radioIds.includes(id), false, id + ' legacy radio removed');
 });
 for (const hex of ['#123456', '#ABCDEF', '#000000', '#FFFFFF']) {

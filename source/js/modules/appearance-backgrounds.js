@@ -4,195 +4,115 @@
  */
 var AP_BACKGROUND_CATALOG = [
   {
-    "id": "anime-1",
-    "category": "anime",
-    "name": "二次元 01",
-    "thumb": "https://picsum.photos/seed/yuanshen1/400/225",
-    "value": "url(https://picsum.photos/seed/yuanshen1/1920/1080)",
+    "id": "desktop-random",
+    "category": "desktop",
+    "name": "随机横屏",
+    "thumb": "https://t.alcy.cc/pc",
+    "value": "url(https://t.alcy.cc/pc)",
     "kind": "image"
   },
   {
-    "id": "anime-2",
-    "category": "anime",
-    "name": "二次元 02",
-    "thumb": "https://picsum.photos/seed/dm15/400/225",
-    "value": "url(https://picsum.photos/seed/dm15/1920/1080)",
+    "id": "desktop-1",
+    "category": "desktop",
+    "name": "桌面 01",
+    "thumb": "/assets/wallpaper/desktop-1.avif",
+    "value": "url(/assets/wallpaper/desktop-1.avif)",
     "kind": "image"
   },
   {
-    "id": "anime-3",
-    "category": "anime",
-    "name": "二次元 03",
-    "thumb": "https://picsum.photos/seed/dm2/400/225",
-    "value": "url(https://picsum.photos/seed/dm2/1920/1080)",
+    "id": "desktop-2",
+    "category": "desktop",
+    "name": "桌面 02",
+    "thumb": "/assets/wallpaper/desktop-2.avif",
+    "value": "url(/assets/wallpaper/desktop-2.avif)",
     "kind": "image"
   },
   {
-    "id": "anime-4",
-    "category": "anime",
-    "name": "二次元 04",
-    "thumb": "https://picsum.photos/seed/dm7/400/225",
-    "value": "url(https://picsum.photos/seed/dm7/1920/1080)",
+    "id": "desktop-3",
+    "category": "desktop",
+    "name": "桌面 03",
+    "thumb": "/assets/wallpaper/desktop-3.avif",
+    "value": "url(/assets/wallpaper/desktop-3.avif)",
     "kind": "image"
   },
   {
-    "id": "anime-5",
-    "category": "anime",
-    "name": "二次元 05",
-    "thumb": "https://picsum.photos/seed/dm8/400/225",
-    "value": "url(https://picsum.photos/seed/dm8/1920/1080)",
+    "id": "desktop-4",
+    "category": "desktop",
+    "name": "桌面 04",
+    "thumb": "/assets/wallpaper/desktop-4.avif",
+    "value": "url(/assets/wallpaper/desktop-4.avif)",
     "kind": "image"
   },
   {
-    "id": "anime-6",
-    "category": "anime",
-    "name": "二次元 06",
-    "thumb": "https://picsum.photos/seed/dm3/400/225",
-    "value": "url(https://picsum.photos/seed/dm3/1920/1080)",
+    "id": "desktop-5",
+    "category": "desktop",
+    "name": "桌面 05",
+    "thumb": "/assets/wallpaper/desktop-5.avif",
+    "value": "url(/assets/wallpaper/desktop-5.avif)",
     "kind": "image"
   },
   {
-    "id": "anime-7",
-    "category": "anime",
-    "name": "二次元 07",
-    "thumb": "https://picsum.photos/seed/dm11/400/225",
-    "value": "url(https://picsum.photos/seed/dm11/1920/1080)",
+    "id": "desktop-6",
+    "category": "desktop",
+    "name": "桌面 06",
+    "thumb": "/assets/wallpaper/desktop-6.avif",
+    "value": "url(/assets/wallpaper/desktop-6.avif)",
     "kind": "image"
   },
   {
-    "id": "anime-8",
-    "category": "anime",
-    "name": "二次元 08",
-    "thumb": "https://picsum.photos/seed/dm12/400/225",
-    "value": "url(https://picsum.photos/seed/dm12/1920/1080)",
+    "id": "mobile-random",
+    "category": "mobile",
+    "name": "随机竖屏",
+    "thumb": "https://t.alcy.cc/mp",
+    "value": "url(https://t.alcy.cc/mp)",
     "kind": "image"
   },
   {
-    "id": "landscape-1",
-    "category": "landscape",
-    "name": "风景 01",
-    "thumb": "https://picsum.photos/seed/fj1/400/225",
-    "value": "url(https://picsum.photos/seed/fj1/1920/1080)",
+    "id": "mobile-1",
+    "category": "mobile",
+    "name": "手机 01",
+    "thumb": "/assets/wallpaper/mobile-1.avif",
+    "value": "url(/assets/wallpaper/mobile-1.avif)",
     "kind": "image"
   },
   {
-    "id": "landscape-2",
-    "category": "landscape",
-    "name": "风景 02",
-    "thumb": "https://picsum.photos/seed/fj2/400/225",
-    "value": "url(https://picsum.photos/seed/fj2/1920/1080)",
+    "id": "mobile-2",
+    "category": "mobile",
+    "name": "手机 02",
+    "thumb": "/assets/wallpaper/mobile-2.avif",
+    "value": "url(/assets/wallpaper/mobile-2.avif)",
     "kind": "image"
   },
   {
-    "id": "landscape-3",
-    "category": "landscape",
-    "name": "风景 03",
-    "thumb": "https://picsum.photos/seed/fj3/400/225",
-    "value": "url(https://picsum.photos/seed/fj3/1920/1080)",
+    "id": "mobile-3",
+    "category": "mobile",
+    "name": "手机 03",
+    "thumb": "/assets/wallpaper/mobile-3.avif",
+    "value": "url(/assets/wallpaper/mobile-3.avif)",
     "kind": "image"
   },
   {
-    "id": "landscape-4",
-    "category": "landscape",
-    "name": "风景 04",
-    "thumb": "https://picsum.photos/seed/fj4/400/225",
-    "value": "url(https://picsum.photos/seed/fj4/1920/1080)",
+    "id": "mobile-4",
+    "category": "mobile",
+    "name": "手机 04",
+    "thumb": "/assets/wallpaper/mobile-4.avif",
+    "value": "url(/assets/wallpaper/mobile-4.avif)",
     "kind": "image"
   },
   {
-    "id": "landscape-5",
-    "category": "landscape",
-    "name": "风景 05",
-    "thumb": "https://picsum.photos/seed/fj5/400/225",
-    "value": "url(https://picsum.photos/seed/fj5/1920/1080)",
+    "id": "mobile-5",
+    "category": "mobile",
+    "name": "手机 05",
+    "thumb": "/assets/wallpaper/mobile-5.avif",
+    "value": "url(/assets/wallpaper/mobile-5.avif)",
     "kind": "image"
   },
   {
-    "id": "landscape-6",
-    "category": "landscape",
-    "name": "风景 06",
-    "thumb": "https://picsum.photos/seed/fj6/400/225",
-    "value": "url(https://picsum.photos/seed/fj6/1920/1080)",
-    "kind": "image"
-  },
-  {
-    "id": "landscape-7",
-    "category": "landscape",
-    "name": "风景 07",
-    "thumb": "https://picsum.photos/seed/fj7/400/225",
-    "value": "url(https://picsum.photos/seed/fj7/1920/1080)",
-    "kind": "image"
-  },
-  {
-    "id": "landscape-8",
-    "category": "landscape",
-    "name": "风景 08",
-    "thumb": "https://picsum.photos/seed/fj8/400/225",
-    "value": "url(https://picsum.photos/seed/fj8/1920/1080)",
-    "kind": "image"
-  },
-  {
-    "id": "pets-1",
-    "category": "pets",
-    "name": "萌宠 01",
-    "thumb": "https://picsum.photos/seed/mc1/400/225",
-    "value": "url(https://picsum.photos/seed/mc1/1920/1080)",
-    "kind": "image"
-  },
-  {
-    "id": "pets-2",
-    "category": "pets",
-    "name": "萌宠 02",
-    "thumb": "https://picsum.photos/seed/mc2/400/225",
-    "value": "url(https://picsum.photos/seed/mc2/1920/1080)",
-    "kind": "image"
-  },
-  {
-    "id": "pets-3",
-    "category": "pets",
-    "name": "萌宠 03",
-    "thumb": "https://picsum.photos/seed/mc3/400/225",
-    "value": "url(https://picsum.photos/seed/mc3/1920/1080)",
-    "kind": "image"
-  },
-  {
-    "id": "pets-4",
-    "category": "pets",
-    "name": "萌宠 04",
-    "thumb": "https://picsum.photos/seed/mc4/400/225",
-    "value": "url(https://picsum.photos/seed/mc4/1920/1080)",
-    "kind": "image"
-  },
-  {
-    "id": "pets-5",
-    "category": "pets",
-    "name": "萌宠 05",
-    "thumb": "https://picsum.photos/seed/mc5/400/225",
-    "value": "url(https://picsum.photos/seed/mc5/1920/1080)",
-    "kind": "image"
-  },
-  {
-    "id": "pets-6",
-    "category": "pets",
-    "name": "萌宠 06",
-    "thumb": "https://picsum.photos/seed/mc6/400/225",
-    "value": "url(https://picsum.photos/seed/mc6/1920/1080)",
-    "kind": "image"
-  },
-  {
-    "id": "pets-7",
-    "category": "pets",
-    "name": "萌宠 07",
-    "thumb": "https://picsum.photos/seed/mc7/400/225",
-    "value": "url(https://picsum.photos/seed/mc7/1920/1080)",
-    "kind": "image"
-  },
-  {
-    "id": "pets-8",
-    "category": "pets",
-    "name": "萌宠 08",
-    "thumb": "https://picsum.photos/seed/mc8/400/225",
-    "value": "url(https://picsum.photos/seed/mc8/1920/1080)",
+    "id": "mobile-6",
+    "category": "mobile",
+    "name": "手机 06",
+    "thumb": "/assets/wallpaper/mobile-6.avif",
+    "value": "url(/assets/wallpaper/mobile-6.avif)",
     "kind": "image"
   },
   {
@@ -299,82 +219,18 @@ var AP_BACKGROUND_CATALOG = [
     "name": "纯色 07",
     "value": "#f7eff5",
     "kind": "solid"
-  },
-  {
-    "id": "mobile-1",
-    "category": "mobile",
-    "name": "手机 01",
-    "thumb": "https://picsum.photos/seed/mb4/400/225",
-    "value": "url(https://picsum.photos/seed/mb4/1080/1920)",
-    "kind": "image"
-  },
-  {
-    "id": "mobile-2",
-    "category": "mobile",
-    "name": "手机 02",
-    "thumb": "https://picsum.photos/seed/mb5/400/225",
-    "value": "url(https://picsum.photos/seed/mb5/1080/1920)",
-    "kind": "image"
-  },
-  {
-    "id": "mobile-3",
-    "category": "mobile",
-    "name": "手机 03",
-    "thumb": "https://picsum.photos/seed/mb6/400/225",
-    "value": "url(https://picsum.photos/seed/mb6/1080/1920)",
-    "kind": "image"
-  },
-  {
-    "id": "mobile-4",
-    "category": "mobile",
-    "name": "手机 04",
-    "thumb": "https://picsum.photos/seed/mb7/400/225",
-    "value": "url(https://picsum.photos/seed/mb7/1080/1920)",
-    "kind": "image"
-  },
-  {
-    "id": "mobile-5",
-    "category": "mobile",
-    "name": "手机 05",
-    "thumb": "https://picsum.photos/seed/mb8/400/225",
-    "value": "url(https://picsum.photos/seed/mb8/1080/1920)",
-    "kind": "image"
-  },
-  {
-    "id": "mobile-6",
-    "category": "mobile",
-    "name": "手机 06",
-    "thumb": "https://picsum.photos/seed/mb9/400/225",
-    "value": "url(https://picsum.photos/seed/mb9/1080/1920)",
-    "kind": "image"
-  },
-  {
-    "id": "mobile-7",
-    "category": "mobile",
-    "name": "手机 07",
-    "thumb": "https://picsum.photos/seed/mb16/400/225",
-    "value": "url(https://picsum.photos/seed/mb16/1080/1920)",
-    "kind": "image"
-  },
-  {
-    "id": "mobile-8",
-    "category": "mobile",
-    "name": "手机 08",
-    "thumb": "https://picsum.photos/seed/mb19/400/225",
-    "value": "url(https://picsum.photos/seed/mb19/1080/1920)",
-    "kind": "image"
   }
 ];
-var AP_BACKGROUND_CATEGORIES = [{id:'anime',name:'二次元'},{id:'landscape',name:'风景'},{id:'pets',name:'萌宠'},{id:'mobile',name:'手机'}];
+var AP_BACKGROUND_CATEGORIES = [{id:'desktop',name:'桌面壁纸'},{id:'mobile',name:'手机壁纸'}];
 var AP_BACKGROUND_APIS = [
   {id:'bingDayBg',name:'必应每日壁纸'}, {id:'bingHistoryBg',name:'必应随机壁纸'},
   {id:'EEEDog',name:'二次元随机'}, {id:'seovx',name:'随机美图'},
-  {id:'picsum',name:'Picsum 随机'}, {id:'waiBizhi',name:'高清壁纸随机'},
+  {id:'picsum',name:'随机壁纸'}, {id:'waiBizhi',name:'高清壁纸随机'},
   {id:'btstu',name:'手机二次元随机'}, {id:'unsplash',name:'横屏二次元随机'}
 ];
 var apBackgroundState = { token:0, pending:null, current:'default', initialized:false,
   status:'idle', message:'选择背景前会先检查图片，加载失败时保留当前背景。', retry:null,
-  main:'wallpaper', category:'anime', environmentListening:false, customToken:0, customPending:null, draft:null,
+  main:'wallpaper', category:'desktop', environmentListening:false, customToken:0, customPending:null, draft:null,
   customStatus:'idle', customMessage:'先预览并验证，再应用到全站。' };
 
 // Runtime-only access: settings.js owns these lexical variables and can update their URLs.
@@ -398,6 +254,10 @@ function appearanceBackgroundEscape(value) {
 }
 function appearanceBackgroundSafeUrl(value, httpsOnly) {
   if(typeof value !== 'string' || !value || value.length > 2000 || /[\s"'()\\;{}<>`]/.test(value)) return '';
+  // 站内相对路径（本站自带的 12 张壁纸就是 /assets/wallpaper/*.avif）：
+  // new URL('/a.avif') 没有 base 会直接抛异常，所以单独放行。
+  // 只认单个前导斜杠 —— '//evil.com' 是协议相对外链，必须继续走下面的绝对 URL 校验。
+  if(value.charAt(0) === '/' && value.charAt(1) !== '/') return value;
   try {
     var u = new URL(value);
     if(!/^https?:$/.test(u.protocol) || (httpsOnly && u.protocol !== 'https:') || !u.hostname || u.username || u.password) return '';
@@ -419,7 +279,9 @@ function appearanceBackgroundDefaultUrl() {
   var dark=!!(root && root.getAttribute('data-theme') === 'dark');
   var width=typeof window !== 'undefined' ? window.innerWidth : (root && root.clientWidth);
   var mobile=typeof width === 'number' && width <= 768;
-  return mobile ? (dark ? 'https://picsum.photos/id/1039/1920/1080' : 'https://picsum.photos/id/1018/1920/1080') : (dark ? 'https://picsum.photos/id/1044/1920/1080' : 'https://picsum.photos/id/1015/1920/1080');
+  // 2026-10-19 起默认背景是随机图 API（与 settings.js 的 resetBg_() 一致）：
+  // 桌面 /pc、桌面夜间 /ys、手机 /mp、手机夜间 /moe。
+  return mobile ? (dark ? 'https://t.alcy.cc/moe' : 'https://t.alcy.cc/mp') : (dark ? 'https://t.alcy.cc/ys' : 'https://t.alcy.cc/pc');
 }
 function appearanceBackgroundWatchEnvironment() {
   if(apBackgroundState.environmentListening) return;
@@ -457,8 +319,8 @@ function appearanceBackgroundMarkup() {
   var esc=appearanceBackgroundEscape;
   var main=[['wallpaper','壁纸'],['colors','颜色'],['custom','自定义']];
   var tabs=main.map(function(t){return '<button type="button" class="ap-btn" data-ap-bg-main="'+t[0]+'" aria-controls="ap-bg-main-'+t[0]+'" aria-pressed="'+(t[0] === 'wallpaper')+'" onclick="showAppearanceBackgroundTab(this.dataset.apBgMain)">'+t[1]+'</button>';}).join('');
-  var categoryTabs=AP_BACKGROUND_CATEGORIES.map(function(c){return '<button type="button" class="ap-btn" data-ap-bg-category="'+c.id+'" aria-controls="ap-bg-category-'+c.id+'" aria-pressed="'+(c.id === 'anime')+'" onclick="showAppearanceBackgroundCategory(this.dataset.apBgCategory)">'+esc(c.name)+'</button>';}).join('');
-  var categoryPanels=AP_BACKGROUND_CATEGORIES.map(function(c){return '<div id="ap-bg-category-'+c.id+'" class="ap-bg-grid" aria-label="'+esc(c.name)+'壁纸"'+(c.id === 'anime' ? '' : ' hidden')+'></div>';}).join('');
+  var categoryTabs=AP_BACKGROUND_CATEGORIES.map(function(c){return '<button type="button" class="ap-btn" data-ap-bg-category="'+c.id+'" aria-controls="ap-bg-category-'+c.id+'" aria-pressed="'+(c.id === 'desktop')+'" onclick="showAppearanceBackgroundCategory(this.dataset.apBgCategory)">'+esc(c.name)+'</button>';}).join('');
+  var categoryPanels=AP_BACKGROUND_CATEGORIES.map(function(c){return '<div id="ap-bg-category-'+c.id+'" class="ap-bg-grid" aria-label="'+esc(c.name)+'"'+(c.id === 'desktop' ? '' : ' hidden')+'></div>';}).join('');
   var colors=AP_BACKGROUND_CATALOG.filter(function(item){return item.category === 'colors';}).map(appearanceBackgroundOptionMarkup).join('');
   var apis=AP_BACKGROUND_APIS.map(function(api){return '<button type="button" class="ap-btn" data-ap-bg-id="api-'+api.id+'" aria-pressed="false" onclick="selectAppearanceBackgroundApi(this.dataset.apBgId.slice(4))">'+esc(api.name)+'<span class="ap-bg-check" hidden aria-hidden="true">✓</span></button>';}).join('');
   return '<section id="ap-background-panel" class="ap-panel ap-background-panel" aria-label="背景设置">'+

@@ -682,7 +682,14 @@ test('deferred module loads before settings with refreshed JS/CSS cache versions
   assert.match(scripts[index][1], /[?&]v=[^&"']*fireflies1/);
   const settingsIndex = scripts.findIndex(match => match[1].startsWith('/js/modules/settings.js?'));
   assert.ok(index < settingsIndex, 'settings can access the controller on first execution');
-  assert.match(scripts[settingsIndex][1], /[?&]v=[^&"']*snow1/);
-  assert.match(config, /href=["']\/css\/site-inject\.css\?v=[^"']*snow1["']/);
+  // settings.js 与 site-inject.css 只要求带 2026-10-10 及之后的缓存版本戳
+  // （雪景那一版起就需要强制刷新），不锁死具体后缀。
+  const version = (pattern, label) => {
+    const match = config.match(pattern);
+    assert.ok(match, label + ' 注入行存在');
+    assert.ok(Number(match[1].slice(0, 8)) >= 20261010, label + ' 缓存版本不早于雪景上线：' + match[1]);
+  };
+  version(/settings\.js\?v=([^"'\s]+)/, 'settings.js');
+  version(/href=["']\/css\/site-inject\.css\?v=([^"']+)["']/, 'site-inject.css');
   assert.equal(scripts.filter(match => match[1].startsWith('/js/modules/fireflies.js')).length, 1);
 });

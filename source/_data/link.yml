@@ -1,34 +1,102 @@
-# 友人帐数据源：source/social/link/index.md 里的 {% flink %} 标签会读取本文件
+# 友人帐数据源：source/social/link/index.md 里的 flink 模板会读取本文件
 # 想加友链：在下面某个分组的 link_list 里追加一项即可
-- class_name: 推荐站点🍔
-  class_desc: 这里放最熟悉的小伙伴或者赞助商，当然是最前排啦
+#
+# 字段说明：
+#   name      站点名
+#   link      站点地址（必须带 https://）
+#   avatar    头像地址（建议正方形，100x100 以上）
+#   descr     一句话简介
+#   siteshot  站点预览截图（可选）。不写就自动用 thum.io 现截，
+#             但那个服务偶尔抽风，有条件的建议自己传图或截图后放 /assets/ 里。
+#
+# 分组字段：
+#   class_name  分组标题
+#   class_desc  分组说明
+#   mini: true  该分组用紧凑小卡（无预览图），适合放工具站/不常更新的链接
+#
+# 想换成「分类导航」式的分组：直接加新的 - class_name 段即可，页面会自动多一栏。
+# 排序即展示顺序。
+
+- class_name: 常来常往🍔
+  class_desc: 都是认真在写、值得一读的独立博客
+  link_list:
+    - name: 夏夜流萤
+      link: https://blog.cuteleaf.cn
+      avatar: https://blog.cuteleaf.cn/avatar.png
+      descr: 飞萤之火自无梦的长夜亮起，绽放在终竟的明天。
+    - name: 番茄主理人
+      link: https://blog.fqzlr.top/
+      avatar: https://q1.qlogo.cn/g?b=qq&nk=20447289&s=640
+      descr: 躬身入局，心为主理，行有尺度，自持本心。
+    - name: LonelyBingの小窝
+      link: https://lonelybing.top
+      avatar: https://img.lonelybing.top/file/头像/1789400498937.jpg
+      descr: 一名普普通通の大学生~
+    - name: 池泛の小窝
+      link: https://chortle.asia
+      avatar: https://chortle.asia/uploads/image/avater_1786082652615.jpg
+      descr: 山水有相逢，来日皆可期
+    - name: YuJing的记忆终端
+      link: https://yujingblog.top
+      avatar: https://yujingblog.top/assets/home/avatar.webp
+      descr: 记一些无用的日常，和有光的时刻
+    - name: 楠香自语
+      link: https://blog.onlycc.ltd
+      avatar: https://blog.onlycc.ltd/upload/onlynn_avatar.png
+      descr: ✦在代码与文字间，寻找生活的回响✦
+    - name: kwicaiiBlog
+      link: https://blog.kwicaii.moe/
+      avatar: https://pic.kwicaii.moe/me.jpg
+      descr: 守岁花开，季季不同
+    - name: 奶油小屋
+      link: https://abcdtfk.icu/
+      avatar: https://abcdtfk.icu/avatar.png
+      descr: 玫瑰捧起篝火，追忆它年少时爱的日落
+    - name: O7statの小窝
+      link: https://hello123.fun
+      avatar: https://hello123.fun/avatar.png
+      descr: 记录学习，分享笔记
+    - name: 玻璃瓶和纸飞机
+      link: https://www.sunandyou.cn
+      avatar: https://www.sunandyou.cn/img/logo-B3KTxsD8.png
+      descr: 专注于个人搞笑和后端开发
+    - name: Zhong Website
+      link: https://zhongweb.cn
+      avatar: https://zhongweb.cn/icons/icon-512.png
+      descr: 医学生×互联网折腾爱好者
+
+- class_name: 技术与灵感🌿
+  class_desc: 这个站能跑起来，多亏了它们
   link_list:
     - name: Hexo
       link: https://hexo.io/zh-cn/
-      avatar: https://picsum.photos/id/1039/200/200
+      avatar: https://hexo.io/logo.svg
       descr: 快速、简洁且高效的博客框架
-      siteshot: https://picsum.photos/id/1036/800/450
     - name: Butterfly
       link: https://butterfly.js.org/
-      avatar: https://picsum.photos/id/1036/200/200
+      avatar: https://butterfly.js.org/img/avatar.png
       descr: Fomalhaut 主题的上游项目
-      siteshot: https://picsum.photos/id/1039/800/450
+    - name: Firefly
+      link: https://github.com/CuteLeaf/Firefly
+      avatar: https://avatars.githubusercontent.com/u/139784047?v=4
+      descr: 本站改版时的参照项目
 
-- class_name: 小伙伴们🍭
-  class_desc: 交换友链请在友人帐页面留言
+- class_name: 工具站🔧
+  class_desc: 平时用得比较多的几个
+  mini: true
   link_list:
-    - name: 示例站点 A
-      link: https://example.com/
-      avatar: https://picsum.photos/id/1018/200/200
-      descr: 这是一个示例友链，请替换成你自己的朋友
-      siteshot: https://picsum.photos/id/1041/800/450
-    - name: 示例站点 B
-      link: https://example.org/
-      avatar: https://picsum.photos/id/1036/200/200
-      descr: 这是一个示例友链，请替换成你自己的朋友
-      siteshot: https://picsum.photos/id/1039/800/450
-    - name: 示例站点 C
-      link: https://example.net/
-      avatar: https://picsum.photos/id/1039/200/200
-      descr: 这是一个示例友链，请替换成你自己的朋友
-      siteshot: https://picsum.photos/id/1036/800/450
+    - name: npmmirror
+      link: https://npmmirror.com/
+      avatar: https://avatars.githubusercontent.com/u/46491790?v=4
+      descr: 国内 npm 镜像
+      theme_color: "#eef3ff"
+    - name: jsDelivr
+      link: https://www.jsdelivr.com/
+      avatar: https://avatars.githubusercontent.com/u/18324045?v=4
+      descr: 静态资源 CDN
+      theme_color: "#fff5e8"
+    - name: Shields.io
+      link: https://shields.io/
+      avatar: https://avatars.githubusercontent.com/u/13421469?v=4
+      descr: 徽章生成
+      theme_color: "#eefaf1"

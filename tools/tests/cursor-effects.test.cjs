@@ -480,8 +480,12 @@ for (const type of ['childList', 'characterData']) {
   });
 }
 
+// reading.js 现在的 FPS 输出是三段带 class 的 span（fps-label / fps-value / fps-state），
+// 状态色走 data-state。cursor.js 的 fpsOutputNode() 同时保留了对**旧版**内联着色 span 的
+// 兼容分支（class="fps-state" + style="color: ..."），这里造的就是那个兼容形态。
 function fpsSpan(e, color) {
   const span = new e.Element('span');
+  span.setAttribute('class', 'fps-state');
   span.setAttribute('style', 'color: ' + color + ';');
   span.appendChild(e.document.createTextNode('60'));
   return span;

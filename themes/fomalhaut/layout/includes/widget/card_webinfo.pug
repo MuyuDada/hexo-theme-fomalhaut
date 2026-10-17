@@ -59,7 +59,7 @@ if theme.aside.card_webinfo.enable
         __bars.push({ y: __y2, n: __c })
       }
       // 「更新」的兜底值 = 本次构建时刻；页面加载后由 source/js/inject/webinfo-card.js
-      // 用 GitHub 部署仓库 yourname.github.io 的最近一次提交时间校正成真实部署时间。
+      // 用 GitHub 部署仓库（<用户名>.github.io）的最近一次提交时间校正成真实部署时间。
       __buildISO = new Date().toISOString()
       __buildDate = (new Date().getMonth() + 1) + '-' + new Date().getDate()
     }

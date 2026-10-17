@@ -1,63 +1,59 @@
 ---
-title: Hello World · 从这里开始
+title: 这个小窝是怎么搭起来的
 categories:
-  - 开始使用
+  - 折腾记录
 tags:
   - Hexo
   - Fomalhaut
-cover: 'https://picsum.photos/id/1044/1200/675'
-description: 这是一篇示例文章，顺手说明这套源码怎么改成你自己的站点。
+  - 建站
+cover: /assets/wallpaper/desktop-4.avif
+description: 从 2022 年的第一篇文章，到现在这套 Hexo + Fomalhaut 的站点，中间换了三次框架、重写了两次主题。
 comments: true
 abbrlink: 8b9651a9
 date: 2026-10-01 10:00:00
-updated: 2026-10-01 10:00:00
+updated: 2026-10-19 12:00:00
 ---
 
-## 你现在看到的是什么
+## 为什么还在写博客
 
-一个跑在 **Hexo 6.3.0** 上的静态站点，主题是 **hexo-theme-fomalhaut v1.0.4**（基于 Butterfly 4.3.1 二次开发）。
-仓库里 `source/_posts/` 下只有这一篇与另一篇《外挂标签速查》作为示例，其余空位留给你自己填。
+社交平台上的东西是"发出去"的，博客里的东西是"留下来"的。
+我一直觉得，把自己折腾过的东西摊开写一遍，比收藏一百个链接更有用——写的过程会把那些一知半解的地方逼出来。
 
-## 三步换成你自己的站
+所以这个站从 2022 年一直开到现在，中间换过三次框架，主题也重写了两次。
 
-### 1. 改站点信息
+## 现在跑的是什么
 
-打开根目录的 `_config.yml`：
+| 位置 | 用的东西 |
+| --- | --- |
+| 站点框架 | Hexo 6.3.0 |
+| 主题 | hexo-theme-fomalhaut v1.0.5（基于 Butterfly 4.3.1 二次开发） |
+| 托管 | Cloudflare + Vercel |
+| 评论 | Waline（自建，`comment.muyudada.dpdns.org`） |
+| 搜索 | hexo-generator-search 生成 `/search.xml`，前端本地检索 |
+| 统计 | 不蒜子 + 51LA |
 
-```yaml
-title: 你的站点名
-author: 你的名字
-url: https://your-domain.com/
-```
-
-### 2. 改主题配置
-
-主题的所有开关都在根目录的 `_config.fomalhaut.yml`：
-
-```yaml
-avatar:
-  img: /assets/avatar.webp      # 换成你自己的头像
-
-social:                          # 社交链接，格式： 名称: 链接 || 图标 || 动画
-  Github: https://github.com/yourname || icon-github || faa-tada
-
-index_img: /assets/head.jpg      # 首页大图
-```
-
-### 3. 写文章、跑起来
-
-```bash
-hexo new post "我的第一篇文章"   # 在 source/_posts/ 生成
-hexo server                      # 本地预览 http://localhost:4000
-hexo generate && gulp            # 构建（gulp 负责压缩）
-```
+主题本身是从 Butterfly 改出来的，但改到后来结构已经和上游差得比较远：
+模板从 EJS 换成了 Pug，样式层重排过，侧栏、归档页、友人帐都各自加了独立的小挂件。
 
 {% note info flat %}
-根目录的 `scripts/` 与 `source/js/`、`source/css/` 是**站点级**的增强代码，和 `themes/fomalhaut/` 里的主题代码是分开的。
-升级主题时只要不动 `themes/` 目录，你自己写的样式和脚本都不会丢。
+根目录的 `scripts/`、`source/js/`、`source/css/` 是**站点级**的增强代码，和 `themes/fomalhaut/` 里的主题代码是分开的。
+升级主题时只要不动 `themes/` 目录，自己写的样式和脚本都不会丢。
 {% endnote %}
 
-## 这篇示例用到的写法
+## 这个站上有哪些自己写的东西
 
-上面用到了 `{% note info flat %}...{% endnote %}` 提示块、二级/三级标题、行内代码与代码块。
-更多外挂标签（时间线、标签页、画廊、按钮、折叠、Mermaid 等）见另一篇《外挂标签速查》。
+- **分类快捷导航条** —— 首页、归档、分类、标签页顶部那条可以横向滚动的胶囊，带总篇数统计
+- **标签关系图** —— 在 `/tags/` 页，用 ECharts 力导向图画出标签之间的共现关系
+- **归档页重排** —— 把 Hexo 原生的时间线重构成"概览统计 + 年份吸顶跳转 + 可折叠年份 + 两列卡片"
+- **友人帐延迟徽章** —— 每位朋友的卡片右上角实时显示访问延时，绿/橙/红三档
+- **贡献日历** —— 在 `/site/census/`，数据来自 GitHub 公开的 contributions API
+
+这些挂件的共同点是：都不需要额外部署服务，纯前端跑完。
+
+## 接下来
+
+想写的东西还堆着不少：Hexo 的渲染管线、Pug 模板里那些踩过的坑、还有几个一直没写完的小工具。
+
+如果你也在折腾自己的站点，欢迎去[留言板](/comments/)随便说点什么，或者到[友人帐](/social/link/)交换个链接。
+
+更多外挂标签（时间线、标签页、画廊、按钮、折叠、Mermaid 等）的用法，见另一篇《外挂标签速查》。

@@ -20,6 +20,7 @@ menu:
   网站 || icon-wangye || faa-tada || hide:
     网站统计: /site/census/ || icon--tongjibiao || faa-tada
     旧时光: /site/time/ || icon-xianxingshalou || faa-tada
+    打赏: /sponsor/ || icon-love-sign || faa-tada
     关于: /personal/about/ || icon-paperplane || faa-tada
 
 # Code Blocks (代碼相關)
@@ -45,19 +46,19 @@ copy:
 #   icon: link || the description
 social:
   # 格式： 名称: 链接 || 图标类名 || 动画类名
-  Github: https://github.com/yourname || icon-github || faa-tada
-  B站: https://space.bilibili.com/12345678 || icon-bilibili || faa-tada
-  邮箱: mailto:you@example.com || icon-youxiang || faa-tada
+  Github: https://github.com/muyudada || icon-github || faa-tada
+  B站: https://space.bilibili.com/349764263 || icon-bilibili || faa-tada
+  邮箱: mailto:2756390658@qq.com || icon-youxiang || faa-tada
   # 微信: /assets/wechat-qr.webp || icon-weixin || faa-tada
-  # RSS: /atom.xml || icon-RSS || faa-tada
+  RSS: /atom.xml || icon-RSS || faa-tada
 
   # 用 iconfont 图标的写法：
-  # iconfont icon-github: https://github.com/yourname || Github
-  # iconfont icon-youjian: mailto:you@example.com || 邮箱
+  # iconfont icon-github: https://github.com/muyudada || Github
+  # iconfont icon-youjian: mailto:2756390658@qq.com || 邮箱
 
-  # iconfont icon-github: https://github.com/yourname || Github
-  # iconfont icon-youjian: mailto:you@example.com || 邮箱
-  # iconfont icon-tv: https://space.bilibili.com/12345678 || B站
+  # iconfont icon-github: https://github.com/muyudada || Github
+  # iconfont icon-youjian: mailto:2756390658@qq.com || 邮箱
+  # iconfont icon-tv: https://space.bilibili.com/349764263 || B站
   # iconfont icon-leetcode: https://leetcode.cn/u/yourname/ || 力扣
   # iconfont icon-weibo: https://weibo.com/u/0000000000 || 微博
   # iconfont icon-shejiaotubiao-46: https://www.zhihu.com/people/yourname || 知乎
@@ -67,8 +68,11 @@ social:
 # --------------------------------------
 
 # Algolia search
+# 2026-10-19：本站在 Algolia 上没有任何索引（appId/apiKey/indexName 全是占位），
+# 开着它等于搜索框点了没结果，所以默认关闭，改走下面的本地搜索。
+# 想用 Algolia：先在 https://www.algolia.com/ 建索引，把 _config.yml 的 algolia 段填好，再把这里 enable 改回 true。
 algolia_search:
-  enable: true
+  enable: false
   hits:
     per_page: 5
   labels:
@@ -77,9 +81,12 @@ algolia_search:
     hits_stats: "找到${hits}条结果（用时${time} ms）"
 
 # Local search
+# 依赖 hexo-generator-search（已装，见 _config.yml 的 search 段，生成 /search.xml），
+# 前端脚本 themes/fomalhaut/source/js/search/local-search.js。
+# 不用 Hexo 的 algolia 插件，也不需要任何外部服务，构建完就能搜。
 local_search:
-  enable: false
-  preload: true
+  enable: true
+  preload: true # 首屏空闲时就把 search.xml 预取下来，点开搜索框即时出结果
   CDN:
 
 # Math (數學)
@@ -108,7 +115,7 @@ favicon:
 
 # Avatar (頭像)
 avatar:
-  img: /assets/avatar.webp
+  img: /assets/avatar.gif
   effect: false
 
 # Disable all banner image
@@ -151,262 +158,18 @@ cover:
   position: both
   # When cover is not set, the default cover is displayed (當沒有設置cover時，默認的封面顯示)
   default_cover:
-    - https://picsum.photos/id/1036/1200/675
-    - https://picsum.photos/id/1039/1200/675
-    - https://picsum.photos/id/1041/1200/675
-    - https://picsum.photos/id/1043/1200/675
-    - https://picsum.photos/id/1044/1200/675
-    - https://picsum.photos/id/1015/1200/675
-    - https://picsum.photos/id/1016/1200/675
-    - https://picsum.photos/id/1018/1200/675
-    - https://picsum.photos/id/1036/1200/675
-    - https://picsum.photos/id/1041/1200/675
-    - https://picsum.photos/id/1043/1200/675
-    - https://picsum.photos/id/1044/1200/675
-    - https://picsum.photos/id/1015/1200/675
-    - https://picsum.photos/id/1016/1200/675
-    - https://picsum.photos/id/1018/1200/675
-    - https://picsum.photos/id/1036/1200/675
-    - https://picsum.photos/id/1039/1200/675
-    - https://picsum.photos/id/1041/1200/675
-    - https://picsum.photos/id/1043/1200/675
-    - https://picsum.photos/id/1039/1200/675
-    - https://picsum.photos/id/1041/1200/675
-    - https://picsum.photos/id/1043/1200/675
-    - https://picsum.photos/id/1044/1200/675
-    - https://picsum.photos/id/1015/1200/675
-    - https://picsum.photos/id/1016/1200/675
-    - https://picsum.photos/id/1018/1200/675
-    - https://picsum.photos/id/1036/1200/675
-    - https://picsum.photos/id/1039/1200/675
-    - https://picsum.photos/id/1041/1200/675
-    - https://picsum.photos/id/1036/1200/675
-    - https://picsum.photos/id/1039/1200/675
-    - https://picsum.photos/id/1041/1200/675
-    - https://picsum.photos/id/1043/1200/675
-    - https://picsum.photos/id/1044/1200/675
-    - https://picsum.photos/id/1015/1200/675
-    - https://picsum.photos/id/1016/1200/675
-    - https://picsum.photos/id/1018/1200/675
-    - https://picsum.photos/id/1036/1200/675
-    - https://picsum.photos/id/1039/1200/675
-    - https://picsum.photos/id/1018/1200/675
-    - https://picsum.photos/id/1036/1200/675
-    - https://picsum.photos/id/1039/1200/675
-    - https://picsum.photos/id/1041/1200/675
-    - https://picsum.photos/id/1043/1200/675
-    - https://picsum.photos/id/1044/1200/675
-    - https://picsum.photos/id/1015/1200/675
-    - https://picsum.photos/id/1016/1200/675
-    - https://picsum.photos/id/1018/1200/675
-    - https://picsum.photos/id/1036/1200/675
-    - https://picsum.photos/id/1016/1200/675
-    - https://picsum.photos/id/1018/1200/675
-    - https://picsum.photos/id/1036/1200/675
-    - https://picsum.photos/id/1039/1200/675
-    - https://picsum.photos/id/1041/1200/675
-    - https://picsum.photos/id/1043/1200/675
-    - https://picsum.photos/id/1044/1200/675
-    - https://picsum.photos/id/1015/1200/675
-    - https://picsum.photos/id/1016/1200/675
-    - https://picsum.photos/id/1018/1200/675
-    - https://picsum.photos/id/1015/1200/675
-    - https://picsum.photos/id/1016/1200/675
-    - https://picsum.photos/id/1018/1200/675
-    - https://picsum.photos/id/1036/1200/675
-    - https://picsum.photos/id/1039/1200/675
-    - https://picsum.photos/id/1041/1200/675
-    - https://picsum.photos/id/1043/1200/675
-    - https://picsum.photos/id/1044/1200/675
-    - https://picsum.photos/id/1015/1200/675
-    - https://picsum.photos/id/1016/1200/675
-    - https://picsum.photos/id/1044/1200/675
-    - https://picsum.photos/id/1015/1200/675
-    - https://picsum.photos/id/1016/1200/675
-    - https://picsum.photos/id/1018/1200/675
-    - https://picsum.photos/id/1036/1200/675
-    - https://picsum.photos/id/1039/1200/675
-    - https://picsum.photos/id/1041/1200/675
-    - https://picsum.photos/id/1043/1200/675
-    # - https://picsum.photos/id/1044/1200/675
-    - https://picsum.photos/id/1015/1200/675
-    - https://picsum.photos/id/1043/1200/675
-    - https://picsum.photos/id/1044/1200/675
-    - https://picsum.photos/id/1015/1200/675
-    - https://picsum.photos/id/1016/1200/675
-    - https://picsum.photos/id/1018/1200/675
-    - https://picsum.photos/id/1036/1200/675
-    - https://picsum.photos/id/1039/1200/675
-    - https://picsum.photos/id/1041/1200/675
-    - https://picsum.photos/id/1043/1200/675
-    - https://picsum.photos/id/1044/1200/675
-    - https://picsum.photos/id/1041/1200/675
-    - https://picsum.photos/id/1043/1200/675
-    - https://picsum.photos/id/1044/1200/675
-    - https://picsum.photos/id/1015/1200/675
-    - https://picsum.photos/id/1016/1200/675
-    - https://picsum.photos/id/1018/1200/675
-    # - https://picsum.photos/id/1036/1200/675
-    - https://picsum.photos/id/1039/1200/675
-    - https://picsum.photos/id/1041/1200/675
-    - https://picsum.photos/id/1043/1200/675
-    - https://picsum.photos/id/1036/1200/675
-    - https://picsum.photos/id/1039/1200/675
-    - https://picsum.photos/id/1041/1200/675
-    # - https://picsum.photos/id/1043/1200/675
-    - https://picsum.photos/id/1044/1200/675
-    - https://picsum.photos/id/1015/1200/675
-    - https://picsum.photos/id/1016/1200/675
-    - https://picsum.photos/id/1018/1200/675
-    - https://picsum.photos/id/1036/1200/675
-    - https://picsum.photos/id/1039/1200/675
-    - https://picsum.photos/id/1018/1200/675
-    - https://picsum.photos/id/1036/1200/675
-    - https://picsum.photos/id/1039/1200/675
-    - https://picsum.photos/id/1041/1200/675
-    - https://picsum.photos/id/1043/1200/675
-    - https://picsum.photos/id/1044/1200/675
-    - https://picsum.photos/id/1015/1200/675
-    - https://picsum.photos/id/1016/1200/675
-    - https://picsum.photos/id/1018/1200/675
-    - https://picsum.photos/id/1036/1200/675
-    - https://picsum.photos/id/1016/1200/675
-    - https://picsum.photos/id/1018/1200/675
-    - https://picsum.photos/id/1036/1200/675
-    # - https://picsum.photos/id/1039/1200/675
-    - https://picsum.photos/id/1041/1200/675
-    - https://picsum.photos/id/1043/1200/675
-    - https://picsum.photos/id/1044/1200/675
-    - https://picsum.photos/id/1015/1200/675
-    - https://picsum.photos/id/1016/1200/675
-    - https://picsum.photos/id/1018/1200/675
-    - https://picsum.photos/id/1015/1200/675
-    - https://picsum.photos/id/1016/1200/675
-    - https://picsum.photos/id/1018/1200/675
-    - https://picsum.photos/id/1036/1200/675
-    - https://picsum.photos/id/1039/1200/675
-    - https://picsum.photos/id/1041/1200/675
-    - https://picsum.photos/id/1043/1200/675
-    - https://picsum.photos/id/1044/1200/675
-    - https://picsum.photos/id/1015/1200/675
-    - https://picsum.photos/id/1016/1200/675
-    - https://picsum.photos/id/1044/1200/675
-    - https://picsum.photos/id/1015/1200/675
-    - https://picsum.photos/id/1016/1200/675
-    - https://picsum.photos/id/1018/1200/675
-    - https://picsum.photos/id/1036/1200/675
-    - https://picsum.photos/id/1039/1200/675
-    - https://picsum.photos/id/1041/1200/675
-    - https://picsum.photos/id/1043/1200/675
-    - https://picsum.photos/id/1044/1200/675
-    - https://picsum.photos/id/1015/1200/675
-    - https://picsum.photos/id/1043/1200/675
-    - https://picsum.photos/id/1044/1200/675
-    - https://picsum.photos/id/1015/1200/675
-    - https://picsum.photos/id/1016/1200/675
-    - https://picsum.photos/id/1018/1200/675
-    - https://picsum.photos/id/1036/1200/675
-    - https://picsum.photos/id/1039/1200/675
-    - https://picsum.photos/id/1041/1200/675
-    - https://picsum.photos/id/1043/1200/675
-    - https://picsum.photos/id/1044/1200/675
-    - https://picsum.photos/id/1041/1200/675
-    - https://picsum.photos/id/1043/1200/675
-    - https://picsum.photos/id/1044/1200/675
-    - https://picsum.photos/id/1015/1200/675
-    - https://picsum.photos/id/1016/1200/675
-    - https://picsum.photos/id/1018/1200/675
-    - https://picsum.photos/id/1036/1200/675
-    - https://picsum.photos/id/1039/1200/675
-    - https://picsum.photos/id/1041/1200/675
-    - https://picsum.photos/id/1043/1200/675
-    - https://picsum.photos/id/1039/1200/675
-    - https://picsum.photos/id/1041/1200/675
-    - https://picsum.photos/id/1043/1200/675
-    - https://picsum.photos/id/1044/1200/675
-    - https://picsum.photos/id/1015/1200/675
-    - https://picsum.photos/id/1016/1200/675
-    - https://picsum.photos/id/1018/1200/675
-    - https://picsum.photos/id/1036/1200/675
-    - https://picsum.photos/id/1039/1200/675
-    - https://picsum.photos/id/1041/1200/675
-    - https://picsum.photos/id/1036/1200/675
-    - https://picsum.photos/id/1039/1200/675
-    - https://picsum.photos/id/1041/1200/675
-    - https://picsum.photos/id/1043/1200/675
-    - https://picsum.photos/id/1044/1200/675
-    - https://picsum.photos/id/1015/1200/675
-    - https://picsum.photos/id/1016/1200/675
-    - https://picsum.photos/id/1018/1200/675
-    - https://picsum.photos/id/1036/1200/675
-    - https://picsum.photos/id/1039/1200/675
-    - https://picsum.photos/id/1018/1200/675
-    - https://picsum.photos/id/1036/1200/675
-    - https://picsum.photos/id/1039/1200/675
-    - https://picsum.photos/id/1041/1200/675
-    - https://picsum.photos/id/1043/1200/675
-    - https://picsum.photos/id/1044/1200/675
-    - https://picsum.photos/id/1015/1200/675
-    - https://picsum.photos/id/1016/1200/675
-    - https://picsum.photos/id/1018/1200/675
-    - https://picsum.photos/id/1036/1200/675
-    - https://picsum.photos/id/1039/1200/675
-    - https://picsum.photos/id/1041/1200/675
-    - https://picsum.photos/id/1043/1200/675
-    - https://picsum.photos/id/1044/1200/675
-    - https://picsum.photos/id/1015/1200/675
-    - https://picsum.photos/id/1016/1200/675
-    - https://picsum.photos/id/1018/1200/675
-    - https://picsum.photos/id/1036/1200/675
-    - https://picsum.photos/id/1039/1200/675
-    - https://picsum.photos/id/1041/1200/675
-    - https://picsum.photos/id/1036/1200/675
-    - https://picsum.photos/id/1039/1200/675
-    - https://picsum.photos/id/1041/1200/675
-    - https://picsum.photos/id/1043/1200/675
-    - https://picsum.photos/id/1044/1200/675
-    - https://picsum.photos/id/1015/1200/675
-    - https://picsum.photos/id/1016/1200/675
-    - https://picsum.photos/id/1018/1200/675
-    - https://picsum.photos/id/1036/1200/675
-    - https://picsum.photos/id/1039/1200/675
-    - https://picsum.photos/id/1018/1200/675
-    - https://picsum.photos/id/1036/1200/675
-    - https://picsum.photos/id/1039/1200/675
-    - https://picsum.photos/id/1041/1200/675
-    - https://picsum.photos/id/1043/1200/675
-    - https://picsum.photos/id/1044/1200/675
-    - https://picsum.photos/id/1015/1200/675
-    - https://picsum.photos/id/1016/1200/675
-    - https://picsum.photos/id/1018/1200/675
-    - https://picsum.photos/id/1036/1200/675
-    - https://picsum.photos/id/1016/1200/675
-    - https://picsum.photos/id/1018/1200/675
-    - https://picsum.photos/id/1036/1200/675
-    - https://picsum.photos/id/1039/1200/675
-    - https://picsum.photos/id/1041/1200/675
-    - https://picsum.photos/id/1043/1200/675
-    - https://picsum.photos/id/1044/1200/675
-    - https://picsum.photos/id/1015/1200/675
-    - https://picsum.photos/id/1016/1200/675
-    - https://picsum.photos/id/1018/1200/675
-    - https://picsum.photos/id/1015/1200/675
-    - https://picsum.photos/id/1016/1200/675
-    - https://picsum.photos/id/1018/1200/675
-    - https://picsum.photos/id/1036/1200/675
-    - https://picsum.photos/id/1039/1200/675
-    - https://picsum.photos/id/1041/1200/675
-    - https://picsum.photos/id/1043/1200/675
-    - https://picsum.photos/id/1044/1200/675
-    - https://picsum.photos/id/1015/1200/675
-    - https://picsum.photos/id/1016/1200/675
-    - https://picsum.photos/id/1044/1200/675
-    - https://picsum.photos/id/1015/1200/675
-    - https://picsum.photos/id/1016/1200/675
-    - https://picsum.photos/id/1018/1200/675
-    - https://picsum.photos/id/1036/1200/675
-    - https://picsum.photos/id/1039/1200/675
-    - https://picsum.photos/id/1041/1200/675
+    - /assets/wallpaper/desktop-1.avif
+    - /assets/wallpaper/desktop-2.avif
+    - /assets/wallpaper/desktop-3.avif
+    - /assets/wallpaper/desktop-4.avif
+    - /assets/wallpaper/desktop-5.avif
+    - /assets/wallpaper/desktop-6.avif
+    - /assets/wallpaper/mobile-1.avif
+    - /assets/wallpaper/mobile-2.avif
+    - /assets/wallpaper/mobile-3.avif
+    - /assets/wallpaper/mobile-4.avif
+    - /assets/wallpaper/mobile-5.avif
+    - /assets/wallpaper/mobile-6.avif
 
 # A simple 404 page
 error_404:
@@ -469,15 +232,17 @@ post_copyright:
   license_url: https://creativecommons.org/licenses/by-nc-sa/4.0/
 
 # Sponsor/reward
-# 2026-10-05 按要求关闭文章底部「投喂作者」按钮（投喂通道暂停）
+# 2026-10-19：恢复投喂通道，二维码换成本站真实的支付宝/微信收款码
+# （图片在 source/assets/sponsor/，同时被 /sponsor/ 打赏页引用）。
+# 只想要页面、不想在文章底部挂按钮的话，把 enable 改回 false 即可。
 reward:
-  enable: false
+  enable: true
   coinAudio: https://npm.elemecdn.com/akilar-candyassets@1.0.36/audio/aowu.m4a
   QR_code:
-    - img: https://picsum.photos/id/1018/1200/675
+    - img: /assets/sponsor/wechat.png
       link:
       text: 微信
-    - img: https://picsum.photos/id/1043/1200/675
+    - img: /assets/sponsor/alipay.png
       link:
       text: 支付宝
 
@@ -541,8 +306,10 @@ addtoany:
 comments:
   # Up to two comments system, the first will be shown as default
   # Choose: Disqus/Disqusjs/Livere/Gitalk/Valine/Waline/Utterances/Facebook Comments/Twikoo/Giscus/Remark42
+  # 2026-10-19：从 Twikoo 切到 Waline（Waline 服务已在线，见下面 waline.serverURL）。
+  # 想换回 Twikoo：把这里改回 - Twikoo，再把 twikoo.envId 填成你自己的部署地址。
   use:
-    - Twikoo # Valine,Disqus,...
+    - Waline # Valine,Disqus,...
   text: true # Display the comment name next to the button
   # lazyload: The comment system will be load when comment element enters the browser's viewport.
   # If you set it to true, the comment count will be invalid
@@ -594,10 +361,17 @@ valine:
 # waline - A simple comment system with backend support fork from Valine
 # https://waline.js.org/
 waline:
-  serverURL:
+  serverURL: https://comment.muyudada.dpdns.org/ # 与 Firefly-yuan 同一套 Waline 服务
   bg:
   pageview: false
   option:
+    lang: zh-CN
+    login: enable # 登录后可改评论、收到回复通知
+    requiredMeta: [nick, mail]
+    emoji:
+      - https://unpkg.com/@waline/emojis@1.2.0/weibo
+      - https://unpkg.com/@waline/emojis@1.2.0/bilibili
+      - https://unpkg.com/@waline/emojis@1.2.0/bmoji
     # pageSize: 10
     # requiredFields: mail
     # # anonymous: false
@@ -794,14 +568,23 @@ tag_ui: # 留空或 index
 # The formal of image: url(http://xxxxxx.com/xxx.jpg)
 # "#e4f4f6" "#efefef"
 background:
-  #【必选】默认背景 url(https://picsum.photos/id/1015/1920/1080)
+  #【必选】默认背景（2026-10-19 起走随机图 API，每次加载换一张）
   default: var(--default-bg)
-  #【可选】PC端夜间模式背景 url(https://picsum.photos/id/1044/1920/1080)
+  #【可选】PC端夜间模式背景
   darkmode: var(--darkmode-bg)
-  #【可选】移动端日间默认背景 url(https://picsum.photos/id/1018/1920/1080)
+  #【可选】移动端日间默认背景
   mobileday: var(--mobileday-bg)
-  #【可选】移动端夜间模式背景 url(https://picsum.photos/id/1039/1920/1080)
+  #【可选】移动端夜间模式背景
   mobilenight: var(--mobilenight-bg)
+  # 上面四个都是 CSS 变量，真正的 URL 在 inject.head 的 <style id="defineBg"> 里，
+  # 运行时会由 source/js/modules/settings.js 的 resetBg_() 重写同一份值。
+  # 当前值（t.alcy.cc 随机图，全部 HTTPS、支持跨域）：
+  #   --default-bg    https://t.alcy.cc/pc   横屏随机
+  #   --darkmode-bg   https://t.alcy.cc/ys   二次元随机
+  #   --mobileday-bg  https://t.alcy.cc/mp   竖屏随机
+  #   --mobilenight-bg https://t.alcy.cc/moe 萌图随机
+  # 想改回固定图片：直接把上面四个变量换成 url(/assets/wallpaper/xxx.avif)（本地仍留着 12 张），
+  # 或者干脆在这里写死 URL（写死的话记得把 defineBg 与 resetBg_() 一起改掉）。
 
 # Footer Background
 footer_bg: false
@@ -926,8 +709,9 @@ subtitle:
   source: false
   # 如果關閉打字效果，subtitle 只會顯示 sub 的第一行文字
   sub:
-    - "Welcome to DemoのTiny Home!🤣🤣🤣"
-    - "Hope you have a nice day!🍭🍭🍭"
+    - "永远相信美好的事情即将发生 ✨"
+    - "Welcome to Muyu's Tiny Home 🍭"
+    - "记录折腾过的东西，和没什么用但让我开心的事"
 
 # Loading Animation (加載動畫)
 # preloader: false
@@ -952,24 +736,25 @@ aside:
     category: true
   card_author:
     enable: true
-    description:
+    description: 永远相信美好的事情即将发生
     button:
       enable: true
       icon: # fab fa-github
       text: Github主页
-      link: https://github.com/yourname
+      link: https://github.com/MuyuDada
   card_announcement:
     enable: true
     content: |
       <div class="anno2">
         <div class="a-sect">
-          <div class="a-row a-flat"><span class="a-lb">关于这个模板</span></div>
-          <p style="margin:.4em 0 0">这是一个演示站点：把 <code>_config.yml</code> 与 <code>_config.fomalhaut.yml</code> 里的站点名、域名、头像、友链换成你自己的，再写几篇文章，就能搭起自己的小站。</p>
+          <div class="a-row a-flat"><span class="a-lb">关于这里</span></div>
+          <p style="margin:.4em 0 0">牧屿的小窝 —— 记录折腾过的东西：主题改造、小挂件、以及一些没什么用但让我开心的事。</p>
         </div>
         <div class="a-sect">
           <div class="a-row a-flat"><span class="a-lb">常用入口</span></div>
-          <div class="a-row"><span class="a-lb">文档</span><a class="a-chip" href="https://hexo.io/zh-cn/docs/" target="_blank" rel="noopener"><i class="a-dot"></i>Hexo 文档</a><span class="a-note">官方</span></div>
-          <div class="a-row a-sub"><span class="a-lb"></span><a class="a-chip" href="https://github.com/fomalhaut1998/hexo-theme-fomalhaut" target="_blank" rel="noopener"><i class="a-dot"></i>主题仓库</a><span class="a-note">GitHub</span></div>
+          <div class="a-row"><span class="a-lb">主题</span><a class="a-chip" href="https://github.com/MuyuDada/hexo-theme-fomalhaut" target="_blank" rel="noopener"><i class="a-dot"></i>hexo-theme-fomalhaut</a><span class="a-note">GitHub</span></div>
+          <div class="a-row a-sub"><span class="a-lb"></span><a class="a-chip" href="https://hexo.io/zh-cn/docs/" target="_blank" rel="noopener"><i class="a-dot"></i>Hexo 文档</a><span class="a-note">官方</span></div>
+          <div class="a-row a-sub"><span class="a-lb"></span><a class="a-chip" href="/social/link/"><i class="a-dot"></i>友人帐</a><a class="a-chip" href="/comments/"><i class="a-dot"></i>留言板</a></div>
         </div>
       </div>
 
@@ -1207,9 +992,12 @@ inject:
     - <style id="transPercent"></style> # 透明度调节
     - <style id="bgFilterParam"></style> # 背景滤镜
     - <span id="fps" aria-hidden="true"></span> # 帧率检测（纯装饰，读屏不播报）
-    - <style id="defineBg">:root{--default-bg:url(https://picsum.photos/id/1015/1920/1080);--darkmode-bg:url(https://picsum.photos/id/1044/1920/1080);--mobileday-bg:url(https://picsum.photos/id/1018/1920/1080);--mobilenight-bg:url(https://picsum.photos/id/1039/1920/1080);}</style> # 默认背景（内联兜底：即使 fomal.js 未执行，首屏也有背景图；运行时会被 fomal.js 覆盖）
-    # 注意：夜间那张的地址必须与 source/js/modules/settings.js 的 resetBg_() 逐字一致 ——
+    - <style id="defineBg">:root{--default-bg:url(https://t.alcy.cc/pc);--darkmode-bg:url(https://t.alcy.cc/ys);--mobileday-bg:url(https://t.alcy.cc/mp);--mobilenight-bg:url(https://t.alcy.cc/moe);}</style> # 默认背景（内联兜底：即使 fomal.js 未执行，首屏也有背景图；运行时会被 fomal.js 覆盖）
+    # 2026-10-19 起四个模式全部改成随机图 API（t.alcy.cc）：/pc 横屏、/ys 二次元、/mp 竖屏、/moe 萌图，每次加载换一张。
+    # 想换回固定壁纸就把这四个地址改成 /assets/wallpaper/*.avif（本地还留着 12 张），并把 settings.js 的 resetBg_() 同步改掉。
+    # 注意：这里的地址必须与 source/js/modules/settings.js 的 resetBg_() 逐字一致 ——
     # 运行时覆盖前浏览器已按这里的值下过一份，URL 不一致就会同一张图下两份。
+    # 随机 API 每次请求返回不同图，所以四个模式用了四个不同端点，避免同一次加载重复拉一张。
     - <style id="menu_shadow"></style> # 菜单发光样式
     - <style id="nav-display"></style> # 菜单栏常驻
     - <style id="aside-show"></style> # 侧栏显隐
@@ -1305,6 +1093,31 @@ inject:
     # （配置备份 bak/20261012-archive-cards/before/_config.fomalhaut.yml）。
     - <link rel="stylesheet" href="/css/archive-page.css?v=20261013b">
     - <script defer src="/js/inject/archive-page.js?v=20261013b"></script>
+    # ── 分类快捷导航条（站点独立样式 + 脚本 + 构建期脚本，不改主题源码）──────────────
+    # 对齐 Firefly 的 CategoryBar：首页 / 归档页 / 分类页 / 标签页顶部横向一条胶囊导航，
+    #   左边「首页」和「归档（总篇数）」，中间可横向滚动的全部分类（各带篇数），
+    #   右边「更多 →」跳 /categories/。分类多时用竖直滚轮也能滚（滚到头放行页面滚动）。
+    # scripts/category-bar.js 构建期插 DOM（分类名与篇数只有构建期才知道），
+    #   插在 <main id="content-inner"> 开标签之后 —— 在 #body-wrap 子树里，
+    #   换页时随 pjax 整块替换，不会残留上一页的高亮状态。
+    # source/js/inject/category-bar.js 客户端补「当前项高亮 / 居中滚动 / 两侧渐隐」，
+    #   同时监听 pjax:complete（主题没有通用自定义初始化钩子，必须自己挂）。
+    # source/css/category-bar.css 负责外观，配色全由 --theme-color / --card-bg 派生；
+    #   JS 没跑时导航条照样可点，只是没有高亮与渐隐（降级安全）。
+    # 改 css/js 记得把下面两个 ?v= 一起提版本。回滚：删掉下面两行 + scripts/category-bar.js。
+    - <link rel="stylesheet" href="/css/category-bar.css?v=20261019">
+    - <script defer src="/js/inject/category-bar.js?v=20261019"></script>
+    # ── 标签关系图（站点独立样式 + 脚本 + 构建期 helper，不改主题源码）────────────────
+    # 只在 /tags/ 文章统计页出现（DOM 在 themes/fomalhaut/layout/includes/page/echarts.pug 里）。
+    # 节点 = 标签（大小 = 引用文章数），连线 = 同一篇文章内共现（粗细 = 共现次数），
+    #   对齐 Firefly 的 TagGraph；数据由 scripts/tag-graph.js 的 tag_graph_data() 构建期算好。
+    # 脚本必须全局引入、不能写在 echarts.pug 里：主题 pjax 换页只替换 #body-wrap 内的 DOM，
+    #   页面内的 <script> 不会重新执行，「首页 pjax 点进 /tags/」时关系图就画不出来。
+    # 站点文章太少（没有任何共现）时整块自动隐藏，不会留空框。
+    # 改 css/js 记得把下面两个 ?v= 一起提版本。回滚：删掉下面两行 + scripts/tag-graph.js
+    #   + echarts.pug 里的关系图小节。
+    - <link rel="stylesheet" href="/css/tag-graph.css?v=20261019">
+    - <script defer src="/js/tag-graph.js?v=20261019"></script>
 
   bottom:
     - <script defer charset="UTF-8" id="LA_COLLECT" src="https://sdk.51.la/js-sdk-pro.min.js"></script> # 51la统计（+defer 解除阻塞）

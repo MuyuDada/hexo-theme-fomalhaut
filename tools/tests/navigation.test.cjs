@@ -80,7 +80,10 @@ const originalThemeHashes = {
   'themes/fomalhaut/layout/includes/header/nav.pug': '2fc3867a67b9258877faf793084f80ed31e47c4d5ce7639ac6932698f820f759',
   'themes/fomalhaut/layout/includes/header/menu_item.pug': '97e25cf1d5a03ce70c52285506e3a651447815004ad6c46989960269730757f5',
   'themes/fomalhaut/source/css/_layout/head.styl': '1a43dba4483db527b3c20967d9289c6bb4b53b0232037cc08c40d141558ec29f',
-  'themes/fomalhaut/source/css/_custom/custom.css': 'b158a558bb9614e87023f559ac554ab0bb7dbaf05441b52dccdb2b4fa124fc06',
+  // 2026-10-19（v1.0.5）复核：custom.css 里只改了两处侧栏个人信息卡的背景图
+  // （picsum 占位 → /assets/wallpaper/desktop-2.avif 与 desktop-5.avif），
+  // 导航相关规则未动，所以只更新这一条基线。
+  'themes/fomalhaut/source/css/_custom/custom.css': '771ea661e92f959bbdca9a190d41ebb576666e614c72b2a2f9514d9a498b7d1c',
   'themes/fomalhaut/source/js/main.js': '375868d3a5ee55a31a5e676168c105a82c9bf9235840471521d799090fe5891e'
 };
 

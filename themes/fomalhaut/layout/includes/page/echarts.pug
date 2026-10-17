@@ -26,6 +26,24 @@ br
 br
 br
 
+//- 标签关系图：对齐 Firefly-yuan 的 TagGraph
+//- 节点 = 标签（大小 = 引用文章数），连线 = 同一篇文章内共现（粗细 = 共现次数）。
+//- 数据由 scripts/tag-graph.js 的 tag_graph_data() 在构建期算好，塞进 application/json，
+//- 页面零额外请求；渲染交给 source/js/tag-graph.js（复用本页已加载的 echarts）。
+//- 脚本本身在 _config.fomalhaut.yml 的 inject.head 里全局引入，不放这儿：
+//-   主题 pjax 换页只替换 #body-wrap 内的 DOM，页面里的 <script> 不会重新执行，
+//-   放页面内会导致「从首页 pjax 点进 /tags/」时关系图不渲染。
+//- 站点文章太少（没有任何共现）时整块自动隐藏，不会留一个空框。
+center
+  font(size=4 style="font-weight:bold") 标签关系图🕸️
+.tag-graph#tag-graph
+  p.tag-graph-meta#tag-graph-meta
+  #tag-graph-chart(style="height:460px")
+  script(type="application/json" id="tag-graph-data")!=tag_graph_data({maxNodes: 40})
+
+br
+br
+
 //- 分类统计图表
 center
   font(size=4 style="font-weight:bold") 文章分类统计图📇

@@ -231,77 +231,57 @@ type: "link"
 }
 </style>
 
+## 本站信息
 
+想加友链的话，把下面这份信息填到你自己的友链页就行（点右上角按钮可以一键复制）：
 
-
-## 本站友链添加方式：
-{% tabs link %}
-<!-- tab 🙋 butterfly-💭candy -->
 ```yml
-    - name: Demo
-      link: https://example.com/
-      avatar: https://picsum.photos/id/1016/1200/675
-      descr: Future is now 🍭🍭🍭
-      siteshot: https://picsum.photos/id/1039/800/450
+- name: Muyuの小窝
+  link: https://muyudada.dpdns.org/
+  avatar: https://muyuimg.cc.cd/file/blog/1788157305659_maomao.gif
+  descr: 永远相信美好的事情即将发生
 ```
-<!-- endtab -->
 
-<!-- tab 🥗Volantis -->
-```JSON
-{
-  "title": "Demo",
-  "screenshot": "https://picsum.photos/id/1039/800/450",
-  "url": "https://example.com/",
-  "avatar": "https://picsum.photos/id/1016/1200/675",
-  "description": "Future is now 🍭🍭🍭",
-  "keywords": "Demo"
-}
-```
-<!-- endtab -->
+| 项目 | 内容 |
+| ---- | ---- |
+| 站点名称 | Muyuの小窝 |
+| 站点地址 | https://muyudada.dpdns.org/ |
+| 站长头像 | https://muyuimg.cc.cd/file/blog/1788157305659_maomao.gif |
+| 站点描述 | 永远相信美好的事情即将发生 |
+| 关键词 | Hexo, Butterfly, Fomalhaut, 博客, Muyu |
 
-<!-- tab 🌴General -->
-
-| 名称       | 数值                                                         |
-| ---------- | ------------------------------------------------------------ |
-| 站点名称   | Demo                                                   |
-| 站点截图   | https://picsum.photos/id/1039/800/450 |
-| 站点链接   | https://example.com/                                        |
-| 站长头像   | https://picsum.photos/id/1016/1200/675                         |
-| 站点描述   | Future is now🍭🍭🍭                         |
-| 站点关键词 | Demo,个人博客,代码                                     |
-
-<!-- endtab -->
-{% endtabs %}
-
-
-## 加入本站友链方式
-参照以下格式留言即可
-```YML
-- name: #站点名称
-  link: #站点链接
-  avatar: #站长头像
-  descr: #站点描述
-  siteshot: #站点截图 
-```
-头像图片尽量控制在50KB以内，必须提供头像图片链接，否则将使用默认头像。
-站点截图可以自己提供，尺寸尽量不要大于 600*600，图片压缩后最好小于200KB。
-未提供站点预览图的，本站会根据贵站链接调用以下 API 自动获取贵站的站点截图。
-对于做了反扒措施的站点，API 获取的将是反扒页面，望知悉。
-站点截图建议使用以下 API 获取以匹配本站样式
-有部分朋友的截图体积过大影响加载速度，后面一律采用小体积截图代替望周知
-```markdown
-https://image.thum.io/get/allowJPG/wait/20/width/600/crop/950/https://<你的域名>/
-```
+## 加入本站友链
 
 {% note primary flat %}
-🎉本站支持交换友链，在您提出申请之前，请将本站添加至友链
-🥗为了保障本站用户，本站仅支持个人网站的友链申请
-🍧申请本站友链需要拥有独立域名（非免费域名），建议开启全站HTTPS
-🥫如果友情链接已经添加，请保持网站的正常访问，会定期清理僵尸网站
-🍖网站有一定的实质性内容和主题，不能是空壳网站和练手网站
-💕感谢您对本站的支持，如果您已经满足上述要求，请在下方表单提交友链申请~~~
+🧡 互换原则：先去你那边把本站加上，再来这里提交，我看到会回访。
+🍊 内容要求：有独立域名（不接受免费二级域名），全站 HTTPS，有实质内容，不是空壳站或练手站。
+🍋 维护约定：长期打不开或者超过一年没更新的，我会先挪到友链列表末尾，再联系不上才会移除。
+🍇 站点类型：只接受个人站点。商业站、采集站、纯导航站、内容农场就不加了，见谅。
 {% endnote %}
 
-<div class="addBtn"><button onclick="leonus.linkCom()"><i class="fa-solid fa-circle-plus"></i>快速申请 (默认样式)</button> <button onclick="leonus.linkCom(&quot;bf&quot;)"><i class="fa-solid fa-circle-plus"></i>快速申请 (Butterfly)</button></div>
+按下面的格式填一份，贴到留言板或者发邮件给我都行：
+
+```yml
+- name: # 站点名称
+  link: # 站点链接（必须 https://）
+  avatar: # 站长头像（正方形，建议 100x100 以上）
+  descr: # 一句话介绍，20 字以内最好
+  siteshot: # 站点截图（可选，不填我会用 thum.io 自动截）
+```
+
+提交前顺手检查三件事，能省掉来回沟通：
+
+1. **头像能直接打开**。头像链接经常是图床防盗链或者权限没设对，导致我这边显示成默认图。
+2. **站点截图别太大**。建议 600×600 以内、压缩后 100KB 以下，太大的截图会把友人帐页面拖慢。
+3. **地址带协议头**。`https://` 不要漏，`www` 和不带 `www` 是两条不同的地址，确认一下哪个是你的主域。
+
+截图可以自己截，也可以用这个接口现取（和本站卡片用的是同一个）：
+
+```markdown
+https://image.thum.io/get/allowJPG/wait/20/width/600/crop/950/https://你的域名/
+```
+
+<div class="addBtn"><button onclick="leonus.linkCom()"><i class="fa-solid fa-circle-plus"></i>快速申请（默认样式）</button> <button onclick="leonus.linkCom(&quot;bf&quot;)"><i class="fa-solid fa-circle-plus"></i>快速申请（Butterfly）</button></div>
 <link rel="stylesheet" href="/css/kslink.css">
 <script src="/js/kslink.js"></script>
+<script src="/js/friend-latency.js?v=20261019" defer></script>

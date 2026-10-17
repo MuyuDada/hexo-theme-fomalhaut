@@ -1383,13 +1383,13 @@ button#go-up:hover #percent {
 
 /* 个人信息卡片背景图 */
 [data-theme="light"] #aside-content > .card-widget.card-info {
-  background-image: url(https://picsum.photos/id/1043/1920/1080);
+  background-image: url(/assets/wallpaper/desktop-2.avif);
   background-repeat: no-repeat;
   background-attachment: inherit;
   background-size: 100%;
 }
 [data-theme="dark"] #aside-content > .card-widget.card-info {
-  background-image: url(https://picsum.photos/id/1036/1920/1080);
+  background-image: url(/assets/wallpaper/desktop-5.avif);
   background-repeat: no-repeat;
   background-attachment: inherit;
   background-size: 100%;

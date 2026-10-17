@@ -40,6 +40,41 @@ function GitCalendarRefresh() {
   return true;
 }
 
+/* 把「扁平 N 天」的贡献数据整理成 gitcalendar 需要的「53 周 × 7 天」。
+   数据源换成了 github-contributions-api.jogruber.de（返回 {contributions:[{date,count,level}...], total:{lastYear:N}}），
+   而本脚本要的是 contributions 按周分组、total 是数字，两者形状对不上，所以在这里统一。
+
+   做法：先建 日期→count 的映射，再从「最后一天所在的周六」往回推 53 周，
+   逐日查表填 0 兜底 —— 这样每列恒定是「周日 → 周六」，不用管源数据从星期几开始、有多少天。
+   已经是二维数组（原 akilar 接口的格式）就原样返回，不动它。 */
+function git_normalize(raw) {
+  if (!raw || !Array.isArray(raw.contributions)) return raw;
+  var flat = raw.contributions;
+  if (!flat.length || Array.isArray(flat[0])) return raw;
+  var DAY = 86400000, i;
+  var byDate = {};
+  for (i = 0; i < flat.length; i++) {
+    if (flat[i] && flat[i].date) byDate[flat[i].date] = flat[i].count || 0;
+  }
+  var t = Date.parse(flat[flat.length - 1].date + 'T00:00:00Z');
+  if (!isFinite(t)) return raw;
+  var endOfWeek = t + (6 - new Date(t).getUTCDay()) * DAY;  // 补齐到本周周六
+  var cursor = endOfWeek - (53 * 7 - 1) * DAY;              // 再往前整整 53 周
+  var weeks = [];
+  for (var w = 0; w < 53; w++) {
+    var week = [];
+    for (var d = 0; d < 7; d++) {
+      var key = new Date(cursor + d * DAY).toISOString().slice(0, 10);
+      week.push({ date: key, count: byDate[key] || 0, level: 0 });
+    }
+    weeks.push(week);
+    cursor += 7 * DAY;
+  }
+  var total = raw.total;
+  if (total && typeof total === 'object') total = total.lastYear || 0;
+  return { contributions: weeks, total: total || 0 };
+}
+
 /* 每次初始化都会领一个递增的编号；旧的那次 fetch 回来时发现自己已经不是最新，就整段丢弃。
    这样「页面刚打开就切主题色」「连点两下颜色」这类并发都不会叠出两份画布。
 
@@ -265,7 +300,7 @@ function GitCalendarInit(git_gitapiurl, git_color, git_user) {
         }
       }
 
-      fetch(git_gitapiurl).then(data => data.json()).then(data => {
+      fetch(git_gitapiurl).then(data => data.json()).then(git_normalize).then(data => {
         if (git_seq !== window.__gitInitSeq) { return }  // 已经被更新的一次初始化取代，丢弃这次结果
         if (document.getElementById('git_loading')) {
           document.getElementById('git_loading').remove()

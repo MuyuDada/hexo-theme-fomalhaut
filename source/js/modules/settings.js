@@ -703,8 +703,8 @@ let bingHistoryBg = "url(https://bing.biturl.top/?resolution=1920&format=image&i
 let EEEDog = "url(https://www.loliapi.com/acg/pc/)";
 // 随机美图（2026-09-30 换到 api.dujin.org/pic/；2026-10-06 该接口开始返回 0 字节空图，改用 moe.jitsu.top 萌图）
 let seovx = "url(https://moe.jitsu.top/api?sort=pc)";
-// picsum随机
-let picsum = "url(https://picsum.photos/id/1043/1920/1080.webp)";
+// 随机壁纸（2026-10-19 换到 t.alcy.cc，原 picsum 占位图已下线；id 仍沿用 picsum 以兼容历史本地存储值）
+let picsum = "url(https://t.alcy.cc/pc)";
 // 小歪二次元
 // let waiDongman = "url(https://api.ixiaowai.cn/api/api.php)";
 // 高清壁纸（2026-09-30 修复：原 api.ixiaowai.cn 已失效）
@@ -739,14 +739,17 @@ function bgValToUrl(s) {
 // 更换背景(自己的代码)
 restoreAppearanceBackground();
 // 默认背景
+// 2026-10-19 起四个模式全部改成随机图 API（t.alcy.cc）：/pc 横屏、/ys 二次元、/mp 竖屏、/moe 萌图。
+// 这四行必须与 _config.fomalhaut.yml 的 <style id="defineBg"> 逐字一致，否则同一张图会被下载两份。
+// 想换回固定壁纸就把地址改成 /assets/wallpaper/*.avif（本地还留着 12 张）。
 function resetBg_() {
   var el = document.getElementById("defineBg");
   if (!el) return;
   el.innerText = `:root{
-    --default-bg: url(https://picsum.photos/id/1015/1920/1080);
-    --darkmode-bg:url(https://picsum.photos/id/1044/1920/1080);
-    --mobileday-bg: url(https://picsum.photos/id/1018/1920/1080);
-    --mobilenight-bg: url(https://picsum.photos/id/1039/1920/1080);
+    --default-bg: url(https://t.alcy.cc/pc);
+    --darkmode-bg:url(https://t.alcy.cc/ys);
+    --mobileday-bg: url(https://t.alcy.cc/mp);
+    --mobilenight-bg: url(https://t.alcy.cc/moe);
   }`;
 }
 
