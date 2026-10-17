@@ -8,8 +8,8 @@ const path = require('node:path');
 const vm = require('node:vm');
 const modulePath = path.resolve(__dirname, '../../source/js/modules/appearance-fonts.js');
 const source = fs.readFileSync(modulePath, 'utf8');
-const textFonts = ['LXGWScreen', 'LXGW', 'LXGWNeoXiHei', 'SourceHanSerif', 'ZhuZiAWan', 'HYTMR', 'TTQHB', 'default'];
-const codeFonts = ['Monaco_1', 'Consolas_1', 'MapleMono_1', 'Hack_1'];
+const textFonts = ['LXGW', 'LXGWNeoXiHei', 'SourceHanSerif', 'default', 'ZCOOLKuaiLe', 'MaShanZheng', 'LongCang'];
+const codeFonts = ['JetBrainsMono', 'FiraCode', 'SourceCodePro', 'MapleMono', 'Hack'];
 function deferred() {
   let resolve, reject;
   const promise = new Promise((yes, no) => { resolve = yes; reject = no; });
@@ -23,7 +23,7 @@ function element(id) {
     setAttribute(k, v) { attributes.set(k, String(v)); }, getAttribute: k => attributes.get(k) ?? null };
 }
 function harness(saved = {}, options = {}) {
-  const store = new Map(Object.entries({ font: 'LXGWScreen', codeFont: 'Monaco_1', themeColor: 'purple', bg: 'user-background', ...saved }));
+  const store = new Map(Object.entries({ font: 'LXGW', codeFont: 'JetBrainsMono', themeColor: 'purple', bg: 'user-background', ...saved }));
   const writes = [], setters = [], probes = [], timers = new Map(), nodes = new Map();
   let now = 0, timerId = 0;
   const localStorage = { getItem: k => store.get(k) ?? null,
@@ -44,7 +44,7 @@ function harness(saved = {}, options = {}) {
   if (options.load === false) document.fonts = {};
   if (options.throwLoad) document.fonts.load = () => { throw new Error('font loader threw synchronously'); };
   const ctx = vm.createContext({ document, localStorage, console,
-    FONT_LIST: textFonts.slice(), FONT_DEFAULT: 'LXGWScreen', CODE_FONT_LIST: codeFonts.slice(), CODE_FONT_DEFAULT: 'Monaco_1',
+    FONT_LIST: textFonts.slice(), FONT_DEFAULT: 'LXGW', CODE_FONT_LIST: codeFonts.slice(), CODE_FONT_DEFAULT: 'JetBrainsMono',
     setFont(key) { setters.push(['text', key]); localStorage.setItem('font', key); document.documentElement.style.setProperty('--font-family', key); },
     setCodeFont(key) { setters.push(['code', key]); localStorage.setItem('codeFont', key); document.documentElement.style.setProperty('--code-font', key); },
     setTimeout(fn, delay) { const id = ++timerId; timers.set(id, { fn, at: now + Number(delay) }); return id; },
@@ -68,7 +68,7 @@ function harness(saved = {}, options = {}) {
 }
 function preview(h, kind) { return h.nodes.get('ap-' + kind + '-preview').style.fontFamily; }
 function status(h, kind) { return h.nodes.get('ap-' + kind + '-status').textContent; }
-function unchanged(h, saved = { font: 'LXGWScreen', codeFont: 'Monaco_1' }) {
+function unchanged(h, saved = { font: 'LXGW', codeFont: 'JetBrainsMono' }) {
   assert.equal(h.store.get('font'), saved.font); assert.equal(h.store.get('codeFont'), saved.codeFont);
   assert.deepEqual(h.setters, []); assert.deepEqual(h.writes, []);
   assert.equal(h.store.get('themeColor'), 'purple'); assert.equal(h.store.get('bg'), 'user-background');
@@ -91,7 +91,7 @@ test('classic module provides all public globals without settings eval or side e
   unchanged(h); assert.equal(h.probes.length, 0);
 });
 
-test('markup keeps eight text/four code buttons, semantic labels and previews without eagerly styling font names', () => {
+test('markup keeps seven text/five code buttons, semantic labels and previews without eagerly styling font names', () => {
   const h = harness(), html = h.ctx.appearanceFontMarkup();
   assert.equal(typeof html, 'string');
   assert.equal((html.match(/<button\b[^>]*class=["'][^"']*\bap-font-option\b/g) || []).length, 12);
@@ -109,10 +109,10 @@ test('markup keeps eight text/four code buttons, semantic labels and previews wi
       assert.match(button, /<small\b[^>]*>[^<]+<\/small>/, 'purpose/default annotation');
     }
   }
-  for (const label of ['霞鹜文楷', '霞鹜新晰黑', '思源宋体', '筑紫', '汉仪唐美人', '甜甜圈', '系统', 'Monaco', 'Consolas', 'Maple', 'Hack', '默认']) assert.ok(html.includes(label), label + ' name/default');
+  for (const label of ['霞鹜文楷', '霞鹜新晰黑', '思源宋体', '系统', '站酷快乐体', '马善政', '龙藏', 'JetBrains', 'Fira', 'Source Code Pro', 'Maple', 'Hack', '默认']) assert.ok(html.includes(label), label + ' name/default');
   assert.match(html, /正文|阅读/); assert.match(html, /个性/); assert.match(html, /代码/);
   const details = html.match(/<details\b[^>]*>[\s\S]*?<\/details>/g) || [];
-  assert.ok(details.some(s => s.includes('个性') && ['ZhuZiAWan', 'HYTMR', 'TTQHB'].every(k => s.includes('swf_' + k))), 'decorative fonts live in disclosure');
+  assert.ok(details.some(s => s.includes('个性') && ['ZCOOLKuaiLe', 'MaShanZheng', 'LongCang'].every(k => s.includes('swf_' + k))), 'decorative fonts live in disclosure');
   const text = blockWithId(html, 'p', 'ap-text-preview'), code = blockWithId(html, 'pre', 'ap-code-preview');
   assert.ok(text, 'one paragraph preview'); assert.ok(code, 'one pre preview');
   assert.match(plainText(text), /[\u4e00-\u9fff]/); assert.match(plainText(text), /[a-zA-Z]/); assert.match(plainText(text), /\d/);
@@ -127,30 +127,30 @@ test('markup keeps eight text/four code buttons, semantic labels and previews wi
 });
 
 test('init reflects saved choices/current names in shared previews without loads or writes', () => {
-  const h = harness({ font: 'SourceHanSerif', codeFont: 'Hack_1' }); h.init();
-  selected(h, 'text', 'SourceHanSerif'); selected(h, 'code', 'Hack_1');
-  assert.ok(preview(h, 'text').includes('SourceHanSerif')); assert.ok(preview(h, 'code').includes('Hack_1'));
+  const h = harness({ font: 'SourceHanSerif', codeFont: 'Hack' }); h.init();
+  selected(h, 'text', 'SourceHanSerif'); selected(h, 'code', 'Hack');
+  assert.ok(preview(h, 'text').includes('SourceHanSerif')); assert.ok(preview(h, 'code').includes('Hack'));
   assert.match(h.nodes.get('ap-text-current').textContent, /思源宋体/); assert.match(h.nodes.get('ap-code-current').textContent, /Hack/);
-  unchanged(h, { font: 'SourceHanSerif', codeFont: 'Hack_1' }); assert.equal(h.probes.length, 0);
+  unchanged(h, { font: 'SourceHanSerif', codeFont: 'Hack' }); assert.equal(h.probes.length, 0);
 });
 
 test('invalid keys and all invalid explicit kinds never probe or persist', async () => {
   const h = harness();
-  for (const [key, kind] of [['unknown', 'text'], ['Hack_1', 'text'], ['LXGW', 'code'], ['LXGW', 'unknown'], ['LXGW', ''], ['LXGW', null], ['LXGW', false], ['LXGW', 0], ['LXGW', {}], ['default', 'code'], ['', 'text'], ['__proto__', 'text'], ['constructor', 'text'], ['LXGW";x', 'text'], [null, 'text'], [{}, 'code']]) assert.equal(await h.choose(key, kind), false, String(key) + '/' + kind);
+  for (const [key, kind] of [['unknown', 'text'], ['Hack', 'text'], ['LXGWNeoXiHei', 'code'], ['LXGWNeoXiHei', 'unknown'], ['LXGWNeoXiHei', ''], ['LXGWNeoXiHei', null], ['LXGWNeoXiHei', false], ['LXGWNeoXiHei', 0], ['LXGWNeoXiHei', {}], ['default', 'code'], ['', 'text'], ['__proto__', 'text'], ['constructor', 'text'], ['LXGWNeoXiHei";x', 'text'], [null, 'text'], [{}, 'code']]) assert.equal(await h.choose(key, kind), false, String(key) + '/' + kind);
   assert.equal(h.probes.length, 0); unchanged(h);
 });
 
 test('webfont applies only after a nonempty chosen-family load and repeat current selection avoids another request', async () => {
   const h = harness(); h.init(); const before = preview(h, 'text');
-  const result = h.choose('LXGW'); assert.equal(typeof result.then, 'function'); await flush();
-  assert.equal(h.probes.length, 1); assert.equal(h.probes[0].font, '16px "LXGW"');
+  const result = h.choose('LXGWNeoXiHei'); assert.equal(typeof result.then, 'function'); await flush();
+  assert.equal(h.probes.length, 1); assert.equal(h.probes[0].font, '16px "LXGWNeoXiHei"');
   assert.equal(typeof h.probes[0].sample, 'string'); assert.match(h.probes[0].sample, /[\u4e00-\u9fff]/);
   unchanged(h); assert.equal(preview(h, 'text'), before);
   h.probes[0].resolve([{}]); assert.equal(await result, true);
-  assert.deepEqual(h.setters, [['text', 'LXGW']]); assert.deepEqual(h.writes, [['font', 'LXGW']]);
-  assert.ok(preview(h, 'text').includes('LXGW')); selected(h, 'text', 'LXGW');
+  assert.deepEqual(h.setters, [['text', 'LXGWNeoXiHei']]); assert.deepEqual(h.writes, [['font', 'LXGWNeoXiHei']]);
+  assert.ok(preview(h, 'text').includes('LXGWNeoXiHei')); selected(h, 'text', 'LXGWNeoXiHei');
   assert.equal(h.store.get('themeColor'), 'purple'); assert.equal(h.store.get('bg'), 'user-background'); assert.equal(h.timers.size, 0);
-  assert.equal(await h.choose('LXGW'), true); assert.equal(h.probes.length, 1);
+  assert.equal(await h.choose('LXGWNeoXiHei'), true); assert.equal(h.probes.length, 1);
 });
 
 test('system default works even without Font Loading API and makes no network probes', async () => {
@@ -165,18 +165,18 @@ for (const failure of ['empty', 'reject', 'timeout', 'missing fonts', 'missing l
   test(failure + ' retains font/storage/selection/preview and gives status feedback', async () => {
     const options = failure === 'missing fonts' ? { fonts: false } : failure === 'missing load' ? { load: false } : failure === 'throw' ? { throwLoad: true } : {};
     const h = harness({}, options); h.init(); const before = preview(h, 'text');
-    const result = h.choose('TTQHB', 'text'); await flush();
+    const result = h.choose('LongCang', 'text'); await flush();
     if (failure === 'empty') h.probes[0].resolve([]);
     if (failure === 'reject') h.probes[0].reject(new Error('font network failure'));
     if (failure === 'timeout') { await h.tick(11999); unchanged(h); assert.equal(h.timers.size, 1); await h.tick(1); }
-    assert.equal(await result, false); unchanged(h); assert.equal(preview(h, 'text'), before); selected(h, 'text', 'LXGWScreen');
+    assert.equal(await result, false); unchanged(h); assert.equal(preview(h, 'text'), before); selected(h, 'text', 'LXGW');
     assert.ok(status(h, 'text').length > 0); assert.equal(h.nodes.get('ap-text-status').dataset.state, 'error'); assert.equal(h.timers.size, 0);
     if (failure === 'timeout') { h.probes[0].resolve([{}]); await flush(); unchanged(h); assert.equal(preview(h, 'text'), before); }
   });
 }
 
 test('latest text choice wins and superseded request settles false immediately', async () => {
-  const h = harness(); h.init(); const old = h.choose('LXGW', 'text'), latest = h.choose('SourceHanSerif', 'text'); await flush();
+  const h = harness(); h.init(); const old = h.choose('LXGWNeoXiHei', 'text'), latest = h.choose('SourceHanSerif', 'text'); await flush();
   assert.equal(await old, false); assert.equal(h.probes.length, 2);
   h.probes[1].resolve([{}]); assert.equal(await latest, true); h.probes[0].resolve([{}]); await flush();
   assert.deepEqual(h.setters, [['text', 'SourceHanSerif']]); assert.equal(h.store.get('font'), 'SourceHanSerif');
@@ -184,37 +184,37 @@ test('latest text choice wins and superseded request settles false immediately',
 });
 
 test('stale rejection cannot overwrite status after the latest success', async () => {
-  const h = harness(); h.init(); const old = h.choose('HYTMR', 'text'), latest = h.choose('LXGWNeoXiHei', 'text'); await flush();
+  const h = harness(); h.init(); const old = h.choose('MaShanZheng', 'text'), latest = h.choose('LXGWNeoXiHei', 'text'); await flush();
   h.probes[1].resolve([{}]); assert.equal(await latest, true); const current = status(h, 'text');
   h.probes[0].reject(new Error('late failure')); assert.equal(await old, false); await flush();
   assert.equal(status(h, 'text'), current); selected(h, 'text', 'LXGWNeoXiHei');
 });
 
 test('choosing already active font cancels a pending different selection', async () => {
-  const h = harness(); h.init(); const old = h.choose('TTQHB', 'text'); await flush();
-  assert.equal(await h.choose('LXGWScreen', 'text'), true); assert.equal(h.probes.length, 1);
+  const h = harness(); h.init(); const old = h.choose('LongCang', 'text'); await flush();
+  assert.equal(await h.choose('LXGW', 'text'), true); assert.equal(h.probes.length, 1);
   h.probes[0].resolve([{}]); assert.equal(await old, false); await flush();
-  assert.equal(h.store.get('font'), 'LXGWScreen'); selected(h, 'text', 'LXGWScreen');
+  assert.equal(h.store.get('font'), 'LXGW'); selected(h, 'text', 'LXGW');
 });
 
 test('parallel text/code choices load independently with the code ambiguity sample', async () => {
-  const h = harness(); h.init(); const text = h.choose('LXGW', 'text'), code = h.choose('MapleMono_1', 'code'); await flush();
-  assert.deepEqual(h.probes.map(p => p.font), ['16px "LXGW"', '16px "MapleMono_1"']);
+  const h = harness(); h.init(); const text = h.choose('LXGWNeoXiHei', 'text'), code = h.choose('MapleMono', 'code'); await flush();
+  assert.deepEqual(h.probes.map(p => p.font), ['16px "LXGWNeoXiHei"', '16px "MapleMono"']);
   for (const token of ['0', 'O', '1', 'l', 'I', '{', '}']) assert.ok(h.probes[1].sample.includes(token));
-  h.probes[1].resolve([{}]); assert.equal(await code, true); assert.equal(h.store.get('font'), 'LXGWScreen');
+  h.probes[1].resolve([{}]); assert.equal(await code, true); assert.equal(h.store.get('font'), 'LXGW');
   h.probes[0].resolve([{}]); assert.equal(await text, true);
-  assert.deepEqual(h.setters, [['code', 'MapleMono_1'], ['text', 'LXGW']]);
-  selected(h, 'text', 'LXGW'); selected(h, 'code', 'MapleMono_1'); assert.ok(preview(h, 'code').includes('MapleMono_1'));
+  assert.deepEqual(h.setters, [['code', 'MapleMono'], ['text', 'LXGWNeoXiHei']]);
+  selected(h, 'text', 'LXGWNeoXiHei'); selected(h, 'code', 'MapleMono'); assert.ok(preview(h, 'code').includes('MapleMono'));
 });
 
 test('local reset synchronously restores font defaults only and defeats late success/rejection', async () => {
-  const h = harness({ font: 'SourceHanSerif', codeFont: 'Hack_1' }); h.init();
-  const text = h.choose('LXGW', 'text'), code = h.choose('Consolas_1', 'code'); await flush(); h.reset();
-  assert.deepEqual(h.setters, [['text', 'LXGWScreen'], ['code', 'Monaco_1']]);
-  assert.deepEqual(h.writes, [['font', 'LXGWScreen'], ['codeFont', 'Monaco_1']]); assert.equal(h.probes.length, 2);
+  const h = harness({ font: 'SourceHanSerif', codeFont: 'Hack' }); h.init();
+  const text = h.choose('LXGWNeoXiHei', 'text'), code = h.choose('FiraCode', 'code'); await flush(); h.reset();
+  assert.deepEqual(h.setters, [['text', 'LXGW'], ['code', 'JetBrainsMono']]);
+  assert.deepEqual(h.writes, [['font', 'LXGW'], ['codeFont', 'JetBrainsMono']]); assert.equal(h.probes.length, 2);
   assert.equal(h.store.get('themeColor'), 'purple'); assert.equal(h.store.get('bg'), 'user-background');
-  selected(h, 'text', 'LXGWScreen'); selected(h, 'code', 'Monaco_1');
-  assert.ok(preview(h, 'text').includes('LXGWScreen')); assert.ok(preview(h, 'code').includes('Monaco_1'));
+  selected(h, 'text', 'LXGW'); selected(h, 'code', 'JetBrainsMono');
+  assert.ok(preview(h, 'text').includes('LXGW')); assert.ok(preview(h, 'code').includes('JetBrainsMono'));
   const after = [status(h, 'text'), status(h, 'code')];
   assert.equal(await text, false); assert.equal(await code, false);
   h.probes[0].resolve([{}]); h.probes[1].reject(new Error('late reset failure')); await h.tick(12000);
@@ -222,18 +222,18 @@ test('local reset synchronously restores font defaults only and defeats late suc
 });
 
 test('global cancellation settles both pending choices false without itself resetting preferences', async () => {
-  const h = harness({ font: 'SourceHanSerif', codeFont: 'Hack_1' }); h.init();
-  const text = h.choose('LXGW', 'text'), code = h.choose('Consolas_1', 'code'); await flush(); h.cancel();
+  const h = harness({ font: 'SourceHanSerif', codeFont: 'Hack' }); h.init();
+  const text = h.choose('LXGWNeoXiHei', 'text'), code = h.choose('FiraCode', 'code'); await flush(); h.cancel();
   assert.equal(await text, false); assert.equal(await code, false);
   h.probes[0].resolve([{}]); h.probes[1].resolve([{}]); await h.tick(12000);
-  unchanged(h, { font: 'SourceHanSerif', codeFont: 'Hack_1' }); assert.equal(h.timers.size, 0);
+  unchanged(h, { font: 'SourceHanSerif', codeFont: 'Hack' }); assert.equal(h.timers.size, 0);
 });
 
 test('fresh post-reset request works while pre-reset request cannot apply', async () => {
-  const h = harness(); const old = h.choose('HYTMR', 'text'); await flush(); h.reset();
-  const fresh = h.choose('ZhuZiAWan', 'text'); await flush(); h.probes[0].resolve([{}]); assert.equal(await old, false);
+  const h = harness(); const old = h.choose('MaShanZheng', 'text'); await flush(); h.reset();
+  const fresh = h.choose('ZCOOLKuaiLe', 'text'); await flush(); h.probes[0].resolve([{}]); assert.equal(await old, false);
   h.probes[1].resolve([{}]); assert.equal(await fresh, true);
-  assert.equal(h.store.get('font'), 'ZhuZiAWan'); selected(h, 'text', 'ZhuZiAWan');
+  assert.equal(h.store.get('font'), 'ZCOOLKuaiLe'); selected(h, 'text', 'ZCOOLKuaiLe');
 });
 
 
@@ -241,7 +241,7 @@ test('fresh post-reset request works while pre-reset request cannot apply', asyn
 test('every whitelisted noncurrent webfont probes only itself then applies via its matching setter', async () => {
   for (const [kind, fonts] of [['text', textFonts.filter(k => k !== 'default')], ['code', codeFonts]]) {
     for (const key of fonts) {
-      const saved = kind === 'text' ? { font: key === 'LXGWScreen' ? 'LXGW' : 'LXGWScreen' } : { codeFont: key === 'Monaco_1' ? 'Hack_1' : 'Monaco_1' };
+      const saved = kind === 'text' ? { font: fonts.find(k => k !== key) } : { codeFont: fonts.find(k => k !== key) };
       const h = harness(saved); h.init(); const old = preview(h, kind), result = h.choose(key, kind); await flush();
       assert.equal(h.probes.length, 1, key); assert.equal(h.probes[0].font, '16px "' + key + '"');
       assert.equal(preview(h, kind), old); assert.deepEqual(h.setters, []); assert.deepEqual(h.writes, []);
@@ -254,35 +254,35 @@ test('every whitelisted noncurrent webfont probes only itself then applies via i
 
 test('latest code token changes do not cancel a concurrently pending text request', async () => {
   const h = harness(); h.init();
-  const text = h.choose('SourceHanSerif', 'text'), oldCode = h.choose('Consolas_1', 'code'), freshCode = h.choose('Hack_1', 'code'); await flush();
+  const text = h.choose('SourceHanSerif', 'text'), oldCode = h.choose('FiraCode', 'code'), freshCode = h.choose('Hack', 'code'); await flush();
   assert.equal(await oldCode, false); h.probes[1].resolve([{}]); await flush();
   assert.deepEqual(h.setters, [], 'stale code result cannot apply either kind');
   h.probes[2].resolve([{}]); assert.equal(await freshCode, true);
   h.probes[0].resolve([{}]); assert.equal(await text, true);
-  assert.deepEqual(h.setters, [['code', 'Hack_1'], ['text', 'SourceHanSerif']]);
-  selected(h, 'code', 'Hack_1'); selected(h, 'text', 'SourceHanSerif');
+  assert.deepEqual(h.setters, [['code', 'Hack'], ['text', 'SourceHanSerif']]);
+  selected(h, 'code', 'Hack'); selected(h, 'text', 'SourceHanSerif');
 });
 
 test('failed code load preserves its old value and permits retry while text continues independently', async () => {
   const h = harness(); h.init(); const before = preview(h, 'code');
-  const text = h.choose('LXGW', 'text'), first = h.choose('Consolas_1', 'code'); await flush();
+  const text = h.choose('LXGWNeoXiHei', 'text'), first = h.choose('FiraCode', 'code'); await flush();
   h.probes[1].resolve([]); assert.equal(await first, false);
-  assert.equal(h.store.get('codeFont'), 'Monaco_1'); assert.equal(preview(h, 'code'), before); assert.deepEqual(h.setters, []);
-  const retry = h.choose('Consolas_1', 'code'); await flush(); assert.equal(h.probes.length, 3);
+  assert.equal(h.store.get('codeFont'), 'JetBrainsMono'); assert.equal(preview(h, 'code'), before); assert.deepEqual(h.setters, []);
+  const retry = h.choose('FiraCode', 'code'); await flush(); assert.equal(h.probes.length, 3);
   h.probes[2].resolve([{}]); assert.equal(await retry, true); h.probes[0].resolve([{}]); assert.equal(await text, true);
-  assert.deepEqual(h.setters, [['code', 'Consolas_1'], ['text', 'LXGW']]);
+  assert.deepEqual(h.setters, [['code', 'FiraCode'], ['text', 'LXGWNeoXiHei']]);
 });
 
 test('reinitializing a visible panel during a pending load does not preload or cancel that selection', async () => {
-  const h = harness(); h.init(); const before = preview(h, 'text'); const pending = h.choose('LXGW', 'text'); await flush();
-  h.init(); assert.equal(h.probes.length, 1); assert.equal(preview(h, 'text'), before); selected(h, 'text', 'LXGWScreen'); unchanged(h);
-  h.probes[0].resolve([{}]); assert.equal(await pending, true); selected(h, 'text', 'LXGW');
+  const h = harness(); h.init(); const before = preview(h, 'text'); const pending = h.choose('LXGWNeoXiHei', 'text'); await flush();
+  h.init(); assert.equal(h.probes.length, 1); assert.equal(preview(h, 'text'), before); selected(h, 'text', 'LXGW'); unchanged(h);
+  h.probes[0].resolve([{}]); assert.equal(await pending, true); selected(h, 'text', 'LXGWNeoXiHei');
 });
 
 test('missing panel DOM is safe for init, markup, failure, success, cancel and reset', async () => {
   const h = harness({}, { nodes: false }); assert.doesNotThrow(() => h.init()); assert.doesNotThrow(() => h.ctx.appearanceFontMarkup());
-  const failure = h.choose('LXGW', 'text'); await flush(); h.probes[0].resolve([]); assert.equal(await failure, false); unchanged(h);
-  const success = h.choose('Hack_1', 'code'); await flush(); h.probes[1].resolve([{}]); assert.equal(await success, true);
+  const failure = h.choose('LXGWNeoXiHei', 'text'); await flush(); h.probes[0].resolve([]); assert.equal(await failure, false); unchanged(h);
+  const success = h.choose('Hack', 'code'); await flush(); h.probes[1].resolve([{}]); assert.equal(await success, true);
   assert.doesNotThrow(() => h.cancel()); assert.doesNotThrow(() => h.reset());
-  assert.equal(h.store.get('font'), 'LXGWScreen'); assert.equal(h.store.get('codeFont'), 'Monaco_1'); assert.equal(h.probes.length, 2);
+  assert.equal(h.store.get('font'), 'LXGW'); assert.equal(h.store.get('codeFont'), 'JetBrainsMono'); assert.equal(h.probes.length, 2);
 });

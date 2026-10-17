@@ -83,7 +83,11 @@ const originalThemeHashes = {
   // 2026-10-19（v1.0.5）复核：custom.css 里只改了两处侧栏个人信息卡的背景图
   // （picsum 占位 → /assets/wallpaper/desktop-2.avif 与 desktop-5.avif），
   // 导航相关规则未动，所以只更新这一条基线。
-  'themes/fomalhaut/source/css/_custom/custom.css': '771ea661e92f959bbdca9a190d41ebb576666e614c72b2a2f9514d9a498b7d1c',
+  // 2026-10-19（v1.0.6）再复核：字体引入一节补齐到 19 个 @font-face（11 款字体，
+  // 其中 8 款各带 400/700 两档、3 款装饰体上游只有 400），删掉一段重复的 LXGW 定义，
+  // 新增 html { font-synthesis-weight: none }（禁合成粗体），并订正了注释里的字体清单数量。
+  // 导航相关规则仍未动。
+  'themes/fomalhaut/source/css/_custom/custom.css': '1608d6f44255a0f8421139beb5b8b26c1f75ac87efc5dc916a531868e37d5c7d',
   'themes/fomalhaut/source/js/main.js': '375868d3a5ee55a31a5e676168c105a82c9bf9235840471521d799090fe5891e'
 };
 

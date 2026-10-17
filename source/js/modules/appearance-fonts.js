@@ -1,24 +1,53 @@
-/* 字体选择器：与 settings.js 的同步 setter 分离；只加载当前选择的字体。 */
+/* 字体选择器：与 settings.js 的同步 setter 分离；只加载当前选择的字体。
+   ----------------------------------------------------------------------------
+   *** 这份清单必须与下面两处逐字一致，否则点了不生效 ***
+     1. themes/fomalhaut/source/css/_custom/custom.css 的「字体引入」一节（@font-face 的 family 名）
+     2. source/js/modules/settings.js 的 FONT_LIST / CODE_FONT_LIST 白名单
+   为什么三处都要一致：面板按钮 id 是 swf_ / swfc_ + family 名，点按钮时这里会先
+   document.fonts.load('16px "family"') 探一下 —— 探不到（没有对应的 @font-face）就判定
+   「字体未能加载」直接放弃；而 settings.js 的白名单管的是「刷新后还在不在」，
+   不在白名单里的值每次刷新都会被写回默认值。v1.0.6 之前这三份清单各写各的
+   （面板 12 个 / @font-face 6 个 / 白名单 4+3 个），结果 8 个正文选项里有 7 个点了没反应。
+
+   选字原则：全部为 SIL OFL 1.1 的开源可商用字体，全部有真实可用的单文件 woff2，
+   全部来自 jsDelivr 上的 @fontsource/* 包。加字体时三处一起加。 */
 var APPEARANCE_TEXT_FONTS = [
-  ['LXGWScreen', '霞鹜文楷Screen', '屏幕阅读 · 默认', 'reading'],
-  ['LXGW', '霞鹜文楷', '温润文楷 · 长文', 'reading'],
+  ['LXGW', '霞鹜文楷', '温润文楷 · 默认', 'reading'],
   ['LXGWNeoXiHei', '霞鹜新晰黑', '清晰黑体 · 技术文章', 'reading'],
   ['SourceHanSerif', '思源宋体', '书卷气 · 随笔', 'reading'],
   ['default', '系统默认', '无需下载 · 跟随设备', 'reading'],
-  ['ZhuZiAWan', '筑紫A丸', '圆润可爱 · 短句', 'decorative'],
-  ['HYTMR', '汉仪唐美人', '个性书写 · 标题', 'decorative'],
-  ['TTQHB', '甜甜圈海报', '装饰字体 · 标题', 'decorative']
+  ['ZCOOLKuaiLe', '站酷快乐体', '圆润可爱 · 短句', 'decorative'],
+  ['MaShanZheng', '马善政毛笔楷书', '个性书写 · 标题', 'decorative'],
+  ['LongCang', '龙藏体', '毛笔行草 · 装饰', 'decorative']
 ];
 var APPEARANCE_CODE_FONTS = [
-  ['Monaco_1', 'Monaco', '经典等宽 · 默认'],
-  ['Consolas_1', 'Consolas', '清晰紧凑 · 等宽'],
-  ['MapleMono_1', 'Maple Mono', '柔和圆润 · 等宽'],
-  ['Hack_1', 'Hack', '辨识度优先 · 等宽']
+  ['JetBrainsMono', 'JetBrains Mono', '经典等宽 · 默认'],
+  ['FiraCode', 'Fira Code', '连字友好 · 等宽'],
+  ['SourceCodePro', 'Source Code Pro', 'Adobe 出品 · 等宽'],
+  ['MapleMono', 'Maple Mono', '柔和圆润 · 等宽'],
+  ['Hack', 'Hack', '辨识度优先 · 等宽']
 ];
+/* 旧版面板留下的 family 名 → 新名字。只用于把访客已有的 localStorage 迁移过来，
+   别处不要引用；查不到映射的值交给 settings.js 的白名单逻辑回落到默认。 */
+var APPEARANCE_FONT_ALIASES = {
+  LXGWScreen: 'LXGW',      // 霞鹜文楷Screen 没有可用的单文件 woff2，直接并回 LXGW
+  ZhuZiAWan: 'ZCOOLKuaiLe',// 筑紫A丸无开源版本，换成气质相近的站酷快乐体
+  HYTMR: 'MaShanZheng',    // 汉仪唐美人 → 马善政毛笔楷书
+  TTQHB: 'LongCang',       // 甜甜圈海报 → 龙藏体
+  Monaco_1: 'JetBrainsMono',
+  Consolas_1: 'FiraCode',
+  MapleMono_1: 'MapleMono',
+  Hack_1: 'Hack'
+};
 var appearanceFontStates = { text: { seq: 0, cancel: null }, code: { seq: 0, cancel: null } };
 var APPEARANCE_FONT_TIMEOUT = 12000;
 function appearanceFontList(kind) { return kind === 'code' ? APPEARANCE_CODE_FONTS : APPEARANCE_TEXT_FONTS; }
 function appearanceFontKey(kind) { return kind === 'code' ? 'codeFont' : 'font'; }
+/* 把旧 family 名换成新的；不在映射表里就原样返回（交给白名单逻辑处理）。 */
+function appearanceFontMigrate(key) {
+  if (!key) return key;
+  return Object.prototype.hasOwnProperty.call(APPEARANCE_FONT_ALIASES, key) ? APPEARANCE_FONT_ALIASES[key] : key;
+}
 function appearanceFontFamily(key) {
   return key === 'default' ? "-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Lato, Roboto, 'PingFang SC', 'Microsoft JhengHei', 'Microsoft YaHei', sans-serif" : '"' + key + '", system-ui, sans-serif';
 }
@@ -96,11 +125,11 @@ function chooseAppearanceFont(key, kind) {
 }
 function resetAppearanceFonts() {
   cancelAppearanceFonts();
-  setFont('LXGWScreen');
-  setCodeFont('Monaco_1');
+  setFont('LXGW');
+  setCodeFont('JetBrainsMono');
   initAppearanceFonts();
-  appearanceFontStatus('text', '已恢复霞鹜文楷Screen，仅重置字体。');
-  appearanceFontStatus('code', '已恢复Monaco，不影响背景、主题色及其他偏好。');
+  appearanceFontStatus('text', '已恢复霞鹜文楷，仅重置字体。');
+  appearanceFontStatus('code', '已恢复 JetBrains Mono，不影响背景、主题色及其他偏好。');
 }
 function appearanceFontOptions(items, kind) {
   return items.map(function(f) {
@@ -116,5 +145,5 @@ function appearanceFontMarkup() {
     '<div class="ap-preview"><p id="ap-text-current" class="ap-current"></p><p id="ap-text-preview" class="ap-text-sample">清风翻书，阅读让世界更清晰。<br>每一次停顿，都让文字有了呼吸。<br>Abc · 0123456789</p></div><p id="ap-text-status" class="ap-status" role="status" aria-live="polite"></p>' +
     '<h3 class="ap-subtitle">代码字体</h3><div id="swfs_code" class="ap-font-grid ap-code-grid">' + appearanceFontOptions(APPEARANCE_CODE_FONTS, 'code') + '</div>' +
     '<div class="ap-preview"><p id="ap-code-current" class="ap-current"></p><pre id="ap-code-preview" class="ap-code-sample">const greeting = "Hello, 世界";\n// 字形对比：0O · 1lI · {} [] ()\nconst values = [0, 1, 10];\nvalues.map(value =&gt; value + 1);</pre></div><p id="ap-code-status" class="ap-status" role="status" aria-live="polite"></p>' +
-    '<details class="ap-details ap-license"><summary>字体来源与授权说明</summary><p class="ap-hint">字体授权以各字体发布方许可为准。装饰字体更适合标题或短句；本站保留现有选项，如有授权问题请联系站长处理。</p></details></section>';
+    '<details class="ap-details ap-license"><summary>字体来源与授权说明</summary><p class="ap-hint">全部为 SIL OFL 1.1 开源可商用字体，走 jsDelivr 上的 @fontsource/* 包（Hack 用官方 hack-font 的 web 构建）：霞鹜文楷 LXGW WenKai、思源黑体/宋体 Noto Sans/Serif SC、站酷快乐体 ZCOOL KuaiLe、马善政毛笔楷书 Ma Shan Zheng、龙藏体 Long Cang、JetBrains Mono、Fira Code、Source Code Pro、Maple Mono、Hack。装饰字体更适合标题或短句，正文长文请用阅读组。</p></details></section>';
 }

@@ -21,7 +21,7 @@
  * 【分节目录】（括号里是所在行号）
  *   154  全局色板：--theme-color 及派生色、代码块底色 —— 换主题色的源头就在这里
  *   194  滚动条（三套并存：@supports 标准属性 / ::-webkit-scrollbar 桌面 / #mscrollbar 手机自绘）
- *   293  @font-face 字体引入（正文 7 款 + 代码块 4 款）：family 名同时是美化面板按钮 onclick 传的值，改名要三处一起改
+ *   293  @font-face 字体引入（正文 6 款 + 代码块 5 款；8 款各带 400/700 两档，3 款装饰体只有 400；面板另有「系统默认」1 款不需要 @font-face）：family 名同时是美化面板按钮 onclick 传的值，改名要三处一起改
  *   421  滚动时顶栏显示的标题 #page-name 居中
  *   487  首页文章卡片 / 页面底色 / 明暗遮罩 / 目录 / 超链接 / 代码框 / 鼠标样式……主题默认样式的第一轮覆盖（本文件最大的一段）
  *   666  Twikoo 评论区（输入框高度 / 表情面板 / 气泡 / 夜间配色）
@@ -101,10 +101,16 @@
  *   3448  light_5px                       霓虹灯发光字（5px 档），同上
  *   3731  post-sticky-shine               置顶角标流光
  * ----------------------------------------------------------------------------
- * 【字体索引】@font-face 共 6 个，全部为开源可商用字体（OFL），源码统一走 cdn.jsdelivr.net 的 @fontsource/*
- *   常规字体 3 款：LXGW（霞鹜文楷，默认）· SourceHanSerif（思源宋体）· LXGWNeoXiHei（霞鹜新晰黑）
- *   代码字体 3 款：JetBrainsMono · FiraCode · SourceCodePro
- *   想换成自己的字体：改本文件末尾「字体引入」一节的 src 即可，family 名保持不变最省事。
+ * 【字体索引】@font-face 共 19 个（11 款字体），全部为开源可商用字体（OFL），源码统一走 cdn.jsdelivr.net 的 @fontsource/*（Hack 走 hack-font 官方包）
+ *   常规字体 6 款：LXGW（霞鹜文楷，默认）· SourceHanSerif（思源宋体）· LXGWNeoXiHei（霞鹜新晰黑）
+ *                  · ZCOOLKuaiLe（站酷快乐体）· MaShanZheng（马善政毛笔楷书）· LongCang（龙藏体）
+ *   代码字体 5 款：JetBrainsMono · FiraCode · SourceCodePro · MapleMono · Hack
+ *   字重：阅读 3 款 + 代码 5 款各注册了 400 与 700 两个 @font-face（站内标题/胶囊/欢迎信息都用粗体，
+ *        缺 700 会让浏览器合成假粗体，中文笔画糊成一团）；三款装饰体上游只有 400，
+ *        由 html { font-synthesis-weight: none } 禁止浏览器伪造粗体，按原字形显示。
+ *   面板另有「系统默认」一项，用系统字体栈，不需要 @font-face。
+ *   想换成自己的字体：改本文件「字体引入」一节的 src 即可，family 名保持不变最省事；
+ *   真要改 family 名，必须同时改 appearance-fonts.js 的面板清单与 settings.js 的白名单，否则面板会「点了没反应」。
  * ----------------------------------------------------------------------------
  * 【已知问题 / 坑】（P3 盘点确认的现状；本次只清理死代码，没有改行为）
  *   1. 同一个选择器被拆散在多处 —— 改之前先 Ctrl+F 全找一遍，找到第一个不算数：
@@ -282,15 +288,47 @@
 }
 
 /* 字体引入
-   常规（正文）字体 3 款 + 代码块字体 3 款，**全部为开源可商用字体**（SIL OFL 1.1），
-   统一走公共 CDN（jsDelivr 上的 @fontsource/* 包），不依赖任何自建对象存储。
-   family 名 = 美化设置面板按钮 onclick 传的值 = localStorage.font / codeFont 的值，
-   也是 _config.fomalhaut.yml 里 font-family / code-font-family 引用的名字，改名时这几处要一起改。
-   *** 想换成自己的字体：把下面的 src 换成你自己的 woff2 地址即可，family 名保持不变最省事。 *** */
+   常规（正文/标题）字体 6 款 + 代码块字体 5 款 = 11 款字体、19 个 @font-face
+   （8 款各 400 + 700 两档，3 款装饰体上游只有 400），
+   **全部为开源可商用字体**（SIL OFL 1.1），
+   统一走公共 CDN（jsDelivr 上的 @fontsource/* 包，Hack 用 hack-font 官方包），
+   不依赖任何自建对象存储。面板里第 7 个「系统默认」用系统字体栈，不需要 @font-face。
+
+   *** 三处清单必须逐字一致，改名时一起改，否则面板点了不生效（v1.0.6 修的就是这个 bug） ***
+     1. 这里的 @font-face 的 font-family 名
+     2. source/js/modules/appearance-fonts.js 的 APPEARANCE_TEXT_FONTS / APPEARANCE_CODE_FONTS
+        （面板按钮 id = swf_ / swfc_ + family 名，点按钮时 chooseAppearanceFont 会先
+         document.fonts.load('16px "family"') 探一下，探不到就判定「字体未能加载」直接放弃）
+     3. source/js/modules/settings.js 的 FONT_LIST / CODE_FONT_LIST 白名单
+        （不在白名单里的值每次刷新都会被写回默认值）
+
+   @font-face 只有在页面上真有元素用到该 family 时才会下载，
+   所以多列几款装饰字体不会拖慢首屏 —— 选中才拉。
+
+   *** 字重（v1.0.6 补）：站内 #site-title 700、公告栏胶囊 700、欢迎信息 span 800 等
+   都用粗体。以前每款字体只注册了 400 一个字重，浏览器只能给出「合成粗体」
+   （把 400 的字形机械加粗），中文笔画会糊成一团；小字号（11–13px 的计数、胶囊）尤其明显。
+   所以给 8 款有真实粗体的字体各补一个 700 的 @font-face；
+   站酷快乐体 / 马善政毛笔楷书 / 龙藏体 三款上游本来就只有 400，
+   在 @font-face 之外用下面的 font-synthesis-weight: none 禁止浏览器伪造粗体，
+   让它们老老实实显示原字形。 */
+/* —— 阅读字体（正文/标题，400 + 700 两档都有真字体） —— */
 @font-face {
   font-family: LXGW;
-  /* 霞鹜文楷（LXGW WenKai）· SIL OFL 1.1 */
+  /* 霞鹜文楷（LXGW WenKai）· SIL OFL 1.1 —— 正文默认字体
+     简体单文件版在 @fontsource 上没有（只有 100+ 段 subset，要 @import 一份 106KB 的
+     CSS 再去拉上百个小文件），这里用繁体单文件版，简体字形同样包含在内。 */
   src: url(https://cdn.jsdelivr.net/npm/@fontsource/lxgw-wenkai-tc@5/files/lxgw-wenkai-tc-chinese-traditional-400-normal.woff2);
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: LXGW;
+  /* 同上，真实粗体。给 #site-title（700）、公告栏胶囊（700）这类粗体文字用，
+     没有这一段浏览器就会把 400 的字形机械加粗，中文笔画直接糊掉。 */
+  src: url(https://cdn.jsdelivr.net/npm/@fontsource/lxgw-wenkai-tc@5/files/lxgw-wenkai-tc-chinese-traditional-700-normal.woff2);
+  font-weight: 700;
   font-display: swap;
 }
 
@@ -298,6 +336,15 @@
   font-family: SourceHanSerif;
   /* 思源宋体（Noto Serif SC）· SIL OFL 1.1 */
   src: url(https://cdn.jsdelivr.net/npm/@fontsource/noto-serif-sc@5/files/noto-serif-sc-chinese-simplified-400-normal.woff2);
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: SourceHanSerif;
+  /* 同上，真实粗体 */
+  src: url(https://cdn.jsdelivr.net/npm/@fontsource/noto-serif-sc@5/files/noto-serif-sc-chinese-simplified-700-normal.woff2);
+  font-weight: 700;
   font-display: swap;
 }
 
@@ -305,7 +352,53 @@
   font-family: LXGWNeoXiHei;
   /* 霞鹜新晰黑 → 同族思源黑体（Noto Sans SC）替代 · SIL OFL 1.1 */
   src: url(https://cdn.jsdelivr.net/npm/@fontsource/noto-sans-sc@5/files/noto-sans-sc-chinese-simplified-400-normal.woff2);
+  font-weight: 400;
   font-display: swap;
+}
+
+@font-face {
+  font-family: LXGWNeoXiHei;
+  /* 同上，真实粗体 */
+  src: url(https://cdn.jsdelivr.net/npm/@fontsource/noto-sans-sc@5/files/noto-sans-sc-chinese-simplified-700-normal.woff2);
+  font-weight: 700;
+  font-display: swap;
+}
+
+/* —— 个性装饰字体（短句、标题用，正文别用） ——
+   这三款都是毛笔/圆体风格，小字号下笔画会糊，所以面板里收在「个性装饰」折叠区，
+   只在需要标题气质时用。体积偏大（0.7–2.7 MB），但有 @font-face 不下载，选中才拉。
+   *** 上游只提供 400 一个字重，没有 700 可用（@fontsource 上没有 700 文件，
+   Google Fonts 也只发布 400），所以下面用 font-synthesis-weight: none 明确
+   禁止浏览器给它们伪造粗体 —— 宁可原样显示 400 的干净字形，也不要糊成一团的假粗体。 */
+@font-face {
+  font-family: ZCOOLKuaiLe;
+  /* 站酷快乐体（ZCOOL KuaiLe）· SIL OFL 1.1 · 仅 400 */
+  src: url(https://cdn.jsdelivr.net/npm/@fontsource/zcool-kuaile@5.3.0/files/zcool-kuaile-chinese-simplified-400-normal.woff2);
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: MaShanZheng;
+  /* 马善政毛笔楷书（Ma Shan Zheng）· SIL OFL 1.1 · 仅 400 */
+  src: url(https://cdn.jsdelivr.net/npm/@fontsource/ma-shan-zheng@5.3.1/files/ma-shan-zheng-chinese-simplified-400-normal.woff2);
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: LongCang;
+  /* 龙藏体（Long Cang）· SIL OFL 1.1 · 仅 400 */
+  src: url(https://cdn.jsdelivr.net/npm/@fontsource/long-cang@5.3.0/files/long-cang-chinese-simplified-400-normal.woff2);
+  font-weight: 400;
+  font-display: swap;
+}
+
+/* 关闭「合成粗体」（浏览器把 400 字形机械加粗）。上面 8 款都有真实 700，
+   只有三款装饰体没有，禁掉合成后它们按 400 原样显示；其余字体不受影响，
+   因为它们本来就能命中真实的 700 face。 */
+html {
+  font-synthesis-weight: none;
 }
 
 /* —— 代码块字体 ——
@@ -316,6 +409,15 @@
   font-family: JetBrainsMono;
   /* JetBrains Mono · SIL OFL 1.1 */
   src: url(https://cdn.jsdelivr.net/npm/@fontsource/jetbrains-mono@5/files/jetbrains-mono-latin-400-normal.woff2);
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: JetBrainsMono;
+  /* 同上，真实粗体（代码里的 **加粗**、行内 code 常用） */
+  src: url(https://cdn.jsdelivr.net/npm/@fontsource/jetbrains-mono@5/files/jetbrains-mono-latin-700-normal.woff2);
+  font-weight: 700;
   font-display: swap;
 }
 
@@ -323,6 +425,15 @@
   font-family: FiraCode;
   /* Fira Code · SIL OFL 1.1 */
   src: url(https://cdn.jsdelivr.net/npm/@fontsource/fira-code@5/files/fira-code-latin-400-normal.woff2);
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: FiraCode;
+  /* 同上，真实粗体 */
+  src: url(https://cdn.jsdelivr.net/npm/@fontsource/fira-code@5/files/fira-code-latin-700-normal.woff2);
+  font-weight: 700;
   font-display: swap;
 }
 
@@ -330,6 +441,47 @@
   font-family: SourceCodePro;
   /* Source Code Pro · SIL OFL 1.1 */
   src: url(https://cdn.jsdelivr.net/npm/@fontsource/source-code-pro@5/files/source-code-pro-latin-400-normal.woff2);
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: SourceCodePro;
+  /* 同上，真实粗体 */
+  src: url(https://cdn.jsdelivr.net/npm/@fontsource/source-code-pro@5/files/source-code-pro-latin-700-normal.woff2);
+  font-weight: 700;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: MapleMono;
+  /* Maple Mono · SIL OFL 1.1（只有拉丁字形，中文回落到 --global-font） */
+  src: url(https://cdn.jsdelivr.net/npm/@fontsource/maple-mono@5.3.0/files/maple-mono-latin-400-normal.woff2);
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: MapleMono;
+  /* 同上，真实粗体 */
+  src: url(https://cdn.jsdelivr.net/npm/@fontsource/maple-mono@5.3.0/files/maple-mono-latin-700-normal.woff2);
+  font-weight: 700;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: Hack;
+  /* Hack · SIL OFL 1.1（@fontsource 上没有这个包，直接用官方 hack-font 的 web 构建） */
+  src: url(https://cdn.jsdelivr.net/npm/hack-font@3.3.0/build/web/fonts/hack-regular.woff2);
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: Hack;
+  /* 同上，真实粗体 */
+  src: url(https://cdn.jsdelivr.net/npm/hack-font@3.3.0/build/web/fonts/hack-bold.woff2);
+  font-weight: 700;
   font-display: swap;
 }
 

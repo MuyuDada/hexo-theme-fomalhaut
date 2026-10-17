@@ -104,10 +104,17 @@ if (localStorage.getItem("reset_8") == undefined) {
 /* ===== 字体设置（常规字体 / 代码块字体两组）=====
    family 名与 _custom/custom.css 里的 @font-face、面板按钮 id（swf_ / swfc_ + family）严格一一对应。
    localStorage.font / localStorage.codeFont 存的就是 family 名本身：常规字体直接当 --global-font 用，
-   代码块字体当 --code-font 用（样式表里 pre/code 写的是 var(--code-font, JetBrainsMono)）。 */
-var FONT_LIST = ["LXGW", "SourceHanSerif", "LXGWNeoXiHei", "default"];
+   代码块字体当 --code-font 用（样式表里 pre/code 写的是 var(--code-font, JetBrainsMono)）。
+
+   *** 这三份清单必须逐字一致（v1.0.6 修的 bug 就是它们各写各的）***
+     1. 这里：FONT_LIST / CODE_FONT_LIST（管「刷新后还在不在」）
+     2. themes/fomalhaut/source/css/_custom/custom.css 的「字体引入」一节（@font-face）
+     3. source/js/modules/appearance-fonts.js 的 APPEARANCE_TEXT_FONTS / APPEARANCE_CODE_FONTS
+        （面板按钮 id = swf_ / swfc_ + family 名，点按钮时它会 document.fonts.load 探一下）
+   加字体时三处一起加。 */
+var FONT_LIST = ["LXGW", "LXGWNeoXiHei", "SourceHanSerif", "default", "ZCOOLKuaiLe", "MaShanZheng", "LongCang"];
 var FONT_DEFAULT = "LXGW";
-var CODE_FONT_LIST = ["JetBrainsMono", "FiraCode", "SourceCodePro"];
+var CODE_FONT_LIST = ["JetBrainsMono", "FiraCode", "SourceCodePro", "MapleMono", "Hack"];
 var CODE_FONT_DEFAULT = "JetBrainsMono";
 
 // 恢复localStorage默认配置项
@@ -138,8 +145,14 @@ function initItem() {
 
 
 // 设置字体
-// 用白名单校验而不是只判断 undefined：旧版面板留下的已下架字体（MiSans / YSHST）或其它脏值会被清掉，
+// 用白名单校验而不是只判断 undefined：旧版面板留下的已下架字体（MiSans / YSHST / ZhuZiAWan …）或其它脏值会被清掉，
 // 回落到默认值，保证打开面板时永远有一项是高亮的。
+// 旧 family 名先过一遍 appearanceFontMigrate（appearance-fonts.js 提供），能对应上新字体的就迁移，
+// 迁移不了的再交给白名单回落到默认 —— 这样老访客的偏好不会因为改名而白丢。
+if (typeof appearanceFontMigrate === "function") {
+  localStorage.setItem("font", appearanceFontMigrate(localStorage.getItem("font")));
+  localStorage.setItem("codeFont", appearanceFontMigrate(localStorage.getItem("codeFont")));
+}
 if (FONT_LIST.indexOf(localStorage.getItem("font")) < 0) {
   localStorage.setItem("font", FONT_DEFAULT);
 }
@@ -167,8 +180,7 @@ function setFont(n) {
 if (CODE_FONT_LIST.indexOf(localStorage.getItem("codeFont")) < 0) {
   localStorage.setItem("codeFont", CODE_FONT_DEFAULT);
 }
-setCodeFont(localStorage.getItem("codeFont"));
-function setCodeFont(n) {
+setCodeFont(localStorage.getItem("codeFont"));function setCodeFont(n) {
   localStorage.setItem("codeFont", n)
   document.documentElement.style.setProperty('--code-font', n);
   try { setCodeFontBorder(); } catch (err) { };

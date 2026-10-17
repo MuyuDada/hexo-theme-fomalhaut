@@ -67,27 +67,45 @@ function scrollToTop() {
 /* 导航栏显示标题 end */
 
 /* ------------------------------ 欢迎信息 ------------------------------ */
-/* 原 fomal.js 70-165 行，原样搬运，未改逻辑 */
+/* 原 fomal.js 70-165 行，2026-10-19 重写取数层 */
 /* 欢迎信息 start */
-// 用腾讯位置服务按访客 IP 粗略定位（侧栏「欢迎信息」卡片）
-// ⚠️ 需要你自己的 Key：到 https://lbs.qq.com/ 申请「WebService API」Key，替换下面的 YOUR_TENCENT_MAP_KEY。
-//    Key 是明文下发到浏览器的，务必在控制台把它限制到你的域名，避免配额被盗用。
-//    不想要这个功能：删掉本段 $.ajax 即可，卡片会停在「欢迎信息正在加载中...」。
-//get请求
-$.ajax({
-  type: 'get',
-  url: 'https://apis.map.qq.com/ws/location/v1/ip',
-  data: {
-    key: 'YOUR_TENCENT_MAP_KEY',
-    output: 'jsonp',
-  },
-  dataType: 'jsonp',
-  success: function (res) {
-    ipLoacation = res;
-    //数据回来后立刻渲染：接口慢于 window.onload 时，原先这段欢迎信息会一直空着
-    showWelcome();
-  }
-})
+// 按访客 IP 粗略定位（侧栏「欢迎信息」卡片）。
+// 2026-10-19 换源：原来用腾讯位置服务，需要自己去 lbs.qq.com 申请 Key 填进
+// YOUR_TENCENT_MAP_KEY，填之前接口一直返回错误码 → 卡片先卡在「正在加载中...」，
+// 10 秒后变成「加载失败」。现在改用 ipwho.is：免费、免 Key、带 CORS、支持中文地名
+// （?lang=zh-CN 会把 country / region / city 直接返回成「中国 / 河北省 / 廊坊」）。
+// 注意它是 HTTPS 接口，本站也是 HTTPS，不会被混合内容拦掉。
+// 不想要这个功能：把 loadIpLocation() 换成 showWelcomeFailed() 即可，
+// 或者干脆删掉 card_announcement 里的 #welcome-info（见 card_announcement.pug）。
+var ipLoacation = null;
+var WELCOME_TIMEOUT = 8000;
+function showWelcomeFailed() {
+  try {
+    var el = document.getElementById('welcome-info');
+    if (el && !el.innerHTML.trim()) {
+      el.innerHTML = '<b><center>欢迎信息暂时取不到 🥺</center></b>';
+    }
+  } catch (err) { }
+}
+function loadIpLocation() {
+  if (typeof fetch !== 'function') { showWelcomeFailed(); return; }
+  var ctrl = typeof AbortController === 'function' ? new AbortController() : null;
+  var timer = setTimeout(function () { if (ctrl) ctrl.abort(); }, WELCOME_TIMEOUT);
+  fetch('https://ipwho.is/?lang=zh-CN', { cache: 'no-store', signal: ctrl ? ctrl.signal : undefined })
+    .then(function (res) { return res.json(); })
+    .then(function (res) {
+      clearTimeout(timer);
+      if (res && res.success !== false && res.latitude && res.longitude) {
+        ipLoacation = res;
+        //数据回来后立刻渲染：接口慢于 window.onload 时，原先这段欢迎信息会一直空着
+        showWelcome();
+      } else {
+        showWelcomeFailed();
+      }
+    })
+    .catch(function () { clearTimeout(timer); showWelcomeFailed(); });
+}
+loadIpLocation();
 function getDistance(e1, n1, e2, n2) {
   const R = 6371
   const { sin, cos, asin, PI, hypot } = Math
@@ -117,16 +135,21 @@ function showWelcomeLoading() {
 function showWelcome() {
 
   //数据还没回来（接口慢或被拦截）就先显示加载提示
-  if (!ipLoacation || !ipLoacation.result || !ipLoacation.result.location) {
+  if (!ipLoacation || !ipLoacation.latitude || !ipLoacation.longitude) {
     showWelcomeLoading();
     return;
   }
 
-  //站长所在地坐标（示例值：北京天安门 116.397428, 39.90923）。换成你自己的经纬度，或删掉 dist 与下面这句问候里的距离部分
-  let dist = getDistance(116.397428, 39.90923, ipLoacation.result.location.lng, ipLoacation.result.location.lat);
-  let ad = ipLoacation.result.ad_info;
-  let pos = ad.nation === "中国" ? [ad.province, ad.city, ad.district].filter(Boolean).join(" ") : ad.nation;
-  let ip = ipLoacation.result.ip;
+  //站长所在地坐标（河北廊坊，约 116.71, 39.52）。换成你自己的经纬度即可，
+  //距离只用于「你目前距站长约 N 公里」这一句，不参与定位。
+  var SITE_LAT = 39.5208, SITE_LNG = 116.7147;
+  let dist = getDistance(SITE_LNG, SITE_LAT, ipLoacation.longitude, ipLoacation.latitude);
+  //ipwho.is + lang=zh-CN 直接给中文地名：中国 / 河北省 / 廊坊。
+  //海外访客的 country 会是当地语言的国名，没有省市区，只显示国名。
+  let pos = ipLoacation.country === '中国'
+    ? [ipLoacation.region, ipLoacation.city].filter(Boolean).join(' ') || ipLoacation.country
+    : (ipLoacation.country || '未知地区');
+  let ip = ipLoacation.ip;
   //IPv6 动辄 30+ 字符且无空格，在每个冒号后插软换行点（<wbr>），让它能在冒号处断行而不撑破卡片
   let ipHtml = String(ip).replace(/:/g, ":<wbr>");
 
@@ -141,31 +164,39 @@ function showWelcome() {
   else timeChange = "<span>夜深了</span>";
   let clock = String(hour).padStart(2, "0") + ":" + String(date.getMinutes()).padStart(2, "0");
 
+  //距离措辞：<1 公里说「就在附近」，其余照常报公里数。
+  //站长自己打开站点时 IP 定位往往与站点坐标重合（都会算成 0 公里），这样读起来才不别扭。
+  let distText = dist < 1
+    ? '你就在站长附近'
+    : '你目前距站长约 <span style="color:var(--blue-custom)">' + dist + '</span> 公里';
+
   try {
     //自定义文本和需要放的位置
     document.getElementById("welcome-info").innerHTML =
-      `<b><center>🎉 欢迎信息 🎉</center>来自 <span style="color:var(--blue-custom)">${pos}</span> 的访客，${timeChange}，现在是 <span style="color:var(--blue-custom)">${clock}</span>，你目前距站长约 <span style="color:var(--blue-custom)">${dist}</span> 公里，IP地址：<span style="color:var(--blue-custom)">${ipHtml}</span></b>`;
+      `<b><center>🎉 欢迎信息 🎉</center>来自 <span style="color:var(--blue-custom)">${pos}</span> 的访客，${timeChange}，现在是 <span style="color:var(--blue-custom)">${clock}</span>，${distText}，IP地址：<span style="color:var(--blue-custom)">${ipHtml}</span></b>`;
   } catch (err) {
     // console.log("Pjax无法获取#welcome-info元素🙄🙄🙄")
   }
 }
-window.onload = showWelcome;
+//window.onload 直接赋值会顶掉别的脚本挂的 onload，改用 addEventListener
+window.addEventListener('load', function () {
+  //数据已经回来了就渲染，没回来保持「加载中」，由 loadIpLocation 的回调负责收尾
+  if (ipLoacation) showWelcome(); else showWelcomeLoading();
+});
 // 如果使用了pjax在加上下面这行代码
 document.addEventListener('pjax:complete', showWelcome);
 //Pjax 换页后新插入的 #welcome-info 是空的，先放加载提示（有数据时会被 showWelcome 覆盖）
 document.addEventListener('pjax:complete', showWelcomeLoading);
 
-//fomal.js 是 defer 加载的，执行时 DOM 已解析，先立刻占位
+//本文件是 defer 加载的，执行时 DOM 已解析，先立刻占位
 showWelcomeLoading();
-//接口 10 秒还没回来就给出失败提示，免得「欢迎信息正在加载中...」一直挂着
+//兜底：无论接口怎么失败，页面停留 12 秒后都不该再挂着「加载中」
 setTimeout(function () {
   try {
     let el = document.getElementById("welcome-info");
-    if (el && el.innerHTML.indexOf("正在加载中") > -1) {
-      el.innerHTML = '<b><center>欢迎信息加载失败，请刷新重试🥺</center></b>';
-    }
+    if (el && el.innerHTML.indexOf("正在加载中") > -1) showWelcomeFailed();
   } catch (err) { }
-}, 10000);
+}, 12000);
 
 /* 欢迎信息 end */
 

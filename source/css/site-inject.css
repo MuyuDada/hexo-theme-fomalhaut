@@ -93,11 +93,21 @@ html { scroll-padding-top: 70px !important; }
 .card-announcement .a-row.a-sub { border-top: 0; padding-top: 0; }
 .card-announcement .a-row.a-flat { border-top: 0; padding: 0; }
 .card-announcement .a-lb { flex: 0 0 56px; font-size: 12px; letter-spacing: .4px; color: var(--anno-muted); font-weight: 700; white-space: nowrap; }
-.card-announcement .a-chip { display: inline-flex; align-items: center; gap: 6px; font-weight: 700; font-size: 13px;
+/* 胶囊用 inline-block 而不是 inline-flex：text-overflow 只对块级容器的文本内容生效，
+   放在 flex 容器上时文本会变成匿名 flex item，省略号不会出现（2026-10-19 踩过）。
+   侧栏只有 ~250px 宽，hexo-theme-fomalhaut 这种长名字必须能省略成「hexo-theme-fom…」，
+   否则整行会溢出卡片、把右侧注记挤到看不见的地方。 */
+.card-announcement .a-chip { display: inline-block; max-width: 100%; vertical-align: middle;
+  font-weight: 700; font-size: 13px;
   color: var(--anno-strong); background: var(--anno-chip-bg); border: 1px solid var(--anno-chip-bd);
-  border-radius: 999px; padding: 4px 9px; line-height: 1.7; transition: .25s; flex: 0 0 auto;}
+  border-radius: 999px; padding: 4px 9px; line-height: 1.7; transition: .25s;
+  /* .a-row 是 flex 容器，胶囊是它的 flex item：min-width 默认 auto 时会被 nowrap 的
+     内容撑到「完整文字宽度」，压根不收缩。必须显式 min-width:0 才肯让位给省略号。 */
+  flex: 0 1 auto; min-width: 0;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .card-announcement .a-chip:hover { background: var(--anno-accent); border-color: var(--anno-accent); color: var(--on-theme); }
-.card-announcement .a-chip .a-dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; opacity: .75; }
+.card-announcement .a-chip .a-dot { display: inline-block; vertical-align: middle; margin-right: 5px;
+  width: 5px; height: 5px; border-radius: 50%; background: currentColor; opacity: .75; }
 .card-announcement .a-note { font-size: 12.5px; color: var(--anno-muted); font-weight: 500; margin-left: auto;
   white-space: nowrap; flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis;}
 /* 排版规则（2026-10-04 修正）：.a-row 一律 flex-wrap:nowrap —— 一行装不下时只允许两种结果：

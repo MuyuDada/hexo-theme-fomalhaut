@@ -54,10 +54,15 @@
   /* 探测地址：根路径 + 随机串。随机串是为了绕过浏览器缓存与站点 SW 缓存，
      每次量到的都是真实网络往返，而不是「0ms 的缓存命中」。
      （sw.js 那边对带 __pr= 的请求只改写回源、不写 CacheStorage，
-       否则每个随机串都会在 ICDNCache 里留下一条约 98KB、永远读不到的记录。） */
+       否则每个随机串都会在 ICDNCache 里留下一条约 98KB、永远读不到的记录。）
+     href 可能是站内相对路径（/social/link/），必须带上 base 才能解析；
+     解析不了的返回 null，调用处据此不挂徽标。 */
   function probeUrl(href, tag) {
     var u;
-    try { u = new URL(href); } catch (e) { return null; }
+    try { u = new URL(href, location.href); } catch (e) { return null; }
+    /* 站内链接没有「线路」可言（探测它等于量本机到本站自己的往返，且会被 SW 命中），
+       直接返回空串表示「这条不该有徽标」，与 null（解析失败）区分开。 */
+    if (u.origin === location.origin) return '';
     return u.origin + '/?__pr=' + Date.now().toString(36) + '-' + tag;
   }
 
@@ -170,7 +175,10 @@
     for (i = 0; i < links.length; i++) {
       var a = links[i];
       a.__prSeq = i;
+      /* probeUrl 三种返回：URL 字符串 = 外链，可以探；'' = 站内链接，没有线路可言，不挂徽标；
+         null = href 解析不了，挂一个失败徽标说明原因。 */
       a.__prUrl = probeUrl(a.getAttribute('href'), i);
+      if (a.__prUrl === '') continue;
       if (!a.__prBadge) {
         var b = document.createElement('span');
         b.className = cfg.badgeClass;
@@ -192,7 +200,7 @@
           });
         });
       }
-      if (!a.__prUrl) { paint(a.__prBadge, 'fail', '—', '链接无法解析'); }
+      if (a.__prUrl === null) { paint(a.__prBadge, 'fail', '—', '链接无法解析'); }
     }
 
     if (busy) { log('probe wave already in flight; badges rebuilt, skip probing'); return; }
@@ -204,6 +212,7 @@
       (function (a, idx) {
         seq = seq.then(function () {
           return idle().then(function () {
+            /* 只探真实外链：'' 站内、null 解析失败，后端循环里已经画好状态了 */
             if (!a.__prUrl) return;
             paint(a.__prBadge, 'load', '···', '正在探测…');
             return delay(cfg.initialDelay + idx * cfg.stagger).then(function () {

@@ -1,11 +1,11 @@
-# hexo-theme-fomalhaut · v1.0.5
+# hexo-theme-fomalhaut · v1.0.6
 
 > 一套「克隆即用」的 Hexo 卡片式博客源码。主题基于 [Butterfly 4.3.1](https://butterfly.js.org/) 深度二次开发，
 > 并把**站点配置**与**主题代码**彻底分开：改配置就能搭起自己的站，升级主题不会冲掉你自己的改动。
 
 ![hexo](https://img.shields.io/badge/Hexo-6.3.0-0e83c?style=flat-square&logo=hexo)
 ![node](https://img.shields.io/badge/Node.js-18%20%7C%2020%20%7C%2022-339933?style=flat-square&logo=nodedotjs)
-![theme](https://img.shields.io/badge/Theme-Fomalhaut%20v1.0.5-6513df?style=flat-square)
+![theme](https://img.shields.io/badge/Theme-Fomalhaut%20v1.0.6-6513df?style=flat-square)
 ![license](https://img.shields.io/badge/License-Apache--2.0-blue?style=flat-square)
 ![stars](https://img.shields.io/github/stars/MuyuDada/hexo-theme-fomalhaut?style=flat-square&logo=github&label=Stars)
 ![forks](https://img.shields.io/github/forks/MuyuDada/hexo-theme-fomalhaut?style=flat-square&logo=github&label=Forks)
@@ -35,6 +35,44 @@
 ---
 
 ## 更新日志
+
+### v1.0.6 — 修好美化面板的字体（2026-10-19）
+
+这一版只干一件事：把「美化设置 → 字体」里点了没反应的问题修干净。
+
+**问题**：面板列了 12 个字体选项，但实际只有 6 个真加了 `@font-face`。`settings.js` 的白名单又是另外 7 个名字。三份清单各写各的，后果是——
+
+- 默认项 `LXGWScreen` 不在白名单里，每次刷新都会被写回 `LXGW`；
+- 点其余 7 个正文选项，`document.fonts.load('16px "族名"')` 因为压根没有这个 `@font-face`，永远返回空，直接落进「字体未能加载，已保留当前字体」的失败分支；
+- 代码字体同理，4 个选项里 3 个是死的。
+
+**修法**：三处清单统一。
+
+| 位置 | 作用 | 改了什么 |
+| --- | --- | --- |
+| `themes/fomalhaut/source/css/_custom/custom.css` | 真正的 `@font-face` | 从 6 个补齐到 **19 个**（11 款字体，其中 8 款各带 400 与 700 两档、3 款装饰体上游只有 400），并删掉一段重复的 `LXGW` 定义 |
+| `source/js/modules/appearance-fonts.js` | 面板按钮与预览 | `APPEARANCE_TEXT_FONTS` 改 7 条、`APPEARANCE_CODE_FONTS` 改 5 条 |
+| `source/js/modules/settings.js` | `FONT_LIST` / `CODE_FONT_LIST` 白名单 | 与面板逐字一致 |
+
+**阅读 4 款**：霞鹜文楷（默认）/ 霞鹜新晰黑 / 思源宋体 / 系统默认
+**个性装饰 3 款**：站酷快乐体 / 马善政毛笔楷书 / 龙藏体（收在折叠区，选中才下载）
+**代码 5 款**：JetBrains Mono（默认）/ Fira Code / Source Code Pro / Maple Mono / Hack
+
+（「系统默认」用系统字体栈，不需要 `@font-face`；其余 12 个面板项对应 11 款字体、19 个 `@font-face`。）
+
+**还有一个隐性问题：只有 400 一个字重。** 站内 `#site-title`（46.5px）、公告栏胶囊 `.a-chip`、欢迎信息 `span` 都用 `font-weight: 700/800`，而补齐前的 11 款字体各自只注册了 `font-weight: normal` 一个 face —— 浏览器只能把 400 的字形**机械加粗**（synthetic bold），中文笔画直接糊成一团，13px 的胶囊和 11px 的计数尤其明显。修法：
+
+- 8 款上游有真粗体的字体（霞鹜文楷 / 霞鹜新晰黑 / 思源宋体 / JetBrains Mono / Fira Code / Source Code Pro / Maple Mono / Hack）各补一个 `font-weight: 700` 的 `@font-face`，逐条实测 200（如 `lxgw-wenkai-tc-chinese-traditional-700-normal.woff2` 2040744 B、`hack-bold.woff2` 108008 B）；
+- 站酷快乐体 / 马善政毛笔楷书 / 龙藏体上游只有 400（`@fontsource` 与 Google Fonts 都没发布 700），改用全局 `html { font-synthesis-weight: none }` 禁掉合成粗体，它们按 400 原字形显示 —— 不再发糊，代价是没有真正加粗；
+- 实测：`document.fonts` 里 8 款显示 `400/loaded,700/loaded`、3 款只有 `400/loaded`；`#site-title` 的 computed `fontSynthesisWeight` 为 `none`，全站 77 个粗体文本节点全部命中自定义字体。
+
+- 全部换成 [jsDelivr](https://www.jsdelivr.com/) 上 `@fontsource/*` 的单文件 woff2（Hack 用 `hack-font` 官方包的 web 构建），逐条实测 200 且 `content-type` 正确；
+- 「霞鹜文楷 Screen」在 @fontsource 上没有可用的单文件版（只有 100 多段 subset，要先 `@import` 一份 106 KB 的 CSS 再拉上百个小文件），所以并回 `LXGW`；「筑紫A丸」「汉仪唐美人」「甜甜圈海报」都是商业字体没有开源版本，换成气质相近的三款开源装饰体；
+- 新增 `APPEARANCE_FONT_ALIASES` + `appearanceFontMigrate()`：老访客 `localStorage` 里的 `LXGWScreen` / `Monaco_1` / `ZhuZiAWan` 等旧值会先被翻译成新名字再走白名单，不会被静默清掉；
+- `@font-face` 只在真有元素用到该 family 时才下载，多列几款装饰字体不拖慢首屏；
+- 顺手把 `tools/tests/appearance-fonts.test.cjs` 的夹具迁到新清单（此前它把面板那 12 个名字硬编码进 VM 里的白名单，**伪造出了「全都合法」的假象，所以测试完全测不出这个 bug**）。13 个测试文件现共 **441 个断言、0 失败**。
+
+> **加字体时三处一起改**，少一处就还是「点了没反应」。字体如果上游有 700 字重，记得把两个 `@font-face` 都加上 —— 只注册 400 会让粗体文字走合成粗体，中文笔画会糊。
 
 ### v1.0.5 — 站点身份落定与三处补齐（2026-10-19）
 
@@ -115,7 +153,7 @@
 
 **字体与背景预览化**（新增 `source/js/modules/appearance-fonts.js`、`appearance-backgrounds.js`）
 
-- 字体：阅读 5 / 个性 3 / 代码 4 三组（含「系统默认」），正文与代码各一块实时预览；只对合法 key 请求 `document.fonts.load`、12 秒超时、最新请求胜、失败不写偏好可重试；「恢复默认」只重置两个字体键；
+- 字体：阅读 4 / 个性 3 / 代码 5 三组（含「系统默认」），正文与代码各一块实时预览；只对合法 key 请求 `document.fonts.load`、12 秒超时、最新请求胜、失败不写偏好可重试；「恢复默认」只重置两个字体键；
 - 背景：32 张壁纸 + 8 个渐变 + 7 个纯色 + 8 个在线接口全保留，一级分「壁纸 / 色彩 / 自定义」、壁纸再分四类；打开分类才给 `<img>` 赋 `src`，切换走 `Image` 预加载 + 12 秒超时 + token 取消，失败保留旧图；
 - 两个模块都是全局脚本、在 `settings.js` 之前加载，旧的 `setFont` / `setCodeFont` / `setBg` / `resetBg_` 契约不变，原来的入口照常可用。
 
@@ -361,7 +399,7 @@ v1.0.0 是一次结构性重写，主要变化：
 - **搜索懒加载**：`source/js/inject/search-lazy.js` 只在用户点开搜索时才拉取；
 - **pjax 守卫**：`source/js/pjax-guard.js` 修复换页后状态残留；
 - **CDN 预连接**：配置里对首屏外部域名做 `preconnect` / `dns-prefetch`；
-- **字体**：11 款自建字体改为公共 CDN（jsDelivr 的 `@fontsource/*`），并精简为 **6 款开源可商用字体**；
+- **字体**：11 款自建字体改为公共 CDN（jsDelivr 的 `@fontsource/*`），并精简为 **6 款开源可商用字体**（v1.0.6 起扩到 10 款，全部有真实可用的单文件 woff2）；
 - **图片外链**：原本指向作者私人对象存储的封面 / 壁纸 / 站点截图，全部改为公共占位图服务；
 - **配置瘦身**：`fomal.js` 2973 → 105 行，`custom.css` 删掉 341 行死代码并补上索引地图。
 
@@ -566,7 +604,7 @@ npx hexo clean && npx hexo generate && npx gulp
 | `modules/snow.js` | 雪花特效：两张预渲染雪片按大小 / 透明度 / 速度分层下落，厚度随视口 14–30px；深色 / 后台 / 手机 / 减少动态都暂停 |
 | `modules/fireflies.js` | 萤火虫微光：纯 CSS 呼吸与慢漂，不需要 canvas / rAF / 轮询，桌面 14 只 / ≤600px 8 只，默认关闭、与雪花互斥 |
 | `modules/ripple.js` | 点击涟漪：按下位置 1 个爆发节点 + 两圈同心水纹，700ms 后回收、同时最多 6 枚，默认关闭 |
-| `modules/appearance-fonts.js` | 字体预览面板（阅读 5 / 个性 3 / 代码 4）：`document.fonts.load` + 12 秒超时 + 最新请求胜，失败不写偏好 |
+| `modules/appearance-fonts.js` | 字体预览面板（阅读 4 / 个性 3 / 代码 5）：`document.fonts.load` + 12 秒超时 + 最新请求胜，失败不写偏好；旧 family 名由 `APPEARANCE_FONT_ALIASES` 迁移 |
 | `modules/appearance-backgrounds.js` | 背景预览面板（12 壁纸 + 1 随机横屏 + 1 随机竖屏 + 8 渐变 + 7 纯色 + 8 在线接口）：打开分类才赋 `src`，切换走 `Image` 预加载 + token 取消 |
 | `modules/cursor.js` | 鼠标相关：右键菜单、小猫咪、听话鼠标 |
 | `modules/shell.js` | 站点「外壳」行为：快捷键、夜间动画、标题恶搞、搜索框、手机滚动条 |
@@ -958,9 +996,10 @@ gitcalendar:
 | | 侧栏位置 | 侧栏放左边还是右边 |
 | **四、主题色设置** | 11 个预设色 | 红 / 橙 / 黄 / 抹茶 / 青绿 / 玉石绿 / 晴空蓝 / 柔靛蓝 / 雾蓝灰 / 紫罗兰 / 樱花粉，点一下全站换色 |
 | | 自定义取色圈 | 原生调色板，值以六位 HEX 存本地，首帧校验不合法则回落默认青绿 |
-| **五、字体设置** | 阅读字体 5 款 | 霞鹜文楷Screen（默认）/ 霞鹜文楷 / 霞鹜新晰黑 / 思源宋体 / 系统默认，正文区实时预览 |
-| | 个性装饰 3 款 | 筑紫A丸 / 汉仪唐美人 / 甜甜圈海报，默认收在折叠块里 |
-| | 代码字体 4 款 | Monaco（默认）/ Consolas / Maple Mono / Hack，代码区实时预览 |
+| **五、字体设置** | 阅读字体 4 款 | 霞鹜文楷（默认）/ 霞鹜新晰黑 / 思源宋体 / 系统默认，正文区实时预览 |
+| | 个性装饰 3 款 | 站酷快乐体 / 马善政毛笔楷书 / 龙藏体，默认收在折叠块里 |
+| | 代码字体 5 款 | JetBrains Mono（默认）/ Fira Code / Source Code Pro / Maple Mono / Hack，代码区实时预览 |
+| | 字重 | 8 款上游带真粗体的各注册 400 + 700 两个 `@font-face`；三款装饰体上游只有 400，由 `html { font-synthesis-weight: none }` 禁掉合成粗体（否则中文笔画会被机械加粗糊掉） |
 | **六、背景设置** | 壁纸 | 顶部两张是**随机图 API**（横屏 / 竖屏），下面 6 张桌面 + 6 张手机壁纸（`source/assets/wallpaper/`，AVIF，全部本地），打开分类才加载缩略图 |
 | | 色彩 | 8 个渐变色 + 7 个纯色，另有自定义纯色取色器 |
 | | 自定义 | 粘贴 HTTPS 图片链接；先预览探针再应用，失败保留旧图 |
@@ -969,7 +1008,7 @@ gitcalendar:
 **改面板本身**：
 
 - 想改**默认值**（访客没动过面板时用什么）：改 `_config.fomalhaut.yml` 的 `font` / `theme_color` / `background` 段，以及 `source/js/inject/beauty-boot.js`；
-- 想加**字体**：改 `source/js/modules/appearance-fonts.js` 的 `APPEARANCE_TEXT_FONTS` / `APPEARANCE_CODE_FONTS`，新增字体的 `@font-face` 写在 `themes/fomalhaut/source/css/_custom/custom.css` 的「字体引入」一节；
+- 想加**字体**：三处一起改，少一处面板就会「点了没反应」——① `themes/fomalhaut/source/css/_custom/custom.css` 的「字体引入」一节加 `@font-face`（上游有 700 就补两段，见下）；② `source/js/modules/appearance-fonts.js` 的 `APPEARANCE_TEXT_FONTS` / `APPEARANCE_CODE_FONTS` 加一行（按钮 id = `swf_` / `swfc_` + family 名）；③ `source/js/modules/settings.js` 的 `FONT_LIST` / `CODE_FONT_LIST` 白名单加同一个名字（不在白名单里的值每次刷新都会被写回默认）。字体若只有 400 一个字重，粗体文字会走浏览器合成粗体、中文发糊，此时要么补 700 的 `@font-face`，要么让 `html { font-synthesis-weight: none }` 兜底（字形清晰但不会加粗）；
 - 想加**壁纸 / 渐变 / 纯色 / 在线接口**：改 `source/js/modules/appearance-backgrounds.js` 的 `AP_BACKGROUND_CATALOG` 与 `AP_BACKGROUND_APIS`；想加 **主题色预设**：改 `source/js/modules/settings.js` 的 `themeColorPresets`；
 - 想**直接关掉面板**：`_config.fomalhaut.yml` 的 `beautify.enable: false`，然后去掉 `inject.bottom` 里 `settings.js` 那一行。
 
@@ -1196,7 +1235,7 @@ tags:                           # 标签（可多个）
   - Hexo
   - Fomalhaut
 
-cover: https://picsum.photos/id/1015/1200/675   # 卡片封面；不写则从 cover.default_cover 随机取
+cover: /assets/wallpaper/desktop-1.avif   # 卡片封面；不写则从 cover.default_cover 随机取
 top_img: /assets/head.jpg       # 文章页顶部大图；不写则跟随 default_top_img
 randomcover: false              # true = 每次刷新从 default_cover 随机换一张
 
@@ -1295,7 +1334,7 @@ npx hexo deploy            # 按 _config.yml 的 deploy 段推送
 | 评论区 | `_config.fomalhaut.yml` 的 `comments.use` + 对应系统的段（如 `twikoo.envId`） |
 | 统计 ID | `_config.fomalhaut.yml` 的 `baidu_analytics` 等；51LA 在 `source/js/51la.js` |
 | AI 助手 | `_config.fomalhaut.yml` 的 `ai_chat` 段（详见 8.10） |
-| 字体 | `themes/fomalhaut/source/css/_custom/custom.css` 的「字体引入」一节 + `source/js/modules/appearance-fonts.js` 的 `APPEARANCE_TEXT_FONTS` / `APPEARANCE_CODE_FONTS` |
+| 字体 | `themes/fomalhaut/source/css/_custom/custom.css` 的「字体引入」一节 + `source/js/modules/appearance-fonts.js` 的 `APPEARANCE_TEXT_FONTS` / `APPEARANCE_CODE_FONTS` + `source/js/modules/settings.js` 的 `FONT_LIST` / `CODE_FONT_LIST`（三处必须一致） |
 | 社交图标 | `_config.fomalhaut.yml` 的 `social`（格式：`名称: 链接 || 图标类名 || 动画类名`） |
 | 首页轮播 | 根 `_config.yml` 的 `swiper` 段 |
 | 首屏加载动画 | `_config.fomalhaut.yml` 的 `preloader`（样式文件在 `themes/fomalhaut/layout/includes/loading/load_style/`） |
@@ -1379,7 +1418,7 @@ npx hexo clean && npx hexo generate && npx gulp
 在文章 Front-matter 写 `cover: 图片链接`，或在 `_config.fomalhaut.yml` 的 `cover.default_cover` 里配置封面池。
 
 **Q：字体 / 图片挂了？**
-默认走公共 CDN（`cdn.jsdelivr.net` 的 `@fontsource/*` 与 `picsum.photos`）。若所在网络访问不畅，把 `themes/fomalhaut/source/css/_custom/custom.css` 里的 `@font-face` 换成你自己的字体，把 `cover.default_cover` 换成你自己的图床即可。
+字体默认走 `cdn.jsdelivr.net` 的 `@fontsource/*`，背景默认走 `t.alcy.cc` 的随机图接口。若所在网络访问不畅：把 `themes/fomalhaut/source/css/_custom/custom.css` 里的 `@font-face` 换成你自己的字体；把 `_config.fomalhaut.yml` 的 `<style id="defineBg">` 与 `source/js/modules/settings.js` 的 `resetBg_()` 一起改回本地 `/assets/wallpaper/*.avif`（站点自带 12 张，还在）。
 
 **Q：想彻底不用某个页面？**
 删掉 `source/` 下对应目录，并把 `_config.fomalhaut.yml` 的 `menu:` 与其面板配置一并去掉。
@@ -1396,7 +1435,7 @@ npx hexo clean && npx hexo generate && npx gulp
 
 - 本项目基于 [hexo-theme-butterfly](https://github.com/jerryc127/hexo-theme-butterfly)（Apache-2.0，作者 [Jerry](https://butterfly.js.org/)）二次开发，**继续沿用 Apache-2.0 协议**：仓库根目录的 `LICENSE` 覆盖整套站点、配置与文档，主题本体另见 `themes/fomalhaut/LICENSE`（保留上游许可证与版权声明）；
 - 部分美化思路参考了 Hexo 社区的公开方案（[akilar](https://akilar.top/)、[anzhiyu](https://blog.anheyu.com/) 等），在此致谢；
-- 示例图片来自 [picsum.photos](https://picsum.photos/)，字体来自 [jsDelivr](https://www.jsdelivr.com/) 上的 `@fontsource/*` 开源字体包（全部为 SIL OFL 许可）；
+- 随机背景来自 [t.alcy.cc](https://t.alcy.cc/)，壁纸来自主题自带的本地 AVIF 素材，字体来自 [jsDelivr](https://www.jsdelivr.com/) 上的 `@fontsource/*` 开源字体包（全部为 SIL OFL 许可）；
 - 站点里的示例数据（域名、邮箱、友链、统计 ID）均为占位内容，请替换为你自己的。
 
 ---

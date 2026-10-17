@@ -53,7 +53,19 @@
   //     （见 source/css/site-inject.css 的 #rightside 块，2026-10-15 第三版），
   //     不再需要单独的 --theme-solid 计算。hover 仍是主题自带的浅橙 #FF7242。
   // 5) 字体
-  var ft = def(ls("font"), "LXGW");
+  //    旧 family 名在这里也要迁一次：本文件在 head 里同步执行、早于 settings.js，
+  //    老访客 localStorage 里如果还留着 LXGWScreen / Monaco_1 之类的旧名字，
+  //    不迁的话首帧会先按一个没有 @font-face 的族名渲染（掉成系统字体），
+  //    等 settings.js 跑完才跳回来 —— 一帧闪动。映射表与 appearance-fonts.js 的
+  //    APPEARANCE_FONT_ALIASES 逐字一致。用 try/catch 兜住，别让字体拖垮整个预置脚本。
+  var ALIAS = {
+    LXGWScreen: "LXGW", ZhuZiAWan: "ZCOOLKuaiLe", HYTMR: "MaShanZheng", TTQHB: "LongCang",
+    Monaco_1: "JetBrainsMono", Consolas_1: "FiraCode", MapleMono_1: "MapleMono", Hack_1: "Hack"
+  };
+  function migrate(k) {
+    return (k && Object.prototype.hasOwnProperty.call(ALIAS, k)) ? ALIAS[k] : k;
+  }
+  var ft = def(migrate(ls("font")), "LXGW");
   if (ft === "default") {
     // 系统默认字体栈：与 source/js/fomal.js 的 setFont 逐字一致。原来只写 -apple-system，
     // 这个关键字在 Windows 上不存在，会让只声明 var(--global-font) 的标题掉到浏览器默认字体。
