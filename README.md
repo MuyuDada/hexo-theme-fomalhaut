@@ -1,11 +1,11 @@
-# hexo-theme-fomalhaut · v1.0.7
+# hexo-theme-fomalhaut · v1.0.8
 
 > 一套「克隆即用」的 Hexo 卡片式博客源码。主题基于 [Butterfly 4.3.1](https://butterfly.js.org/) 深度二次开发，
 > 并把**站点配置**与**主题代码**彻底分开：改配置就能搭起自己的站，升级主题不会冲掉你自己的改动。
 
 ![hexo](https://img.shields.io/badge/Hexo-6.3.0-0e83c?style=flat-square&logo=hexo)
 ![node](https://img.shields.io/badge/Node.js-18%20%7C%2020%20%7C%2022-339933?style=flat-square&logo=nodedotjs)
-![theme](https://img.shields.io/badge/Theme-Fomalhaut%20v1.0.7-6513df?style=flat-square)
+![theme](https://img.shields.io/badge/Theme-Fomalhaut%20v1.0.8-6513df?style=flat-square)
 ![license](https://img.shields.io/badge/License-Apache--2.0-blue?style=flat-square)
 ![stars](https://img.shields.io/github/stars/MuyuDada/hexo-theme-fomalhaut?style=flat-square&logo=github&label=Stars)
 ![forks](https://img.shields.io/github/forks/MuyuDada/hexo-theme-fomalhaut?style=flat-square&logo=github&label=Forks)
@@ -35,6 +35,40 @@
 ---
 
 ## 更新日志
+
+### v1.0.8 — 导航胶囊化 + 页脚两段式（2026-10-19）
+
+照 [miraii.cn](https://miraii.cn/) 改的两块「框架」：顶部导航收成一条胶囊工具栏，页脚从原来的一坨链接堆改成「品牌 + 短链 + 友链」的主段加一条实心底栏。
+
+**导航（`source/css/nav-pill.css`）**
+
+- 菜单收进 44px 高的半透明药丸（`rgba(15,23,42,.52)` + 1px 白边 + `9999px` 圆角），一级项 15px/36px 高，图标染主题青；
+- 右侧搜索/美化/夜间模式三件套改成 44×44 的圆钮；二级菜单改成横向白药丸，`top: calc(100% + 8px)` 悬停展开；
+- **没有直接改 `source/css/navigation.css`**：那份文件被 `tools/tests/navigation.test.cjs` 逐条断言选择器/属性/`!important`，还锁了 5 个文件的 SHA256。新开一份排在它后面做外观覆盖，测试契约零改动。
+- 三个实测出来的坑：①药丸纵向位置 — `custom.css` 和 `navigation.css` 都用 `transform: translateX(-50%) !important`，普通声明盖不住，必须写 `top:50% !important` + `translate(-50%,-50%) !important`；②二级菜单跑到药丸上方 — `.menus_item` 变 flex 容器后，绝对定位子元素的静态位置由 flex 对齐决定，必须显式 `top: calc(100% + 8px)`；③主题那条 3px 下划线穿过胶囊 — `custom.css` 的 `#nav *::after { background-color: … !important }` 会盖掉 `display:none` 之外的写法，`background-color` 也得 `!important`。
+
+**页脚（`themes/fomalhaut/layout/includes/footer.pug` + `source/css/footer-blocks.css` + `source/js/inject/footer-links.js`）**
+
+- 主段 `.footer-main`：左「站名 + 副标题 + 开启星辰之旅」，右 11 条短链（归档/分类/标签/画廊/音乐/统计/旧时光/留言/打赏/关于/llms）+ 友链（首屏 4 个，「换一批」轮换，共 8 个）；背景是「白→透明」纵向渐变压在头图上，不是实心色块；
+- 底栏 `.footer-bottom`：左侧版权 + 6 枚徽章，右侧 `#workboard` 运行时长/旅行者 1 号距离，纯白（深色 `rgb(13,13,13)`）实底 + 顶部 1px 分隔线；
+- **遮罩 bug**：白天页脚一片灰。`custom.css` 的 `[data-theme="light"] #footer:before { background-color: rgba(0,0,0,.25) !important }` 特异性 (0,2,0) 高于裸 `#footer::before`，光靠排后面盖不住 —— 必须写同特异性选择器 + `!important` 才能清掉；
+- **悬浮件避让**：`#rightside`（右下 38×215 圆钮列，`z-index:100`）与 `#fps`（左下 115×30，`z-index:1000`）都是 `position:fixed`，不随文档流动。用两个 CSS 变量 `--ft-safe-r: 96px` / `--ft-safe-b: 48px` 在四处 padding 里统一留白，换掉原来那条只对 `min-width:901px` 生效的 `@media`；
+- **底栏徽章折行**：flex 子项默认 `min-width:auto`，1440px 下会被压成 5+1 两行。`.footer-bottom-left { flex: 0 0 auto }` 锁死左侧宽度，压力转给右侧文本换行。
+
+**顺带清掉的占位残留**
+
+| 位置 | 原来 | 现在 |
+| --- | --- | --- |
+| `source/js/modules/console-art.js` | `欢迎来到Demoの小家!` / `By Demo` / `Powered by Demo` | `Muyuの小窝` / `By MuyuDada` / `Powered by Fomalhaut` |
+| `source/js/modules/nav.js` | `document.title.split(" \| Demo")[0]`、`title.endsWith("\| Demo")` | 统一走 `pageTitleOf()`：优先读 `GLOBAL_CONFIG_SITE.title`，退回按 `" \| "` 切 |
+| `source/js/modules/footer-time.js` | `new Date("01/10/2026")` | `new Date("08/09/2022")`（与 `footer.owner.since` / 控制台口径一致） |
+| `source/manifest.json` | `"name": "Demo"` / `"short_name": "Demo"` | `Muyuの小窝` / `Muyu` |
+| `source/css/mobile-drawer.css` | `content: "Demo"` | `content: "MUYU"` |
+| `_config.fomalhaut.yml` 的 `runtimeshow.publish_date` | `1/10/2026` | `8/9/2022`（小站资讯卡的「已运行」天数读的就是它） |
+
+摸鱼牌也从两张 shields 风格 SVG（左段写着 `Demo`）改成纯文本胶囊 `🌴 放假摸鱼中`，不再有位图缩放发虚的问题。
+
+**测试**：`node --test "tools/tests/*.test.cjs"` → 441 passed / 0 failed。
 
 ### v1.0.7 — 霞鹜文楷换成本地简体子集（2026-10-19）
 

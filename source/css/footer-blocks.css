@@ -1,0 +1,562 @@
+/* ============================================================================
+ * source/css/footer-blocks.css —— 页脚「两段式」外观层（2026-10-19）
+ * ----------------------------------------------------------------------------
+ * 参照 https://miraii.cn/ 的页脚，把原来 tzy 那套「#ft 三栏（格言 / 猜你想看 /
+ * 推荐友链头像墙）+ 一整块深色文字」换成清爽的两段式：
+ *
+ *   .footer-main    主段：白→透明的向上渐变，左边站名+副标题+CTA，右边短链导航+友链
+ *   .footer-bottom  底栏：纯实底，左边版权+框架+徽章，右边运行时长（#workboard）
+ *
+ * 【为什么渐变「往上淡出」】
+ *   本站 #footer 自己没有背景，透出来的是 body 上那张固定背景图（见截图）。
+ *   主段底部给纯色、顶部渐隐到透明，图片能一直延续到页脚上沿，接缝不可见；
+ *   底栏再压一层同色实底，两段之间就是一条硬分界 —— 这正是 miraii 的做法。
+ *
+ * 【深色模式】
+ *   浅色用 #fff 系，深色用 #0d0d0d 系（跟 body 深色底一致，见 .dbg-ft-bg 实测：
+ *   light bodyBg = #fff，dark bodyBg = #0d0d0d）。判定方式是 [data-theme='dark']，
+ *   与 nav-pill.css / mobile-drawer.css 保持一致。
+ *
+ * 【和旧样式的关系】
+ *   - custom.css:2996-3155 的整套 #ft / .ft-item-* / .t-top / .ft-links / .img-group-item
+ *     规则全部自然失配（新 pug 里已经没有这些 class），保持原样不动，随时可回滚。
+ *   - custom.css:3153 的 `#footer-wrap { padding: 20px 20px }` 和主题 footer.styl 的
+ *     `text-align: center` 由本文件覆盖。
+ *   - 主题 footer.styl 的 `#footer:before` 是给「深色遮罩 + 白字」准备的，这里必须去掉，
+ *     否则白底会被压成灰底。
+ *
+ * 【改这个文件记得同步提 _config.fomalhaut.yml 里的 ?v= 版本号，否则吃缓存】
+ * ========================================================================== */
+
+/* ------------------------------ 变量 ------------------------------ */
+#footer-wrap {
+  --ft-main-solid: #fff;
+  --ft-main-grad: linear-gradient(
+    to top,
+    rgb(255 255 255 / 100%) 0%,
+    rgb(255 255 255 / 96%) 42%,
+    rgb(255 255 255 / 72%) 74%,
+    rgb(255 255 255 / 0%) 100%
+  );
+  --ft-bottom-bg: #fff;
+  --ft-title: #1f1f1f;
+  --ft-text: rgb(31 31 31 / 78%);
+  --ft-muted: rgb(31 31 31 / 52%);
+  --ft-line: rgb(31 31 31 / 10%);
+  --ft-hover: var(--theme-color);
+  --ft-chip-bg: rgb(31 31 31 / 4%);
+  --ft-chip-hover-bg: rgb(31 31 31 / 8%);
+
+  /* 【固定悬浮件安全带】页面上有三个 position:fixed 的常驻挂件，它们不随文档流动，
+     滚到页底时必定压在页脚上，只能靠留白让路：
+       ① #rightside（右下角圆钮列）：宽 38px、贴右边 10px → 占视口右侧 48px。
+          实测 1440px 时 x=1392~1430；各断点 x 都是 vw-48 起（1100→1052、900→852、420→372）。
+       ② #fps（左下角性能条）：高 30px（≤600px 为 28px）、贴底 12px、宽约 115px
+          → 占视口底部 42px 的左下角；实测会盖住 #ghbdages 首几枚徽章。
+       ③ .neko（右下角小猫）+ #myscoll（猫缠绳）：64x64，CSS 是 right:56px + translateX(50%)，
+          1440px 实测 x=1352~1416 / y=760~824 —— 正好压住底栏右侧 #workboard 的运行时长。
+          它只在 body.clientWidth > 992 时初始化（cursor.js:56），≤992px 不出现。
+          悬停时猫身上的 100x100 报时气泡还会往左上探到 x≈1284。
+     取值：右 96px（= 猫身左缘 88px + 8 余量）、底 48px（>42 留 6 余量）。
+     注：猫只在 >992px 存在，所以 992px 以下把 --ft-safe-r 收回 56px（见下面断点），
+         否则小屏右侧会白掉一大条。 */
+  --ft-safe-r: 96px;
+  --ft-safe-b: 48px;
+
+  /* 主题 footer.styl 给了 padding: 40px 20px + text-align: center，
+     custom.css:3153 又改成 20px —— 全部由本文件的各段自行内边距接管 */
+  box-sizing: border-box;
+  padding: 0;
+  color: var(--ft-text);
+  text-align: left;
+}
+
+[data-theme='dark'] #footer-wrap {
+  --ft-main-solid: #0d0d0d;
+  --ft-main-grad: linear-gradient(
+    to top,
+    rgb(13 13 13 / 100%) 0%,
+    rgb(13 13 13 / 96%) 42%,
+    rgb(13 13 13 / 72%) 74%,
+    rgb(13 13 13 / 0%) 100%
+  );
+  --ft-bottom-bg: #0d0d0d;
+  --ft-title: rgb(255 255 255 / 92%);
+  --ft-text: rgb(255 255 255 / 72%);
+  --ft-muted: rgb(255 255 255 / 46%);
+  --ft-line: rgb(255 255 255 / 12%);
+  --ft-chip-bg: rgb(255 255 255 / 6%);
+  --ft-chip-hover-bg: rgb(255 255 255 / 12%);
+}
+
+/* 主题给页脚背景图压的那层黑色遮罩，白底页脚用不上，去掉。
+   注意：custom.css:658 / :673 写的是 `[data-theme="light"] #footer:before { … !important }`，
+   特异性 (0,1,1) 比裸 `#footer:before` (0,1,0) 高，光靠「排后面」盖不住 ——
+   必须同特异性 + !important 才会生效（实测裸选择器时白天仍是 rgba(0,0,0,0.25)）。 */
+[data-theme='light'] #footer::before,
+[data-theme='dark'] #footer::before,
+#footer::before,
+#footer:before {
+  background-color: transparent !important;
+  background-image: none !important;
+}
+
+/* 主题 footer.styl 的 `#footer-wrap a { color: var(--light-grey) }` 会盖掉我们想要的深色 */
+#footer-wrap a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* ------------------------------ 公共容器 ------------------------------ */
+#footer-wrap .footer-container {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* ==========================================================================
+ * 第一段：主段
+ * ========================================================================== */
+#footer-wrap .footer-main {
+  position: relative;
+  /* 右/下用安全带变量，避开 #rightside 与 #fps 两个固定挂件（见变量块注释） */
+  padding: 56px var(--ft-safe-r) 30px 20px;
+  background: var(--ft-main-grad);
+}
+
+#footer-wrap .footer-main-inner {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr);
+  gap: 32px 48px;
+  align-items: end;
+}
+
+/* ------------------------------ 左：品牌 ------------------------------ */
+#footer-wrap .footer-brand {
+  min-width: 0;
+}
+
+#footer-wrap .footer-brand-name {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--ft-title);
+  letter-spacing: 0.2px;
+}
+
+#footer-wrap .footer-brand-desc {
+  margin: 8px 0 0;
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--ft-muted);
+}
+
+#footer-wrap .footer-brand-cta {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  height: 34px;
+  padding: 0 16px;
+  margin-top: 16px;
+  font-size: 13.5px;
+  line-height: 1;
+  color: var(--ft-title);
+  background: var(--ft-chip-bg);
+  border: 1px solid var(--ft-line);
+  border-radius: 9999px;
+  transition: background-color 180ms ease, border-color 180ms ease, color 180ms ease;
+}
+
+#footer-wrap .footer-brand-cta i {
+  font-size: 12px;
+  color: var(--ft-hover);
+  transition: transform 180ms ease;
+}
+
+#footer-wrap .footer-brand-cta:hover {
+  color: var(--ft-title);
+  background: var(--ft-chip-hover-bg);
+  border-color: var(--ft-hover);
+}
+
+#footer-wrap .footer-brand-cta:hover i {
+  transform: translateX(3px);
+}
+
+/* ------------------------------ 右：链接组 ------------------------------ */
+#footer-wrap .footer-links {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: flex-end;
+  min-width: 0;
+}
+
+#footer-wrap .footer-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 4px;
+  justify-content: flex-end;
+  margin: 0;
+}
+
+#footer-wrap .footer-nav-item {
+  padding: 4px 10px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--ft-text);
+  white-space: nowrap;
+  border-radius: 9999px;
+  transition: background-color 180ms ease, color 180ms ease;
+}
+
+#footer-wrap .footer-nav-item:hover {
+  color: var(--ft-hover);
+  background: var(--ft-chip-bg);
+}
+
+/* 友链一行：默认只露前 4 位，其余由 footer-links.js 轮换 */
+#footer-wrap .footer-friends {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 6px;
+  align-items: center;
+  justify-content: flex-end;
+  min-height: 26px;
+}
+
+#footer-wrap .footer-friends-label {
+  padding: 0 8px 0 0;
+  font-size: 13px;
+  color: var(--ft-muted);
+  letter-spacing: 0.4px;
+}
+
+#footer-wrap .footer-friend-item {
+  display: none;
+  padding: 3px 10px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--ft-text);
+  white-space: nowrap;
+  background: var(--ft-chip-bg);
+  border-radius: 9999px;
+  transition: background-color 180ms ease, color 180ms ease;
+}
+
+#footer-wrap .footer-friend-item.is-shown {
+  display: inline-block;
+}
+
+#footer-wrap .footer-friend-item:hover {
+  color: var(--ft-hover);
+  background: var(--ft-chip-hover-bg);
+}
+
+#footer-wrap .footer-friends-refresh {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  color: var(--ft-muted);
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  border-radius: 9999px;
+  transition: background-color 180ms ease, color 180ms ease;
+}
+
+#footer-wrap .footer-friends-refresh i {
+  font-size: 13px;
+}
+
+#footer-wrap .footer-friends-refresh:hover {
+  color: var(--ft-hover);
+  background: var(--ft-chip-bg);
+}
+
+#footer-wrap .footer-friends-refresh.is-spinning i {
+  animation: ft-spin 480ms ease;
+}
+
+@keyframes ft-spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+#footer-wrap .footer-friend-more {
+  padding: 3px 10px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--ft-muted);
+  white-space: nowrap;
+  border-radius: 9999px;
+  transition: color 180ms ease, background-color 180ms ease;
+}
+
+#footer-wrap .footer-friend-more:hover {
+  color: var(--ft-hover);
+  background: var(--ft-chip-bg);
+}
+
+/* ==========================================================================
+ * 第二段：底栏
+ * ========================================================================== */
+#footer-wrap .footer-bottom {
+  padding: 18px var(--ft-safe-r) var(--ft-safe-b) 20px;
+  background: var(--ft-bottom-bg);
+  border-top: 1px solid var(--ft-line);
+}
+
+#footer-wrap .footer-bottom-inner {
+  display: flex;
+  gap: 24px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+#footer-wrap .footer-bottom-left {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-start;
+  min-width: 0;
+  font-size: 13.5px;
+  line-height: 1.7;
+  color: var(--ft-muted);
+
+  /* 底栏左侧（版权 + 6 枚徽章）不给收缩：flex 默认 min-width:auto 会把它压到
+     能折行的宽度，1440px 下徽章就被挤成 5+1 两行。锁成 flex:0 0 auto 后，
+     压力全给右侧 #workboard 的文本换行 —— 视觉上更整齐。 */
+  flex: 0 0 auto;
+}
+
+#footer-wrap .footer-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  align-items: center;
+}
+
+#footer-wrap .footer-copyright {
+  color: var(--ft-muted);
+}
+
+#footer-wrap .footer-framework {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0 4px;
+  align-items: center;
+  color: var(--ft-muted);
+}
+
+#footer-wrap .footer-framework a {
+  color: var(--ft-text);
+  transition: color 180ms ease;
+}
+
+#footer-wrap .footer-framework a:hover {
+  color: var(--ft-hover);
+}
+
+#footer-wrap .footer-separator {
+  margin: 0 2px;
+  opacity: 0.5;
+}
+
+#footer-wrap .footer_custom_text {
+  font-size: 13.5px;
+  color: var(--ft-muted);
+}
+
+/* 徽章：原来靠 pug 里的 style="margin-inline:5px" 撑开，现在统一收进 CSS */
+#footer-wrap #ghbdages {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  margin: 2px 0 0;
+  padding: 0;
+}
+
+#footer-wrap .github-badge {
+  display: inline-flex;
+  border-radius: 4px;
+}
+
+#footer-wrap .github-badge img {
+  display: block;
+  height: 20px;
+  border-radius: 4px;
+}
+
+/* ------------------------------ 右：运行时长 ------------------------------ */
+#footer-wrap .footer-bottom-right {
+  flex: none;
+  max-width: 100%;
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--ft-muted);
+  text-align: right;
+}
+
+#footer-wrap #workboard {
+  color: var(--ft-muted);
+}
+
+/* 摸鱼牌：原来是两张 136x20 的 shields 风格 SVG，左段硬编码着 "Demo" 占位，
+   而且 <img> 里的中文取不到站点字体。2026-10-19 改成纯文本胶囊，跟随主题色与深色模式。 */
+#footer-wrap #workboard .boardsign {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 22px;
+  padding: 0 9px;
+  margin-bottom: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1;
+  white-space: nowrap;
+  color: var(--theme-color);
+  background: rgb(57 197 187 / 12%);
+  border: 1px solid rgb(57 197 187 / 28%);
+  border-radius: 9999px;
+}
+
+#footer-wrap #workboard .boardsign i {
+  font-size: 11px;
+}
+
+/* 上班日用暖橙，跟放假日的青绿区分开 */
+#footer-wrap #workboard .boardsign-work {
+  color: #e8833a;
+  background: rgb(232 131 58 / 10%);
+  border-color: rgb(232 131 58 / 26%);
+}
+
+#footer-wrap #workboard i.fa-heartbeat {
+  color: #ff4d4f;
+}
+
+/* 脚本写死的 13px 字号在小屏上略大，压一档 */
+#footer-wrap #workboard div {
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  line-height: 1.8;
+  color: var(--ft-muted);
+}
+
+/* 旅行者 1 号那行走字母间距，跟上一行拉开层次 */
+#footer-wrap #workboard div br + text {
+  letter-spacing: 0.2px;
+}
+
+/* ==========================================================================
+ * 响应式
+ * ========================================================================== */
+/* 注：--ft-safe-r / --ft-safe-b 两个安全带变量是为了避开左右两侧的 fixed 挂件，
+ *     所有断点都要带上；下面每个断点只改常规内边距，右/下继续读变量。 */
+/* 猫咪 .neko 只在 body.clientWidth > 992 时初始化（cursor.js:56），
+   992 以下右侧只剩 #rightside（48px），安全带收回 56px 就够，不必白掉 96px。 */
+@media screen and (max-width: 992px) {
+  #footer-wrap {
+    --ft-safe-r: 56px;
+  }
+}
+
+@media screen and (max-width: 900px) {
+  #footer-wrap .footer-main {
+    padding: 44px var(--ft-safe-r) 26px 20px;
+  }
+
+  #footer-wrap .footer-main-inner {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 22px;
+    align-items: start;
+  }
+
+  #footer-wrap .footer-links {
+    align-items: flex-start;
+  }
+
+  #footer-wrap .footer-nav {
+    justify-content: flex-start;
+    margin-left: -10px; /* 抵消首项的左 padding，让「归档」与站名左对齐 */
+  }
+
+  #footer-wrap .footer-friends {
+    justify-content: flex-start;
+    margin-left: -6px;
+  }
+}
+
+@media screen and (max-width: 768px) {
+  #footer-wrap .footer-bottom-inner {
+    flex-direction: column;
+    gap: 14px;
+    align-items: flex-start;
+  }
+
+  #footer-wrap .footer-bottom-left {
+    align-items: flex-start;
+  }
+
+  #footer-wrap .footer-bottom-right {
+    text-align: left;
+  }
+}
+
+@media screen and (max-width: 576px) {
+  #footer-wrap .footer-main {
+    padding: 36px var(--ft-safe-r) 22px 16px;
+  }
+
+  #footer-wrap .footer-bottom {
+    padding: 16px var(--ft-safe-r) var(--ft-safe-b) 16px;
+  }
+
+  #footer-wrap .footer-brand-name {
+    font-size: 19px;
+  }
+
+  #footer-wrap .footer-nav-item {
+    padding: 4px 8px;
+    font-size: 13.5px;
+  }
+
+  #footer-wrap #ghbdages {
+    gap: 5px;
+  }
+
+  #footer-wrap .github-badge img {
+    height: 18px;
+  }
+}
+
+/* ==========================================================================
+ * 打印：页脚只留版权行
+ * ========================================================================== */
+@media print {
+  #footer-wrap .footer-main {
+    display: none;
+  }
+
+  #footer-wrap .footer-bottom {
+    border-top: none;
+    background: none;
+  }
+
+  #footer-wrap #ghbdages,
+  #footer-wrap #workboard {
+    display: none;
+  }
+}

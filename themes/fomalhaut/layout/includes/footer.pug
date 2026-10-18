@@ -1,97 +1,83 @@
+//- 【2026-10-19 改版】页脚改成两段式：
+//-   .footer-main   主段：左「站名 + 副标题 + 星辰之旅」，右「短链导航 + 友链换一批」
+//-   .footer-bottom 底栏：左「版权 + 六枚徽章」，右「运行时长」
+//-
+//- 【这些 id / class 有脚本或主题配置依赖，改结构时别删】——————————————
+//-   #workboard   —— source/js/modules/footer-time.js 每秒把 innerHTML 整段重写，
+//-                    内容是「摸鱼牌 + 本站运行了 X 年 Y 天 … + 旅行者 1 号距离 …」。
+//-   #ghbdages    —— 六枚 shields.io 徽章，样式在 custom.css 的 .github-badge。
+//-   .copyright / .framework-info / .footer_custom_text —— 对应 _config.fomalhaut.yml 的
+//-                    footer.owner / footer.copyright / footer.custom_text 三个开关。
+//-
+//- 【样式】全部在 source/css/footer-blocks.css（站点注入，排在主题 index.css 之后），
+//-        主题自带的 _layout/footer.styl 与 custom.css 的 #ft 一套不再参与排版。
+//-
+//- 【友链】仍读 source/_data/link.yml 第一组（常来常往），最多取 8 位；
+//-        首屏默认显示前 4 位，其余由 source/js/inject/footer-links.js 在点「换一批」时轮换。
+- var _ftNow = new Date()
+- var _ftYear = _ftNow.getFullYear()
+- var _ftSince = theme.footer.owner.since
+- var _ftGroups = site.data.link || []
+- var _ftFriends = (_ftGroups.length && _ftGroups[0].link_list) ? _ftGroups[0].link_list.slice(0, 8) : []
+
 #footer-wrap
-  #ft
-    .ft-item-1
-      .t-top
-        .t-t-l
-          p.ft-t.t-l-t 格言🧬
-          .bg-ad
-            div
-              | 再看看那个光点，它就在这里，这是家园，这是我们 —— 你所爱的每一个人，你认识的每一个人，你听说过的每一个人，曾经有过的每一个人，都在它上面度过他们的一生✨
-            .btn-xz-box
-              a.btn-xz(href='/box/astronomy/') 点击开启星辰之旅
-        .t-t-r
-          p.ft-t.t-l-t 猜你想看💡
-          ul.ft-links
-            li
-              a(href='/archives/') 文章归档
-              a(href='/box/nav/') 网址导航
-            li
-              a(href='/social/link/') 我的朋友
-              a(href='/comments/') 留点什么
-            li
-              a(href='/personal/about/') 关于作者
-              a(href='/sponsor/') 投喂打赏
-            li
-              a(href='/categories/') 文章分类
-              a(href='/tags/') 文章标签
-            li
-              a(href='/box/gallery/') 我的画廊
-              a(href='/site/time/') 建设进程
-            li
-              a(href='/site/census/') 网站统计
-              a(href='/llms.txt') llms.txt
-    .ft-item-2
-      p.ft-t 推荐友链⌛
-      //- 【2026-10-19 改】原来这里是 8 个硬编码占位（example.com / picsum 头像 / 广告位招租），
-      //- 现改为直接读 source/_data/link.yml 的第一组（常来常往），只取前 8 位。
-      //- 好处：加友链只改 link.yml 一处，页脚自动跟着变；不想要页脚友链就删掉本段。
-      //- 头像建议 100x100 以内的小图，这里用 CSS 统一裁成方形。
-      .ft-img-group
-        - var _ftGroups = site.data.link || []
-        - var _ftFriends = (_ftGroups.length && _ftGroups[0].link_list) ? _ftGroups[0].link_list.slice(0, 8) : []
-        each item in _ftFriends
-          .img-group-item
-            a(href=item.link target='_blank' rel='noopener' title=item.name)
-              img(src=item.avatar alt=item.name loading='lazy')
+  .footer-main
+    .footer-container.footer-main-inner
+      .footer-brand
+        h2.footer-brand-name= config.title
+        p.footer-brand-desc= config.subtitle
+        a.footer-brand-cta(href='/box/astronomy/')
+          span 开启星辰之旅
+          i.fas.fa-arrow-right
+      .footer-links
+        nav.footer-nav
+          a.footer-nav-item(href='/archives/') 归档
+          a.footer-nav-item(href='/categories/') 分类
+          a.footer-nav-item(href='/tags/') 标签
+          a.footer-nav-item(href='/box/gallery/') 画廊
+          a.footer-nav-item(href='/life/music/') 音乐
+          a.footer-nav-item(href='/site/census/') 统计
+          a.footer-nav-item(href='/site/time/') 旧时光
+          a.footer-nav-item(href='/comments/') 留言
+          a.footer-nav-item(href='/sponsor/') 打赏
+          a.footer-nav-item(href='/personal/about/') 关于
+          a.footer-nav-item(href='/llms.txt') llms
+        .footer-friends
+          span.footer-friends-label 友链
+          each item, i in _ftFriends
+            a.footer-friend-item(class=(i < 4 ? 'is-shown' : '') href=item.link target='_blank' rel='noopener' title=item.descr || item.name)= item.name
+          button.footer-friends-refresh(type='button' title='换一批')
+            i.fas.fa-rotate-right
+          a.footer-friend-more(href='/social/link/') 全部
 
-  if theme.footer.owner.enable
-    - var now = new Date()
-    - var nowYear = now.getFullYear()
-    //- if theme.footer.owner.since && theme.footer.owner.since != nowYear
-    //-   .copyright!= `&copy;${theme.footer.owner.since} - ${nowYear} By ${config.author}`
-    //- else
-    //-   .copyright!= `&copy;${nowYear} By ${config.author}`
-    //- 新加的
-    if theme.footer.owner.since && theme.footer.owner.since != nowYear
-      .copyright
-        span!= `<b>&copy;${theme.footer.owner.since}-${nowYear}</b>`
-        span!= `<b>&nbsp;&nbsp;By ${config.author}</b>`
-    else
-       .copyright
-         span!= `<b>&copy;${nowYear}</b>`
-         span!= `<b>&nbsp;&nbsp;By ${config.author}</b>`
-    //- 到这里
-  if theme.footer.copyright
-    .framework-info
-      span= _p('footer.framework') + ' '
-      a(href='https://hexo.io')= 'Hexo'
-      span.footer-separator |
-      span= _p('footer.theme') + ' '
-      a(href='https://github.com/jerryc127/hexo-theme-butterfly')= 'Butterfly'
-  if theme.footer.custom_text
-    .footer_custom_text!=`${theme.footer.custom_text}`
-  #workboard
-  p#ghbdages
-    a.github-badge(target='_blank' href="https://hexo.io/" style='margin-inline:5px' title="博客框架为Hexo_v6.3.0")
-      img(src="https://img.shields.io/badge/Frame-Hexo-blue.svg" alt='')
-
-    a.github-badge(target='_blank' href="https://github.com/MuyuDada/hexo-theme-fomalhaut" style='margin-inline:5px' title="主题Fomalhaut v1.0.7(基于Butterfly v4.3.1)")
-      img(src="/assets/badge/Theme-Fomalhaut-6513df.svg" alt='')
-
-    a.github-badge(target='_blank' href="https://vercel.com/" style='margin-inline:5px' title="本站采用多线部署，主线路托管于Vercel")
-      img(src="https://img.shields.io/badge/Hosted-Vercel-brightgreen.svg" alt='')
-
-    a.github-badge(target='_blank' href="https://user.51.la/" style='margin-inline:5px' title="本站数据分析得益于51la技术支持")
-      img(src="https://img.shields.io/badge/Analytics-51la-3db1eb.svg" alt='')
-
-
-
-    a.github-badge(target='_blank' href="https://npmmirror.com/" style='margin-inline:5px' title="本站使用npmmirror为部分静态资源加速")
-      //- 源站上这枚已去掉 shields.io 模板自带的 1px 深色阴影文字（浅底深字会显重影），别换回 -fff2cc 那版
-      img(src="/assets/badge/CDN-npmmirror.svg" alt='')
-
-    a.github-badge(target='_blank' href="https://github.com/" style='margin-inline:5px' title="本网站源码由Github提供存储仓库")
-      img(src="https://img.shields.io/badge/Source-GitHub-d021d6.svg" alt='')
-
-    //- a.github-badge(target='_blank' href="http://creativecommons.org/licenses/by-nc-sa/4.0/" style='margin-inline:5px' title="本站采用知识共享署名-非商业性使用-相同方式共享4.0国际许可协议进行许可")
-    //-   img(src="https://picsum.photos/id/1039/1200/675" alt='')
+  .footer-bottom
+    .footer-container.footer-bottom-inner
+      .footer-bottom-left
+        .footer-meta
+          if theme.footer.owner.enable
+            span.footer-copyright= `${_ftSince && _ftSince != _ftYear ? '©' + _ftSince + '-' + _ftYear : '©' + _ftYear} Powered By ${config.author}`
+          if theme.footer.copyright
+            span.footer-framework
+              span= _p('footer.framework') + ' '
+              a(href='https://hexo.io')= 'Hexo'
+              span.footer-separator |
+              span= _p('footer.theme') + ' '
+              a(href='https://github.com/jerryc127/hexo-theme-butterfly')= 'Butterfly'
+        if theme.footer.custom_text
+          .footer_custom_text!=`${theme.footer.custom_text}`
+        p#ghbdages
+          a.github-badge(target='_blank' href="https://hexo.io/" title="博客框架为Hexo_v6.3.0")
+            img(src="https://img.shields.io/badge/Frame-Hexo-blue.svg" alt='')
+          a.github-badge(target='_blank' href="https://github.com/MuyuDada/hexo-theme-fomalhaut" title="主题Fomalhaut v1.0.8(基于Butterfly v4.3.1)")
+            img(src="/assets/badge/Theme-Fomalhaut-6513df.svg" alt='')
+          a.github-badge(target='_blank' href="https://vercel.com/" title="本站采用多线部署，主线路托管于Vercel")
+            img(src="https://img.shields.io/badge/Hosted-Vercel-brightgreen.svg" alt='')
+          a.github-badge(target='_blank' href="https://user.51.la/" title="本站数据分析得益于51la技术支持")
+            img(src="https://img.shields.io/badge/Analytics-51la-3db1eb.svg" alt='')
+          a.github-badge(target='_blank' href="https://npmmirror.com/" title="本站使用npmmirror为部分静态资源加速")
+            //- 源站上这枚已去掉 shields.io 模板自带的 1px 深色阴影文字（浅底深字会显重影），别换回 -fff2cc 那版
+            img(src="/assets/badge/CDN-npmmirror.svg" alt='')
+          a.github-badge(target='_blank' href="https://github.com/" title="本网站源码由Github提供存储仓库")
+            img(src="https://img.shields.io/badge/Source-GitHub-d021d6.svg" alt='')
+      .footer-bottom-right
+        #workboard

@@ -29,7 +29,7 @@ function createtime1() {
   var dnum = Math.floor(days);
 
   var ascll = [
-    `欢迎来到Demoの小家!`,
+    `欢迎来到Muyuの小窝!`,
     `Future is now 🍭🍭🍭`,
     `
         
@@ -45,7 +45,7 @@ function createtime1() {
     "天啦!",
     // 版权年份跟着走：2022 是建站年（与 _config.fomalhaut.yml 的 footer.owner.since 保持一致），
     // 结束年份取运行时的当前年份，省得每年手改一次。
-    "©2022-" + new Date().getFullYear() + " By Demo",
+    "©2022-" + new Date().getFullYear() + " By MuyuDada",
   ];
 
   setTimeout(
@@ -89,7 +89,7 @@ function createtime2() {
   setTimeout(
     console.warn.bind(
       console,
-      "%c ⚡ Powered by Demo %c 你正在访问Demoの小家",
+      "%c ⚡ Powered by Fomalhaut %c 你正在访问Muyuの小窝",
       "color:white; background-color:#f0ad4e",
       ""
     )

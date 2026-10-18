@@ -804,7 +804,10 @@ busuanzi:
 # Formal: Month/Day/Year Time or Year/Month/Day Time
 runtimeshow:
   enable: false
-  publish_date: 1/10/2026 00:00:00
+  # 建站日（2022-08-09）。enable 只控制 aside 上那条「已运行 XXX 天」横幅，
+  # 但小站资讯卡里的「已运行」天数一直在读这个字段（card_webinfo.pug:47），
+  # 之前留的 1/10/2026 会让卡片显示「已运行 281 天」，与页脚 #workboard 的 2022 口径不一致。
+  publish_date: 8/9/2022 00:00:00
 
 # Aside widget - Newest Comments
 newest_comments:
@@ -1012,6 +1015,17 @@ inject:
     - <link rel="stylesheet" href="/css/site-inject.css?v=20261015-fps4">
     # 导航磨砂底色与工具区间距（独立覆盖；保留主题导航显示/折叠逻辑）
     - <link rel="stylesheet" href="/css/navigation.css?v=20261011-nav3">
+    # 导航胶囊化：站名 / 菜单 / 右侧按钮都做成圆角药丸（参照 miraii.cn）。
+    # 必须排在 navigation.css 之后才能盖住它的 44x44 / radius:12px 等形状声明。
+    - <link rel="stylesheet" href="/css/nav-pill.css?v=20261019-pill1">
+    # ── 页脚两段式改版（站点独立样式 + 脚本，不改主题源码）────────────────────────
+    # source/css/footer-blocks.css：把 themes/fomalhaut/layout/includes/footer.pug 新版结构
+    #   做成「主段（白→透明向上渐变，左品牌 / 右短链导航 + 友链）+ 底栏（实底，左版权徽章 /
+    #   右运行时长）」两段，参照 miraii.cn。custom.css:2996-3155 那套 #ft 旧样式已自然失配，留作回滚。
+    # source/js/inject/footer-links.js：友链「换一批」只切 .is-shown 类，不重新请求。
+    # 必须排在 site-inject.css / navigation.css 之后。回滚：删掉下面两行即可。
+    - <link rel="stylesheet" href="/css/footer-blocks.css?v=20261019-ft5">
+    - <script defer src="/js/inject/footer-links.js?v=20261019-ft2"></script>
     # ── 手机端抽屉菜单改版（站点独立样式，不改主题源码）────────────────────────
     # source/css/mobile-drawer.css：#sidebar-menus 的层级 / 统计胶囊 / 图标底衬 /
     # 手风琴二级菜单 / 极光底色 / 深色适配，配色全部由 --theme-color 派生。

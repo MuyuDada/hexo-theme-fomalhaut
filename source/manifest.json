@@ -1,6 +1,6 @@
 {
-  "name": "Demo",
-  "short_name": "Demo",
+  "name": "Muyuの小窝",
+  "short_name": "Muyu",
   "theme_color": "var(--theme-color)",
   "background_color": "var(--theme-color)",
   "display": "standalone",

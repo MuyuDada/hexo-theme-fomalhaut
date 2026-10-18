@@ -31,6 +31,17 @@
 
 document.addEventListener('pjax:complete', tonav);
 document.addEventListener('DOMContentLoaded', tonav);
+
+// 当前页的纯标题（不含「 | 站名」后缀）。导航栏标题与分享文案共用，避免各自写死分隔符。
+// 必须留在本文件「导航栏显示标题」区段内：tools/tests/scroll-listeners.test.cjs
+// 按 document.addEventListener(...tonav) 到「导航栏显示标题 end」之间的文本切片来跑单测。
+function pageTitleOf() {
+  var site = (typeof window !== "undefined") ? window.GLOBAL_CONFIG_SITE : null;
+  if (site && site.title) return String(site.title);
+  var title = document.title || "";
+  var sep = title.indexOf(" | ");
+  return sep > 0 ? title.substring(0, sep) : title;
+}
 //响应pjax
 function tonav() {
   // Replace only this module's listener; keep other scroll handlers intact.
@@ -55,7 +66,8 @@ function tonav() {
     position = scroll;
   });
   //修复没有弄右键菜单的童鞋无法回顶部的问题
-  pageName.innerText = document.title.split(" | Demo")[0];
+  // 2026-10-19：原来写死 split(" | Demo")，站点改名后分隔符不再命中，#page-name 会显示整串。
+  pageName.innerText = pageTitleOf();
 }
 
 function scrollToTop() {
@@ -233,9 +245,8 @@ function share_() {
   let url = window.location.origin + window.location.pathname
   try {
     // 截取标题
-    var title = document.title;
-    var subTitle = title.endsWith("| Demo") ? title.substring(0, title.length - 7) : title;
-    navigator.clipboard.writeText('Demo的站内分享\n标题：' + subTitle + '\n链接：' + url + '\n欢迎来访！🍭🍭🍭');
+    var subTitle = pageTitleOf();
+    navigator.clipboard.writeText('Muyuの小窝的站内分享\n标题：' + subTitle + '\n链接：' + url + '\n欢迎来访！🍭🍭🍭');
     fomalNotify({
           title: "成功复制分享信息🎉",
           message: "您现在可以通过粘贴直接跟小伙伴分享了！",

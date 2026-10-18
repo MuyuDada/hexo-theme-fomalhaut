@@ -1,0 +1,365 @@
+/* ============================================================================
+ * source/css/nav-pill.css —— 导航栏「胶囊工具栏」外观
+ * ----------------------------------------------------------------------------
+ * 参照 https://miraii.cn/ 的顶部导航（2026-10-19）：
+ *   左：站名胶囊  |  中：一条圆角药丸里横排 5 个菜单胶囊  |  右：三个圆形按钮
+ *
+ * 【为什么新开一个文件，而不是改 navigation.css】
+ *   source/css/navigation.css 有一整套契约测试（tools/tests/navigation.test.cjs）
+ *   逐条断言它的 selector / 属性 / !important 与注入行版本戳，改一个 padding
+ *   就要同步改十几处断言。这里只做「外观层」，加载顺序排在 navigation.css
+ *   之后（见 _config.fomalhaut.yml 的 inject.head），靠后者覆盖前者；
+ *   布局骨架、fixed/visible 状态机、折叠阈值仍然由主题与 navigation.css 负责，
+ *   本文件不碰 position / transform / display 这几个决定「菜单什么时候出现」的属性
+ *   （唯一例外是把 .menus_items 从 inline 改成 flex，见下）。
+ *
+ * 【配色】
+ *   胶囊本体是「深色半透明 + 一圈浅色描边」，正文浅色 —— 这是 miraii 的做法，
+ *   好处是不管底下是首屏大图还是滚动后的白色导航条，胶囊都自带对比度。
+ *   图标取 var(--theme-color)，跟随美化面板的主题色。
+ * ========================================================================== */
+
+/* ------------------------------ 站名胶囊 ------------------------------ */
+#nav > #blog_name > #site-name {
+  display: inline-flex;
+  align-items: center;
+  box-sizing: border-box;
+  height: 40px;
+  padding: 0 14px;
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  border-radius: 9999px;
+  background: rgba(15, 23, 42, 0.52);
+  /* 主题给了 24px + 霓虹动画，胶囊里塞不下，压到 17px */
+  font-size: 17px !important;
+  line-height: 1;
+  color: #eee !important;
+  text-shadow: none !important;
+  white-space: nowrap;
+  transition: background-color 160ms ease;
+}
+
+/* 悬停遮罩（#site-name::before 的「回到顶部」房子图标）跟着一起变胶囊，
+   否则会出现一个直角方块压在圆角胶囊上 */
+#nav > #blog_name > #site-name::before {
+  border-radius: 9999px !important;
+}
+
+#nav > #blog_name > #site-name:hover,
+#nav > #blog_name > #site-name:focus-visible {
+  background: rgba(15, 23, 42, 0.72);
+}
+
+/* ------------------------------ 中间菜单药丸 ------------------------------ */
+/* 主题里 .menus_items 是 display:inline + 绝对居中；要排成一条工具栏就得 flex。
+   注意别把 display 写成块级以外的值：≤800px 时主题会挂 .hide-menu 把整块藏起来，
+   那条规则是 `#nav.hide-menu .menus_items { display: none }`，选择器权重更高，仍然生效。 */
+#nav .menus_items {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  /* navigation.css 与 custom.css 都用了 transform: translateX(-50%) !important 做水平居中，
+     这里必须 !important 才能把纵向的 -50% 一并写进去，否则药丸会挂在导航条下沿。 */
+  top: 50% !important;
+  height: 44px;
+  padding: 0 6px;
+  box-sizing: border-box;
+  transform: translate(-50%, -50%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 9999px;
+  background: rgba(15, 23, 42, 0.52);
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.1);
+}
+
+#nav .menus_items .menus_item {
+  display: flex;
+  padding: 0 !important;
+}
+
+/* 一级菜单项：每项自己也是一个胶囊 */
+#nav .menus_items .menus_item > a.site-page {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  box-sizing: border-box;
+  height: 36px;
+  padding: 0 12px;
+  border-radius: 9999px;
+  font-size: 15px !important;
+  font-weight: 500 !important;
+  line-height: 1;
+  color: #eee !important;
+  text-decoration: none;
+  white-space: nowrap;
+  text-shadow: none !important;
+  transition: background-color 160ms ease, color 160ms ease;
+}
+
+#nav .menus_items .menus_item > a.site-page:hover,
+#nav .menus_items .menus_item > a.site-page:focus-visible {
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff !important;
+}
+
+/* 主题在 .site-page:not(.child)::after 上画了一条 3px 的主题色下划线（悬停时从 0 撑到 100%）。
+   胶囊本身已经有悬停底衬，再叠一条直线会横穿圆角、顶出胶囊边界，所以只对胶囊内的一级项关掉。
+   注意不能直接写 display:none —— 主题的 #nav *::after 还会给它刷背景色，这里一并复位。 */
+#nav .menus_items .menus_item > a.site-page::after {
+  display: none !important;
+  width: 0 !important;
+  background-color: transparent !important;
+}
+
+/* 菜单文字字号写在 pug 的内联 style 里（17px），必须 !important 才压得住 */
+#nav .menus_items span.menu_word {
+  font-size: 15px !important;
+  line-height: 1;
+}
+
+/* 图标默认 fill:currentColor（跟文字走），这里单独接到主题色 —— 对应 miraii 的青色图标 */
+#nav .menus_items svg.menu_icon {
+  width: 20px !important;
+  height: 20px !important;
+  fill: var(--theme-color) !important;
+  vertical-align: middle !important;
+  flex-shrink: 0;
+}
+
+#nav .menus_items .menus_item > a.site-page > i {
+  color: var(--theme-color) !important;
+  font-size: 16px;
+}
+
+/* 展开箭头：小一号、半透明，跟文字同色 */
+#nav .menus_items .menus_item > a.site-page > i.fa-chevron-down {
+  margin-left: -2px;
+  font-size: 10px;
+  opacity: 0.7;
+  color: #eee !important;
+  transition: transform 200ms ease;
+}
+
+#nav .menus_items .menus_item:hover > a.site-page > i.fa-chevron-down {
+  transform: rotate(180deg);
+}
+
+/* ------------------------------ 二级菜单（横排胶囊） ------------------------------ */
+#nav .menus_items .menus_item .menus_item_child {
+  /* .menus_item 一旦变成 flex 容器，绝对定位子元素的静态位置就改由 flex 的对齐规则决定，
+     会跑到药丸中间（实测 top 只有 24px，正好压住一级菜单）。
+     所以这里显式钉在 .menus_item 下沿外 8px，不再依赖静态位置。
+     水平方向沿用 custom.css 的 left:50% + translateX(-50%) 居中。 */
+  top: calc(100% + 8px);
+  margin-top: 0;
+  gap: 6px;
+  padding: 8px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.16);
+}
+
+#nav .menus_items .menus_item .menus_item_child li {
+  border-radius: 9999px !important;
+}
+
+#nav .menus_items .menus_item .menus_item_child li a.site-page.child {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-sizing: border-box;
+  height: 40px;
+  padding: 0 16px 0 12px;
+  border-radius: 9999px;
+  font-size: 14px !important;
+  line-height: 1;
+  color: #333 !important;
+  white-space: nowrap;
+  text-shadow: none !important;
+  transition: background-color 160ms ease, color 160ms ease;
+}
+
+#nav .menus_items .menus_item .menus_item_child li:hover {
+  background: transparent !important;
+}
+
+#nav .menus_items .menus_item .menus_item_child li a.site-page.child:hover {
+  background: color-mix(in srgb, var(--theme-color) 14%, transparent);
+  color: color-mix(in srgb, var(--theme-color) 72%, #000) !important;
+}
+
+#nav .menus_items .menus_item .menus_item_child li a.site-page.child svg.menu_icon {
+  width: 18px !important;
+  height: 18px !important;
+  fill: var(--theme-color) !important;
+}
+
+#nav .menus_items .menus_item .menus_item_child li a.site-page.child > i {
+  color: var(--theme-color) !important;
+  font-size: 15px;
+}
+
+#nav .menus_items .menus_item .menus_item_child li a.site-page.child span.menu_word {
+  font-size: 14px !important;
+}
+
+/* ------------------------------ 右侧圆形按钮 ------------------------------ */
+/* navigation.css 给的形状是 44x44 / radius 12px；这里只换成正圆 + 深色底，
+   尺寸与命中区域（touch target）完全不动 */
+#nav #nav-right > #search-button > a.search,
+#nav #nav-right > #meihua-button,
+#nav #nav-right > #nightmode-button,
+#nav #nav-right > #toggle-menu > a {
+  border: 1px solid rgba(255, 255, 255, 0.24) !important;
+  border-radius: 50% !important;
+  background: rgba(15, 23, 42, 0.52);
+  color: #eee !important;
+  text-shadow: none !important;
+  transition: background-color 160ms ease, box-shadow 160ms ease;
+}
+
+#nav #nav-right > #search-button > a.search:hover,
+#nav #nav-right > #meihua-button:hover,
+#nav #nav-right > #nightmode-button:hover,
+#nav #nav-right > #toggle-menu > a:hover,
+#nav #nav-right > #search-button > a.search:focus-visible,
+#nav #nav-right > #meihua-button:focus-visible,
+#nav #nav-right > #nightmode-button:focus-visible,
+#nav #nav-right > #toggle-menu > a:focus-visible {
+  background: rgba(15, 23, 42, 0.76);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--theme-color) 55%, transparent);
+  color: var(--theme-color) !important;
+}
+
+/* 搜索按钮原本带一个「搜索」文字，圆形按钮里放不下，隐藏掉（图标仍在，title 仍在） */
+#nav #nav-right > #search-button > a.search > span {
+  display: none !important;
+}
+
+/* ------------------------------ 居中滚动标题 ------------------------------ */
+#nav #page-name {
+  border-radius: 9999px;
+  background: rgba(15, 23, 42, 0.52);
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  color: #eee !important;
+  font-size: 15px;
+  text-shadow: none !important;
+}
+
+#nav #page-name::before {
+  border-radius: 9999px !important;
+}
+
+/* ------------------------------ 滚动后：导航条变白底时的适配 ------------------------------ */
+/* 首屏透明时胶囊压在背景图上；滚动后主题把整条导航刷成白底，深色胶囊照样有对比度，
+   所以这里不改胶囊配色，只把导航条自身的边框去掉，避免「白条 + 一圈深胶囊」双层描边 */
+#page-header.nav-fixed #nav,
+#page-header.nav-visible #nav,
+#page-header.not-top-img #nav {
+  border-bottom: 0;
+  box-shadow: none;
+}
+
+/* ------------------------------ 响应式 ------------------------------ */
+/* 800px 以下主题会用 .hide-menu 把菜单整块收进汉堡（main.js:
+   if (window.innerWidth <= 800) hideMenuIndex = true），所以这里只需要处理
+   801px – 1100px 这段「菜单还在，但五个胶囊 + 站名 + 三个圆钮开始挤」的区间。
+   实测 860px 下药丸全展开也只有 ~440px，可用宽度 ~570px，图标完全放得下，
+   所以只收内边距和字号，不砍图标 —— 砍了就不像工具栏了。 */
+@media screen and (max-width: 1100px) {
+  #nav .menus_items .menus_item > a.site-page {
+    padding: 0 9px;
+    gap: 4px;
+  }
+
+  #nav .menus_items span.menu_word {
+    font-size: 14px !important;
+  }
+
+  #nav .menus_items svg.menu_icon {
+    width: 18px !important;
+    height: 18px !important;
+  }
+
+  #nav > #blog_name > #site-name {
+    padding: 0 11px;
+    font-size: 16px !important;
+  }
+}
+
+@media screen and (max-width: 940px) {
+  #nav .menus_items .menus_item > a.site-page {
+    padding: 0 7px;
+    gap: 3px;
+  }
+
+  #nav .menus_items span.menu_word {
+    font-size: 13px !important;
+  }
+
+  #nav > #blog_name > #site-name {
+    padding: 0 10px;
+    font-size: 15px !important;
+  }
+}
+
+/* 视口更窄时菜单已经收起，这里只让站名胶囊与右侧三个圆钮不互相挤 */
+@media screen and (max-width: 480px) {
+  #nav > #blog_name > #site-name {
+    height: 36px;
+    font-size: 15px !important;
+  }
+}
+
+/* ------------------------------ 深色模式 ------------------------------ */
+/* 深色下导航条本身也是深色，胶囊再叠一层深色会糊成一片，
+   所以反过来：胶囊用浅色底 + 深色文字。 */
+[data-theme="dark"] #nav > #blog_name > #site-name,
+[data-theme="dark"] #nav .menus_items,
+[data-theme="dark"] #nav #page-name,
+[data-theme="dark"] #nav #nav-right > #search-button > a.search,
+[data-theme="dark"] #nav #nav-right > #meihua-button,
+[data-theme="dark"] #nav #nav-right > #nightmode-button,
+[data-theme="dark"] #nav #nav-right > #toggle-menu > a {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+[data-theme="dark"] #nav .menus_items .menus_item > a.site-page {
+  color: #e8eaed !important;
+}
+
+[data-theme="dark"] #nav .menus_items .menus_item > a.site-page:hover,
+[data-theme="dark"] #nav .menus_items .menus_item > a.site-page:focus-visible {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+[data-theme="dark"] #nav .menus_items .menus_item .menus_item_child {
+  background: rgba(37, 39, 42, 0.96);
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="dark"] #nav .menus_items .menus_item .menus_item_child li a.site-page.child {
+  color: #e8eaed !important;
+}
+
+/* ------------------------------ 阅读模式 ------------------------------ */
+/* body.read-mode 下主题会整块隐藏导航，胶囊不需要额外处理，
+   但防止 :hover 背景在隐藏前一帧闪一下 */
+body.read-mode #nav .menus_items .menus_item > a.site-page:hover {
+  background: transparent;
+}
+
+/* ------------------------------ 降低动效 ------------------------------ */
+@media (prefers-reduced-motion: reduce) {
+  #nav > #blog_name > #site-name,
+  #nav .menus_items .menus_item > a.site-page,
+  #nav .menus_items .menus_item > a.site-page > i.fa-chevron-down,
+  #nav .menus_items .menus_item .menus_item_child li a.site-page.child,
+  #nav #nav-right > #search-button > a.search,
+  #nav #nav-right > #meihua-button,
+  #nav #nav-right > #nightmode-button,
+  #nav #nav-right > #toggle-menu > a {
+    transition: none !important;
+  }
+}

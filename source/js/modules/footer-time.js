@@ -28,7 +28,7 @@ function createtime() {
   var unit = (vgd / vgAU).toFixed(6);    // 天文单位（1 AU = 149597870.7 km）
   var lt = vgLight(vgd);                 // 信号单程光行时
   // 网站诞生时间
-  var grt = new Date("01/10/2026 00:00:00");
+  var grt = new Date("08/09/2022 00:00:00");
   // 年按“满周年”算：2022-08-09 → 2026-08-09 记 4 年，周年之后再数剩余的天/时/分/秒
   var years = now.getFullYear() - grt.getFullYear(),
     anniv = new Date(grt.getTime());
@@ -46,10 +46,13 @@ function createtime() {
   1 == String(mnum).length && (mnum = "0" + mnum);
   var snum = Math.floor(rest / 1000) % 60;
   1 == String(snum).length && (snum = "0" + snum);
-  // 摸鱼牌子按"当天是否法定休息日"切换：休息日=放假摸鱼中，工作日=上班摸鱼中
+  // 摸鱼牌子按"当天是否法定休息日"切换：休息日=放假摸鱼中，工作日=上班摸鱼中。
+  // 2026-10-19：原来用的是两张 shields 风格 SVG（左段还写着 "Demo" 占位）。
+  // 但 <img> 引用 SVG 时取不到站点字体（霞鹜文楷），中文只能回落到系统无衬线，
+  // 而且深色模式下浅底徽章很扎眼。改成纯文本胶囊，样式在 footer-blocks.css 的 .boardsign。
   var boardBadge = isRestDay(new Date())
-    ? `<img class='boardsign' src='/assets/badge/Fomalhaut-rest.svg' title='放假啦，光明正大地摸鱼~'>`
-    : `<img class='boardsign' src='/assets/badge/Fomalhaut-work.svg' title='上班偷偷摸鱼，别被发现~'>`;
+    ? `<span class='boardsign boardsign-rest' title='放假啦，光明正大地摸鱼~'><i class='fas fa-umbrella-beach'></i>放假摸鱼中</span>`
+    : `<span class='boardsign boardsign-work' title='上班偷偷摸鱼，别被发现~'><i class='fas fa-mug-hot'></i>上班摸鱼中</span>`;
   let currentTimeHtml =
     boardBadge +
     `<br> <div style="font-size:13px;font-weight:bold">本站居然运行了 ${ynum} 年 ${dnum} 天 ${hnum} 小时 ${mnum} 分 ${snum} 秒 <i id="heartbeat" class='fas fa-heartbeat'></i> <br> 旅行者 1 号当前距离地球 ${dis} 千米，约为 ${unit} 个天文单位（信号单程需 ${lt}）🚀</div>`;
