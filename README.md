@@ -1,11 +1,11 @@
-# hexo-theme-fomalhaut · v1.0.6
+# hexo-theme-fomalhaut · v1.0.7
 
 > 一套「克隆即用」的 Hexo 卡片式博客源码。主题基于 [Butterfly 4.3.1](https://butterfly.js.org/) 深度二次开发，
 > 并把**站点配置**与**主题代码**彻底分开：改配置就能搭起自己的站，升级主题不会冲掉你自己的改动。
 
 ![hexo](https://img.shields.io/badge/Hexo-6.3.0-0e83c?style=flat-square&logo=hexo)
 ![node](https://img.shields.io/badge/Node.js-18%20%7C%2020%20%7C%2022-339933?style=flat-square&logo=nodedotjs)
-![theme](https://img.shields.io/badge/Theme-Fomalhaut%20v1.0.6-6513df?style=flat-square)
+![theme](https://img.shields.io/badge/Theme-Fomalhaut%20v1.0.7-6513df?style=flat-square)
 ![license](https://img.shields.io/badge/License-Apache--2.0-blue?style=flat-square)
 ![stars](https://img.shields.io/github/stars/MuyuDada/hexo-theme-fomalhaut?style=flat-square&logo=github&label=Stars)
 ![forks](https://img.shields.io/github/forks/MuyuDada/hexo-theme-fomalhaut?style=flat-square&logo=github&label=Forks)
@@ -36,6 +36,46 @@
 
 ## 更新日志
 
+### v1.0.7 — 霞鹜文楷换成本地简体子集（2026-10-19）
+
+这一版修的是一类很隐蔽的「字体没渲染」：不是加载失败，而是**字库里没有那些字**。
+
+**现象**：首页标题「Muyuの小窝」的「窝」、导航「主页」的「页」、「八宝箱」的「宝」，
+文章标题里的「为」「风」「给」，侧栏统计卡里的「电脑状态」「加载」，分类条的「标签」——
+这些字全都不是霞鹜文楷，而是回落到微软雅黑/苹方，同一个词里一半文楷一半黑体。
+
+**根因**：`LXGW` 的 `@font-face` 指向 `@fontsource/lxgw-wenkai-tc`，那是**繁体子集**。
+用 fontTools 量过：6681 个字形，GB2312 只覆盖 3837 个（51.5%），上面那些**简体专有码位全都缺**
+（窝 U+7A9D 不在、繁体的 窩 U+7AA9 在；页 U+9875 缺、頁 U+9801 在……）。
+浏览器只能逐字回落，所以看起来「有的字渲染成功、有的没有」。
+
+**修法**：自己切一份简体子集，自托管到 `source/assets/fonts/`：
+
+| 文件 | 大小 | 内容 |
+| --- | --- | --- |
+| `lxgw-wenkai-subset-400.woff2` | 953812 B | 站点字符集 ∪ GB2312 一级 3755 字 ∪ 拉丁/标点核心区，共 5406 字符 |
+| `lxgw-wenkai-subset-700.woff2` | 970548 B | 同上，源用上游 Medium（`usWeightClass=500`） |
+
+- 字体源是 LxgwWenKai-**Lite** v1.530（13.9 MB TTF）。上游只有 Light/Medium/Regular，**没有真 Bold**，
+  所以「粗体」用 Medium 顶，比合成粗体干净得多；
+- 子集用 `fontTools.subset` 生成，命令与重新生成的步骤写在 `custom.css` 的字体注释里；
+- 覆盖实测：站点正文 1989 个非 ASCII 字符里只缺 97 个，**全是 emoji**（U+1F300 段），本就该回落；
+  用户报障的 12 个字（窝页宝为风给电脑态载标签）**零缺失**；
+- 两个文件合计 1.92 MB，比原来那两个繁体子集（1952032 + 2040744 B ≈ 4 MB）**省一半**，
+  而且是同源域名、不再等 jsDelivr；
+- `_config.fomalhaut.yml` 的 `<link rel="preload">` 跟着从 CDN 绝对地址换成本地
+  `/assets/fonts/lxgw-wenkai-subset-400.woff2`（只预载 400，700 让 CSS 解析后自己懒加载）；
+- `source/box/astronomy/voyager.html` 里也有一份同款 `@font-face`（独立页，不继承主题 CSS），一并换掉。
+
+**踩到的坑**：第一次改完，浏览器里 400 那档死活加载不出来（`document.fonts` 只有 `700:loaded`）。
+查 CSSOM 发现 `@font-face` 里 `src` 整行消失 —— 因为注释正文里写了 `public/**/*.{html,js,json,css}`，
+其中的 `*/` 提前把 CSS 注释闭合了，把紧随其后的 `src` 一起当垃圾丢掉。
+**CSS 注释里不要出现 `*/`**，哪怕是举例的文件 glob。
+
+> 改字体注释或 `src` 后记得 `npx hexo clean && npx hexo generate`：
+> `public/css/index.css` 是从 `themes/fomalhaut/source/css/index.styl` 编译来的，
+> 增量构建有时不会重编 styl，只改源码会看到「改了没生效」的假象。
+
 ### v1.0.6 — 修好美化面板的字体（2026-10-19）
 
 这一版只干一件事：把「美化设置 → 字体」里点了没反应的问题修干净。
@@ -62,7 +102,7 @@
 
 **还有一个隐性问题：只有 400 一个字重。** 站内 `#site-title`（46.5px）、公告栏胶囊 `.a-chip`、欢迎信息 `span` 都用 `font-weight: 700/800`，而补齐前的 11 款字体各自只注册了 `font-weight: normal` 一个 face —— 浏览器只能把 400 的字形**机械加粗**（synthetic bold），中文笔画直接糊成一团，13px 的胶囊和 11px 的计数尤其明显。修法：
 
-- 8 款上游有真粗体的字体（霞鹜文楷 / 霞鹜新晰黑 / 思源宋体 / JetBrains Mono / Fira Code / Source Code Pro / Maple Mono / Hack）各补一个 `font-weight: 700` 的 `@font-face`，逐条实测 200（如 `lxgw-wenkai-tc-chinese-traditional-700-normal.woff2` 2040744 B、`hack-bold.woff2` 108008 B）；
+- 8 款上游有真粗体的字体（霞鹜文楷 / 霞鹜新晰黑 / 思源宋体 / JetBrains Mono / Fira Code / Source Code Pro / Maple Mono / Hack）各补一个 `font-weight: 700` 的 `@font-face`，逐条实测 200（如 `hack-bold.woff2` 108008 B；霞鹜文楷当时用的 `lxgw-wenkai-tc-chinese-traditional-700-normal.woff2` 2040744 B 已在 v1.0.7 换成本地简体子集）；
 - 站酷快乐体 / 马善政毛笔楷书 / 龙藏体上游只有 400（`@fontsource` 与 Google Fonts 都没发布 700），改用全局 `html { font-synthesis-weight: none }` 禁掉合成粗体，它们按 400 原字形显示 —— 不再发糊，代价是没有真正加粗；
 - 实测：`document.fonts` 里 8 款显示 `400/loaded,700/loaded`、3 款只有 `400/loaded`；`#site-title` 的 computed `fontSynthesisWeight` 为 `none`，全站 77 个粗体文本节点全部命中自定义字体。
 

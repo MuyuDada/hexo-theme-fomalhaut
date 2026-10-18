@@ -87,7 +87,11 @@ const originalThemeHashes = {
   // 其中 8 款各带 400/700 两档、3 款装饰体上游只有 400），删掉一段重复的 LXGW 定义，
   // 新增 html { font-synthesis-weight: none }（禁合成粗体），并订正了注释里的字体清单数量。
   // 导航相关规则仍未动。
-  'themes/fomalhaut/source/css/_custom/custom.css': '1608d6f44255a0f8421139beb5b8b26c1f75ac87efc5dc916a531868e37d5c7d',
+  // 2026-10-19（v1.0.7）三复核：LXGW 从 CDN 的 @fontsource/lxgw-wenkai-tc（繁体子集，
+  // 缺 窝/页/宝/为/风/给/电脑/态/载/标签 等简体字）换成自托管简体子集
+  // source/assets/fonts/lxgw-wenkai-subset-{400,700}.woff2，两处 src 与注释一并改写。
+  // 导航相关规则依然未动。
+  'themes/fomalhaut/source/css/_custom/custom.css': '83278dcec62c7293c829acab7758bb44f7b71a3d0987eaa97a8adaab3b88766f',
   'themes/fomalhaut/source/js/main.js': '375868d3a5ee55a31a5e676168c105a82c9bf9235840471521d799090fe5891e'
 };
 

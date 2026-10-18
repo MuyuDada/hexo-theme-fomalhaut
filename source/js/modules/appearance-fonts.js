@@ -9,10 +9,11 @@
    不在白名单里的值每次刷新都会被写回默认值。v1.0.6 之前这三份清单各写各的
    （面板 12 个 / @font-face 6 个 / 白名单 4+3 个），结果 8 个正文选项里有 7 个点了没反应。
 
-   选字原则：全部为 SIL OFL 1.1 的开源可商用字体，全部有真实可用的单文件 woff2，
-   全部来自 jsDelivr 上的 @fontsource/* 包。加字体时三处一起加。 */
+   选字原则：全部为 SIL OFL 1.1 的开源可商用字体，全部有真实可用的单文件 woff2。
+   除 LXGW 是自托管简体子集（source/assets/fonts/）外，其余来自 jsDelivr 的 @fontsource/* 包。
+   加字体时三处一起加。 */
 var APPEARANCE_TEXT_FONTS = [
-  ['LXGW', '霞鹜文楷', '温润文楷 · 默认', 'reading'],
+  ['LXGW', '霞鹜文楷', '温润文楷 · 默认（简体子集）', 'reading'],
   ['LXGWNeoXiHei', '霞鹜新晰黑', '清晰黑体 · 技术文章', 'reading'],
   ['SourceHanSerif', '思源宋体', '书卷气 · 随笔', 'reading'],
   ['default', '系统默认', '无需下载 · 跟随设备', 'reading'],
@@ -145,5 +146,5 @@ function appearanceFontMarkup() {
     '<div class="ap-preview"><p id="ap-text-current" class="ap-current"></p><p id="ap-text-preview" class="ap-text-sample">清风翻书，阅读让世界更清晰。<br>每一次停顿，都让文字有了呼吸。<br>Abc · 0123456789</p></div><p id="ap-text-status" class="ap-status" role="status" aria-live="polite"></p>' +
     '<h3 class="ap-subtitle">代码字体</h3><div id="swfs_code" class="ap-font-grid ap-code-grid">' + appearanceFontOptions(APPEARANCE_CODE_FONTS, 'code') + '</div>' +
     '<div class="ap-preview"><p id="ap-code-current" class="ap-current"></p><pre id="ap-code-preview" class="ap-code-sample">const greeting = "Hello, 世界";\n// 字形对比：0O · 1lI · {} [] ()\nconst values = [0, 1, 10];\nvalues.map(value =&gt; value + 1);</pre></div><p id="ap-code-status" class="ap-status" role="status" aria-live="polite"></p>' +
-    '<details class="ap-details ap-license"><summary>字体来源与授权说明</summary><p class="ap-hint">全部为 SIL OFL 1.1 开源可商用字体，走 jsDelivr 上的 @fontsource/* 包（Hack 用官方 hack-font 的 web 构建）：霞鹜文楷 LXGW WenKai、思源黑体/宋体 Noto Sans/Serif SC、站酷快乐体 ZCOOL KuaiLe、马善政毛笔楷书 Ma Shan Zheng、龙藏体 Long Cang、JetBrains Mono、Fira Code、Source Code Pro、Maple Mono、Hack。装饰字体更适合标题或短句，正文长文请用阅读组。</p></details></section>';
+    '<details class="ap-details ap-license"><summary>字体来源与授权说明</summary><p class="ap-hint">全部为 SIL OFL 1.1 开源可商用字体。霞鹜文楷是本站自切的简体子集（只含站点用到的汉字 + GB2312 一级，单文件 0.91 MB，比 CDN 上那套繁体子集小一半且简体不缺字）；其余走 jsDelivr 上的 @fontsource/* 包（Hack 用官方 hack-font 的 web 构建）：霞鹜文楷 LXGW WenKai、思源黑体/宋体 Noto Sans/Serif SC、站酷快乐体 ZCOOL KuaiLe、马善政毛笔楷书 Ma Shan Zheng、龙藏体 Long Cang、JetBrains Mono、Fira Code、Source Code Pro、Maple Mono、Hack。装饰字体更适合标题或短句，正文长文请用阅读组。</p></details></section>';
 }

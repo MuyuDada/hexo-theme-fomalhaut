@@ -971,8 +971,10 @@ inject:
     # 字体预加载：默认正文用霞鹜文楷，而它的 @font-face 写在 index.css 里，
     # 不 preload 的话浏览器要等 CSS 解析完才发现它，关键链就成了 首页 → index.css → 字体。
     # 注意：crossorigin 不能删 —— 字体按 CORS 模式取，少了它会被判定「凭据模式不匹配」而丢弃。
+    # 字体是自托管的简体子集（source/assets/fonts/lxgw-wenkai-subset-400.woff2，953812 B），
+    # 只预载 400 这一档；700 那档只有标题/胶囊用到，让它在 CSS 解析后自己懒加载。
     # 回滚：删掉这一行即可。
-    - <link rel="preload" as="font" type="font/woff2" href="https://cdn.jsdelivr.net/npm/@fontsource/lxgw-wenkai-tc@5/files/lxgw-wenkai-tc-chinese-traditional-400-normal.woff2" crossorigin>
+    - <link rel="preload" as="font" type="font/woff2" href="/assets/fonts/lxgw-wenkai-subset-400.woff2" crossorigin>
     - <link rel="preconnect" href="https://sdk.51.la">
     - <link rel="preconnect" href="https://sdk.51.la" crossorigin> # 灵雀监控走 CORS
     - <link rel="dns-prefetch" href="https://at.alicdn.com">

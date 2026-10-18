@@ -101,7 +101,9 @@
  *   3448  light_5px                       霓虹灯发光字（5px 档），同上
  *   3731  post-sticky-shine               置顶角标流光
  * ----------------------------------------------------------------------------
- * 【字体索引】@font-face 共 19 个（11 款字体），全部为开源可商用字体（OFL），源码统一走 cdn.jsdelivr.net 的 @fontsource/*（Hack 走 hack-font 官方包）
+ * 【字体索引】@font-face 共 19 个（11 款字体），全部为开源可商用字体（OFL），
+ *   源码大多走 cdn.jsdelivr.net 的 @fontsource/*（Hack 走 hack-font 官方包）；
+ *   唯独 LXGW 是自托管的简体子集（source/assets/fonts/，见下面的「字体引入」注释）。
  *   常规字体 6 款：LXGW（霞鹜文楷，默认）· SourceHanSerif（思源宋体）· LXGWNeoXiHei（霞鹜新晰黑）
  *                  · ZCOOLKuaiLe（站酷快乐体）· MaShanZheng（马善政毛笔楷书）· LongCang（龙藏体）
  *   代码字体 5 款：JetBrainsMono · FiraCode · SourceCodePro · MapleMono · Hack
@@ -316,18 +318,35 @@
 @font-face {
   font-family: LXGW;
   /* 霞鹜文楷（LXGW WenKai）· SIL OFL 1.1 —— 正文默认字体
-     简体单文件版在 @fontsource 上没有（只有 100+ 段 subset，要 @import 一份 106KB 的
-     CSS 再去拉上百个小文件），这里用繁体单文件版，简体字形同样包含在内。 */
-  src: url(https://cdn.jsdelivr.net/npm/@fontsource/lxgw-wenkai-tc@5/files/lxgw-wenkai-tc-chinese-traditional-400-normal.woff2);
+     自托管简体子集：/assets/fonts/lxgw-wenkai-subset-400.woff2（953812 B）
+     源 = LxgwWenKai-Lite v1.530（上游只有 Light/Medium/Regular，没有真 Bold，
+     Medium 的 usWeightClass=500，这里按 700 注册给标题用）。
+
+     为什么不用 CDN 上的 @fontsource/lxgw-wenkai-tc：那个包是「繁体子集」，
+     6681 字形里 GB2312 只覆盖 3837 个，窝/页/宝/为/风/给/电脑/态/载/标签 这些
+     简体专有码位全都缺，浏览器只能逐字回落到系统字体 —— 一个词里一半文楷一半雅黑。
+     简体在 @fontsource 上只有 97 段 subset（要 @import 106KB CSS 再拉上百个文件），
+     所以直接自己做子集：站点里出现过的字 + GB2312 一级 3755 字 + 常用标点区，
+     共 5406 个字符、0.91 MB 一个文件，覆盖站点全部正文（只缺 emoji，本就该回落）。
+
+     重新生成（改了文章、加生了生僻字时）：
+       curl -C - -L -o lite-reg.ttf https://ghfast.top/https://github.com/lxgw/LxgwWenKai-Lite/releases/download/v1.530/LXGWWenKaiLite-Regular.ttf
+       python -m fontTools.subset lite-reg.ttf --flavor=woff2 --unicodes-file=charset.txt \
+         --layout-features=kern,liga,vert,locl,ccmp --name-IDs='*' --glyph-names \
+         --output-file=lxgw-wenkai-subset-400.woff2
+     字符集从哪里来：扫 public 下所有 html/js/json/css 文件去重取 >U+2000 的字符，
+     再并上 GB2312 一级与 0x0020-0x007F / 0x2000-0x206F / 0x3000-0x303F / 0xFF00-0xFF60。 */
+  src: url(/assets/fonts/lxgw-wenkai-subset-400.woff2) format('woff2');
   font-weight: 400;
   font-display: swap;
 }
 
 @font-face {
   font-family: LXGW;
-  /* 同上，真实粗体。给 #site-title（700）、公告栏胶囊（700）这类粗体文字用，
-     没有这一段浏览器就会把 400 的字形机械加粗，中文笔画直接糊掉。 */
-  src: url(https://cdn.jsdelivr.net/npm/@fontsource/lxgw-wenkai-tc@5/files/lxgw-wenkai-tc-chinese-traditional-700-normal.woff2);
+  /* 同上，粗档。给 #site-title（700）、公告栏胶囊（700）这类粗体文字用，
+     没有这一段浏览器就会把 400 的字形机械加粗，中文笔画直接糊掉。
+     源是上游 Medium（usWeightClass=500），比合成粗体干净得多。 */
+  src: url(/assets/fonts/lxgw-wenkai-subset-700.woff2) format('woff2');
   font-weight: 700;
   font-display: swap;
 }
