@@ -363,3 +363,205 @@ body.read-mode #nav .menus_items .menus_item > a.site-page:hover {
     transition: none !important;
   }
 }
+
+/* ============================================================================
+ * 滚动后：悬浮玻璃条（对齐 miraii.cn 的「沉浸式下滑」）
+ * ----------------------------------------------------------------------------
+ * 【为什么要改】
+ *   改之前，滚过首屏后 `navigation.css:136` 会把整条导航刷成
+ *   `rgba(251,250,247,0.96)` 的不透明象牙白通栏，还带一条 1px 底边框。
+ *   这条横贯 1440px 的实色带把首屏大图和正文硬切成两段，而带子里仍旧浮着
+ *   一串深色胶囊 —— 白条 + 深药丸，观感最割裂的就是这里。
+ *
+ * 【miraii.cn 怎么做的】（2026-10-19 用 CDP 逐层量过）
+ *   它把 nav 自身背景设成完全透明（computed `backgroundColor` 是
+ *   `rgba(0,0,0,0)`），真正可见的白底挂在 `div.header-inner::before` 上：
+ *   `content:""` / `position:absolute` / `inset:6px 0` / `border-radius:16px` /
+ *   `background:rgba(253,253,253,0.88)`。也就是说，白底不是通栏，而是一枚
+ *   内缩 6px、四角 16px 的悬浮条。首屏那层顶部渐隐由
+ *   `.main-nav::before { background: linear-gradient(rgba(3,7,18,.2), transparent) }`
+ *   负责，滚动后 `.main-nav--scrolled::before { opacity: 0 }` 把它关掉。
+ *   更关键的是它滚动后连胶囊底都不要了：
+ *   `.menu-shell` 的 background 与 border-color 双双变 `rgba(0,0,0,0)`，
+ *   只剩纯文字趴在白条上 —— 这才是「沉浸」的来源。
+ *
+ * 【这里的做法】
+ *   1) `#nav` 自身背景/边框/阴影全部清空（否则 ::before 下面还压着一层白）；
+ *   2) 白底改挂 `#nav::before`：上下内缩 6px、左右内缩 24px（= #nav 的 padding）、
+ *      圆角 16px，叠 `backdrop-filter` 做毛玻璃，`z-index:-1` 落在内容之下；
+ *   3) 滚动态把站名胶囊 / #page-name / 右侧三个圆钮的底与描边一并去掉，
+ *      只留文字和图标，hover 时给一层极淡的白灰衬底。
+ *
+ * 【为什么 ::before 必须写 position:absolute】
+ *   `#nav` 是 flex 容器。::before 若留在文档流里会变成第一个 flex item，
+ *   把后面的站名、菜单、按钮全部挤位。absolute 既脱离 flex 布局，又能在
+ *   创建了 stacking context 的 `#nav`（fixed + z-index:91）内部用 -1 层。
+ * ========================================================================== */
+
+#page-header.nav-fixed #nav::before,
+#page-header.nav-visible #nav::before,
+#page-header.not-top-img #nav::before {
+  content: "";
+  position: absolute;
+  top: 6px;
+  bottom: 6px;
+  left: 24px;
+  right: 24px;
+  z-index: -1;
+  box-sizing: border-box;
+  border: 1px solid rgba(15, 23, 42, 0.06);
+  border-radius: 16px;
+  background: rgba(253, 253, 253, 0.9);
+  box-shadow: 0 6px 24px rgba(15, 23, 42, 0.08);
+  pointer-events: none;
+  transition: background-color 200ms ease, box-shadow 200ms ease, border-color 200ms ease;
+}
+
+/* 把 navigation.css:136 那条 `rgba(251,250,247,.96) !important` 通栏关掉。
+   注意它还有一层 `@media (min-width:1200px)` 的 `rgba(251,250,247,.92) !important`
+   覆盖（navigation.css:173），本文件排在它之后加载，同特异性 + !important 即可压住。 */
+#page-header.nav-fixed #nav,
+#page-header.nav-visible #nav,
+#page-header.not-top-img #nav {
+  background: transparent !important;
+  border-bottom: 0 !important;
+  box-shadow: none !important;
+  opacity: 1 !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+
+/* 白条自己承担毛玻璃，母体不再重复模糊（两层 backdrop-filter 会二次采样变糊） */
+@supports ((backdrop-filter: blur(12px)) or (-webkit-backdrop-filter: blur(12px))) {
+  #page-header.nav-fixed #nav::before,
+  #page-header.nav-visible #nav::before,
+  #page-header.not-top-img #nav::before {
+    background: rgba(253, 253, 253, 0.82);
+    -webkit-backdrop-filter: blur(12px) saturate(1.5);
+    backdrop-filter: blur(12px) saturate(1.5);
+  }
+}
+
+/* 滚动后的胶囊一律「化掉」：只剩文字趴在白条上 */
+#page-header.nav-fixed #nav > #blog_name > #site-name,
+#page-header.nav-visible #nav > #blog_name > #site-name,
+#page-header.not-top-img #nav > #blog_name > #site-name,
+#page-header.nav-fixed #nav #page-name,
+#page-header.nav-visible #nav #page-name,
+#page-header.not-top-img #nav #page-name,
+#page-header.nav-fixed #nav #nav-right > #search-button > a.search,
+#page-header.nav-visible #nav #nav-right > #search-button > a.search,
+#page-header.not-top-img #nav #nav-right > #search-button > a.search,
+#page-header.nav-fixed #nav #nav-right > #meihua-button,
+#page-header.nav-visible #nav #nav-right > #meihua-button,
+#page-header.not-top-img #nav #nav-right > #meihua-button,
+#page-header.nav-fixed #nav #nav-right > #nightmode-button,
+#page-header.nav-visible #nav #nav-right > #nightmode-button,
+#page-header.not-top-img #nav #nav-right > #nightmode-button,
+#page-header.nav-fixed #nav #nav-right > #toggle-menu > a,
+#page-header.nav-visible #nav #nav-right > #toggle-menu > a,
+#page-header.not-top-img #nav #nav-right > #toggle-menu > a {
+  background: transparent !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+}
+
+/* hover：一层几乎看不见的白灰衬底 + 主题色文字，比整块变色克制得多 */
+#page-header.nav-fixed #nav > #blog_name > #site-name:hover,
+#page-header.nav-visible #nav > #blog_name > #site-name:hover,
+#page-header.not-top-img #nav > #blog_name > #site-name:hover,
+#page-header.nav-fixed #nav #page-name:hover,
+#page-header.nav-visible #nav #page-name:hover,
+#page-header.not-top-img #nav #page-name:hover,
+#page-header.nav-fixed #nav #nav-right > #search-button > a.search:hover,
+#page-header.nav-visible #nav #nav-right > #search-button > a.search:hover,
+#page-header.not-top-img #nav #nav-right > #search-button > a.search:hover,
+#page-header.nav-fixed #nav #nav-right > #meihua-button:hover,
+#page-header.nav-visible #nav #nav-right > #meihua-button:hover,
+#page-header.not-top-img #nav #nav-right > #meihua-button:hover,
+#page-header.nav-fixed #nav #nav-right > #nightmode-button:hover,
+#page-header.nav-visible #nav #nav-right > #nightmode-button:hover,
+#page-header.not-top-img #nav #nav-right > #nightmode-button:hover,
+#page-header.nav-fixed #nav #nav-right > #toggle-menu > a:hover,
+#page-header.nav-visible #nav #nav-right > #toggle-menu > a:hover,
+#page-header.not-top-img #nav #nav-right > #toggle-menu > a:hover {
+  background: rgba(15, 23, 42, 0.05) !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+  color: var(--theme-color) !important;
+}
+
+/* 深色：白条换成深色玻璃，文字回到浅色 */
+[data-theme="dark"] #page-header.nav-fixed #nav::before,
+[data-theme="dark"] #page-header.nav-visible #nav::before,
+[data-theme="dark"] #page-header.not-top-img #nav::before {
+  border-color: rgba(255, 255, 255, 0.07);
+  background: rgba(30, 32, 35, 0.88);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.32);
+}
+
+@supports ((backdrop-filter: blur(12px)) or (-webkit-backdrop-filter: blur(12px))) {
+  [data-theme="dark"] #page-header.nav-fixed #nav::before,
+  [data-theme="dark"] #page-header.nav-visible #nav::before,
+  [data-theme="dark"] #page-header.not-top-img #nav::before {
+    background: rgba(30, 32, 35, 0.78);
+  }
+}
+
+[data-theme="dark"] #page-header.nav-fixed #nav > #blog_name > #site-name,
+[data-theme="dark"] #page-header.nav-visible #nav > #blog_name > #site-name,
+[data-theme="dark"] #page-header.not-top-img #nav > #blog_name > #site-name,
+[data-theme="dark"] #page-header.nav-fixed #nav #page-name,
+[data-theme="dark"] #page-header.nav-visible #nav #page-name,
+[data-theme="dark"] #page-header.not-top-img #nav #page-name {
+  color: #eceef0 !important;
+}
+
+[data-theme="dark"] #page-header.nav-fixed #nav > #blog_name > #site-name:hover,
+[data-theme="dark"] #page-header.nav-visible #nav > #blog_name > #site-name:hover,
+[data-theme="dark"] #page-header.not-top-img #nav > #blog_name > #site-name:hover,
+[data-theme="dark"] #page-header.nav-fixed #nav #nav-right a:hover,
+[data-theme="dark"] #page-header.nav-visible #nav #nav-right a:hover,
+[data-theme="dark"] #page-header.not-top-img #nav #nav-right a:hover {
+  background: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* 窄屏：#nav 的左右 padding 会收（head.styl 的 maxWidth768 给 16px），
+   白条的内缩量得跟着走，否则会顶出导航条边界 */
+@media screen and (max-width: 768px) {
+  #page-header.nav-fixed #nav::before,
+  #page-header.nav-visible #nav::before,
+  #page-header.not-top-img #nav::before {
+    left: 12px;
+    right: 12px;
+    border-radius: 14px;
+  }
+}
+
+/* 降低动效 / 打印：静态化 */
+@media (prefers-reduced-motion: reduce) {
+  #page-header.nav-fixed #nav::before,
+  #page-header.nav-visible #nav::before,
+  #page-header.not-top-img #nav::before {
+    transition: none;
+  }
+}
+
+@media print {
+  #page-header.nav-fixed #nav::before,
+  #page-header.nav-visible #nav::before,
+  #page-header.not-top-img #nav::before {
+    display: none;
+  }
+}
+/* ------------------------------ 猫绳（#myscoll）穿帮修正 ------------------------------ */
+/* 滚动条挂绳由 cursor.js:201 以内联 style 写成 `position:fixed; top:0; z-index:9999`，
+   再每帧用 JS 改 height，所以只能靠 !important 压。
+   问题：挂绳从 y=0 起画、宽 6px、right:55.6px（实测 x=1378..1384），
+   z-index 9999 高于 #nav 的 91，滚动后那条悬浮玻璃条（右缘 1416）
+   会被一根深色竖线劈开，正好切在三个圆钮和右圆角之间。
+   解法：把挂绳降到导航之下（88 < 90/91），让它从导航条下沿「钻出来」——
+   视觉上等于绳子挂在栏下方，不用动 JS，也不用给 fixed 元素算偏移。 */
+#myscoll {
+  z-index: 88 !important;
+}

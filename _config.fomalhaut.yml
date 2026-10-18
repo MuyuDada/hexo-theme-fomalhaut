@@ -1017,7 +1017,7 @@ inject:
     - <link rel="stylesheet" href="/css/navigation.css?v=20261011-nav3">
     # 导航胶囊化：站名 / 菜单 / 右侧按钮都做成圆角药丸（参照 miraii.cn）。
     # 必须排在 navigation.css 之后才能盖住它的 44x44 / radius:12px 等形状声明。
-    - <link rel="stylesheet" href="/css/nav-pill.css?v=20261019-pill1">
+    - <link rel="stylesheet" href="/css/nav-pill.css?v=20261019-pill4">
     # ── 页脚两段式改版（站点独立样式 + 脚本，不改主题源码）────────────────────────
     # source/css/footer-blocks.css：把 themes/fomalhaut/layout/includes/footer.pug 新版结构
     #   做成「主段（白→透明向上渐变，左品牌 / 右短链导航 + 友链）+ 底栏（实底，左版权徽章 /

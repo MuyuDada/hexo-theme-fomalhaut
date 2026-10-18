@@ -1,11 +1,11 @@
-# hexo-theme-fomalhaut · v1.0.8
+# hexo-theme-fomalhaut · v1.0.9
 
 > 一套「克隆即用」的 Hexo 卡片式博客源码。主题基于 [Butterfly 4.3.1](https://butterfly.js.org/) 深度二次开发，
 > 并把**站点配置**与**主题代码**彻底分开：改配置就能搭起自己的站，升级主题不会冲掉你自己的改动。
 
 ![hexo](https://img.shields.io/badge/Hexo-6.3.0-0e83c?style=flat-square&logo=hexo)
 ![node](https://img.shields.io/badge/Node.js-18%20%7C%2020%20%7C%2022-339933?style=flat-square&logo=nodedotjs)
-![theme](https://img.shields.io/badge/Theme-Fomalhaut%20v1.0.8-6513df?style=flat-square)
+![theme](https://img.shields.io/badge/Theme-Fomalhaut%20v1.0.9-6513df?style=flat-square)
 ![license](https://img.shields.io/badge/License-Apache--2.0-blue?style=flat-square)
 ![stars](https://img.shields.io/github/stars/MuyuDada/hexo-theme-fomalhaut?style=flat-square&logo=github&label=Stars)
 ![forks](https://img.shields.io/github/forks/MuyuDada/hexo-theme-fomalhaut?style=flat-square&logo=github&label=Forks)
@@ -36,6 +36,24 @@
 
 ## 更新日志
 
+### v1.0.9 — 滚动后的导航变「悬浮玻璃条」（2026-10-19）
+
+上一版把导航收成了胶囊工具栏，但只做了**首屏**的形态。滚过首屏之后，`navigation.css:136` 会把整条导航刷成 `rgba(251,250,247,0.96)` 的**不透明象牙白通栏**加一条 1px 底边框 —— 一条横贯 1440px 的实色带把首屏大图和正文硬切两段，带子里还浮着一串深色胶囊。就是白条 + 深药丸，割裂感全在这里。
+
+**miraii.cn 怎么处理的**（CDP 逐层量过）：它的 `nav` 自身背景是 `rgba(0,0,0,0)`，真正可见的白底挂在 `div.header-inner::before` 上 —— `inset:6px 0` / `border-radius:16px` / `rgba(253,253,253,0.88)`。白底不是通栏，而是一枚内缩 6px、四角 16px 的悬浮条。更关键的是它滚动后连胶囊底也不要了：`.menu-shell` 的 `background` 与 `border-color` 双双变透明，只剩纯文字趴在白条上。
+
+**改法**（`source/css/nav-pill.css` 新增一节）：
+
+- `#nav` 自身背景/边框/阴影全部清空，白底改挂 `#nav::before`：上下内缩 6px、左右内缩 24px（= `#nav` 的 padding）、圆角 16px、`z-index:-1`；
+- `::before` **必须写 `position:absolute`** —— `#nav` 是 flex 容器，留在文档流里它会变成第一个 flex item，把站名、菜单、按钮全部挤位；
+- 白条自己承担毛玻璃（`backdrop-filter: blur(12px) saturate(1.5)`），母体不再重复模糊（两层 backdrop-filter 会二次采样变糊）；
+- 滚动态把站名胶囊 / `#page-name` / 右侧三个圆钮的底与描边一并去掉，只留文字和图标，hover 给一层 `rgba(15,23,42,.05)` 的极淡衬底；
+- 深色下白条换 `rgba(30,32,35,0.88)` 玻璃，文字回到 `#eceef0`；
+- ≤768px 内缩降到 12px（`head.styl` 的 `maxWidth768` 把 `#nav` padding 收到 16px），圆角 14px。
+
+**顺带修的穿帮**：猫绳 `#myscoll` 由 `cursor.js:201` 以内联 style 写成 `position:fixed; top:0; z-index:9999`，比导航的 91 还高。滚动后它从 y=0 起画、右缘落在 1384，正好把玻璃条的右端劈开。压到 `z-index: 88`，绳子从导航条下沿「钻出来」—— 视觉上等于挂在栏下方，不用动 JS。
+
+**测试**：`node --test "tools/tests/*.test.cjs"` → 441 passed / 0 failed。
 ### v1.0.8 — 导航胶囊化 + 页脚两段式（2026-10-19）
 
 照 [miraii.cn](https://miraii.cn/) 改的两块「框架」：顶部导航收成一条胶囊工具栏，页脚从原来的一坨链接堆改成「品牌 + 短链 + 友链」的主段加一条实心底栏。
