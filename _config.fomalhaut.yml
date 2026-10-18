@@ -1065,6 +1065,14 @@ inject:
     #   含 Hero、6 张线路卡、实测参数对照表、技术栈六层分层、个人档案卡 + 昵称由来列表。
     #   配色由 --theme-color / --font-color / --card-bg 派生，深色模式只覆盖 .ab2 上的变量。
     # source/js/inject/about-route-probe.js：给每张线路卡挂「实时延迟」徽标（可点击重测），
+    # ── 随机图片：文章封面 / 侧栏资料卡背景（站点独立脚本，不改主题源码）─────────────
+    # source/js/inject/random-images.js：用栗次元 https://t.alcy.cc 的 JSON 接口批量取一批
+    # 稳定 pic 路径（如 /pic/moe/29.webp?w=640）存 localStorage 一天，每次刷新从池里随机分配。
+    # 必须用稳定 pic 路径而不是 /moe 分类直出端点 —— 后者每次请求换图，同一 URL 两次内容不同，
+    # 浏览器缓存完全失效。`?w=640` 是服务端缩图参数，实测把 1.1 MB 原图压到 30-50 KB。
+    # 接口全挂时保持主题原有的本地壁纸（12 张 .avif），不会出现空白封面。
+    # 回滚：删掉下面这一行即可。
+    - <script defer src="/js/inject/random-images.js?v=20261019-randomimg2"></script>
     #   页面静置 5 分钟静默复测一轮；找不到 .ab2 线路卡时整段直接 return，别的页面零开销。
     # 改这两个文件记得把 ?v= 一起提版本。回滚：删掉下面两行即可
     # （页面源码备份 bak/2026-10-04-about-redesign/before/index.md）。
@@ -1195,6 +1203,14 @@ inject:
     - <script src="/js/inject/ft-ad-extra.js"></script> # 页脚友链补一个「广告位招租」
     - <script src="/js/inject/pc-local-link.js"></script> # 版权卡「文章链接」显示当前域名
     - <script defer src="/js/inject/about-route-probe.js?v=20261006"></script> # 关于页线路卡「实时延迟」徽标（.ab2 作用域）
+    # ── 随机图片：文章封面 / 侧栏资料卡背景（站点独立脚本，不改主题源码）─────────────
+    # source/js/inject/random-images.js：用栗次元 https://t.alcy.cc 的 JSON 接口批量取一批
+    # 稳定 pic 路径（如 /pic/moe/29.webp?w=640）存 localStorage 一天，每次刷新从池里随机分配。
+    # 必须用稳定 pic 路径而不是 /moe 分类直出端点 —— 后者每次请求换图，同一 URL 两次内容不同，
+    # 浏览器缓存完全失效。`?w=640` 是服务端缩图参数，实测把 1.1 MB 原图压到 30-50 KB。
+    # 接口全挂时保持主题原有的本地壁纸（12 张 .avif），不会出现空白封面。
+    # 回滚：删掉下面这一行即可。
+    - <script defer src="/js/inject/random-images.js?v=20261019-randomimg2"></script>
 
     # 公告栏 meta 数据条的填充脚本（数字来自侧栏「小站资讯」卡，卡不在或还没渲染就保持 —）
     - |

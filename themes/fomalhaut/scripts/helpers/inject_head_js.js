@@ -34,7 +34,19 @@ hexo.extend.helper.register('inject_head_js', function () {
         if (!itemStr) {
           return undefined
         }
-        const item = JSON.parse(itemStr)
+        // 主题其它地方（以及本文件之外的站点脚本）曾直接写裸字符串，例如
+        //   localStorage.setItem("theme","dark")
+        // 原实现直接 JSON.parse 会抛 "Unexpected token 'd', "dark" is not valid JSON"，
+        // 并中断同一 <script> 内后续的 <html> 属性初始化（data-theme / hide-aside 全部失效）。
+        // 这里对无法解析的值直接丢弃并清键，既不报错也不会留下坏数据。
+        let item
+        try {
+          item = JSON.parse(itemStr)
+        } catch (e) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        if (!item || typeof item !== "object") return undefined
         const now = new Date()
 
         if (now.getTime() > item.expiry) {

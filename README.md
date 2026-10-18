@@ -1,11 +1,11 @@
-# hexo-theme-fomalhaut · v1.0.11
+# hexo-theme-fomalhaut · v1.0.12
 
 > 一套「克隆即用」的 Hexo 卡片式博客源码。主题基于 [Butterfly 4.3.1](https://butterfly.js.org/) 深度二次开发，
 > 并把**站点配置**与**主题代码**彻底分开：改配置就能搭起自己的站，升级主题不会冲掉你自己的改动。
 
 ![hexo](https://img.shields.io/badge/Hexo-6.3.0-0e83c?style=flat-square&logo=hexo)
 ![node](https://img.shields.io/badge/Node.js-18%20%7C%2020%20%7C%2022-339933?style=flat-square&logo=nodedotjs)
-![theme](https://img.shields.io/badge/Theme-Fomalhaut%20v1.0.11-6513df?style=flat-square)
+![theme](https://img.shields.io/badge/Theme-Fomalhaut%20v1.0.12-6513df?style=flat-square)
 ![license](https://img.shields.io/badge/License-Apache--2.0-blue?style=flat-square)
 ![stars](https://img.shields.io/github/stars/MuyuDada/hexo-theme-fomalhaut?style=flat-square&logo=github&label=Stars)
 ![forks](https://img.shields.io/github/forks/MuyuDada/hexo-theme-fomalhaut?style=flat-square&logo=github&label=Forks)
@@ -35,6 +35,55 @@
 ---
 
 ## 更新日志
+
+### v1.0.12 — 文章封面与资料卡背景改走随机图片 API（2026-10-19）
+
+站点一直在用 [栗次元](https://t.alcy.cc) 的 `https://t.alcy.cc/pc` 做整页背景。这次把**文章封面**和**侧栏资料卡背景**也接上同一套随机图。
+
+#### 1. 为什么不用分类直出端点
+
+`https://t.alcy.cc/moe` 这种端点**同一个 URL 每次请求返回不同图片**（实测连续两次 331546 / 666330 B），`Cache-Control: max-age=2592000` 完全失效，每次刷新都要重新下几百 KB。
+
+改用 JSON 接口拿**稳定 pic 路径**：
+
+```
+GET https://t.alcy.cc/json?moe=12
+-> {"data":[{"id":"29.webp","link":"https://t.alcy.cc/pic/moe/29.webp"}, ...]}
+```
+
+稳定路径带 `Cache-Control: max-age=2592000` + `EO-Cache-Status: HIT`，同一 URL 内容恒定，浏览器能真缓存。
+
+#### 2. `?w=` 是唯一有效的缩图参数（关键发现）
+
+| 参数 | 结果 |
+| --- | --- |
+| `?w=640` | ✅ 200，1.1 MB 原图 → **30-50 KB** |
+| `?width=` `?size=` `?s=` `?q=` | ❌ 都是在换图，不是缩图 |
+| `?w=400` | ❌ 返回 0 字节 |
+| `?imageMogr2/thumbnail/400x` `?x-oss-process=…` `?imageView2/…` | ❌ 200 但 Content-Length 与原图完全相同（参数被忽略） |
+
+#### 3. 实现（`source/js/inject/random-images.js`）
+
+- 四个分类 `moe / xhl / fj / pc` 各取 12 条，合并成一个池子存 `localStorage`（键 `muyu_random_pool_v1`，TTL 一天）。
+- 每次刷新从池里随机分配：封面走 `?w=640`，资料卡走 `?w=600`。
+- 覆盖面：
+  - `.recent-post-cover img.article-cover` —— 首页文章卡片（314×200）
+  - `.article-sort-item-img img` —— `/archives/` 时间线缩略图（96×72）
+  - `img.prev-cover` / `img.next-cover` —— 文章页上下篇卡
+  - `#aside-content > .card-widget.card-info` —— 侧栏资料卡背景（330×410）
+- **必须写 `data-lazy-src` 而不是 `src`**：主题的 `themes/fomalhaut/scripts/filters/post_lazyload.js:13` 会把页面里每个 `<img>` 换成 1×1 占位 gif 并把真地址挪到 `data-lazy-src`，脚本要在 lazyload 扫描前改写这个属性，改完再调 `window.lazyLoadInstance.update()`。
+- **接口全挂时静默退出**，保持主题原有的 12 张本地 `.avif`，不会出现空白封面。
+- 回滚：删掉 `_config.fomalhaut.yml` 里那行 `<script>` 即可。
+
+#### 4. 顺带修的一个老 bug（`themes/fomalhaut/scripts/helpers/inject_head_js.js`）
+
+`saveToLocal.get()` 直接 `JSON.parse` 读到的值。若 `localStorage` 里存的是裸字符串（例如 `localStorage.setItem("theme","dark")`），会抛 `SyntaxError: Unexpected token 'd', "dark" is not valid JSON`，**并且中断同一个 `<script>` 内后续的 `<html>` 属性初始化**（`data-theme` / `hide-aside` 全部失效）。改成 `try/catch` + 非对象直接丢弃，坏数据顺手清键。
+
+#### 5. 验证
+
+- 首页 9 张封面、归档 12 张缩略图、文章页上下篇 2 张、资料卡背景，**全部命中随机图**。
+- pjax 换页（首页 → 归档 → 标签 → 首页）四态均正确重分配。
+- 1440 / 420 两档、浅色 / 深色全部正常；`node --test "tools/tests/*.test.cjs"` → **441 pass / 0 fail**。
 
 ### v1.0.11 — 正文字体改走 jsDelivr 官方分片 + 700 档精简（2026-10-19）
 

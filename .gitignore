@@ -53,3 +53,14 @@ cdn-check/
 .c3-*.png
 .mirprof/
 tmpfont/
+
+# ===== 2026-10-19 追加 2：随机图任务临时产物 =====
+.coverprev.*
+.sheet*.png
+.ri-*.png
+.ri2-*.png
+.rc-*.png
+.fin-*.png
+.chk-*.cjs
+.slice*.cjs
+.variant.cjs
