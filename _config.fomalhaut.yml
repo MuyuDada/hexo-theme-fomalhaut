@@ -718,7 +718,7 @@ subtitle:
 preloader:
   enable: true # true|false
   load_color: # '#37474f'
-  load_style: heo # default|gear|ironheart|scarecrow|triangles|wizard|image|spincat|heo(新增)
+  load_style: pagecat # default|gear|ironheart|scarecrow|triangles|wizard|image|spincat|heo(新增)|pagecat(像素小猫)
   load_image: # url
 
 # aside (側邊欄)
@@ -804,10 +804,10 @@ busuanzi:
 # Formal: Month/Day/Year Time or Year/Month/Day Time
 runtimeshow:
   enable: false
-  # 建站日（2022-08-09）。enable 只控制 aside 上那条「已运行 XXX 天」横幅，
+  # 建站日（2026-10-01）。enable 只控制 aside 上那条「已运行 XXX 天」横幅，
   # 但小站资讯卡里的「已运行」天数一直在读这个字段（card_webinfo.pug:47），
-  # 之前留的 1/10/2026 会让卡片显示「已运行 281 天」，与页脚 #workboard 的 2022 口径不一致。
-  publish_date: 8/9/2022 00:00:00
+  # 所以它必须与页脚 #workboard（footer-time.js 的 grt）同口径；2026-10-19 站长要求从 2026-10-01 起算。
+  publish_date: 10/1/2026 00:00:00
 
 # Aside widget - Newest Comments
 newest_comments:
@@ -974,10 +974,16 @@ inject:
     # 字体预加载：默认正文用霞鹜文楷，而它的 @font-face 写在 index.css 里，
     # 不 preload 的话浏览器要等 CSS 解析完才发现它，关键链就成了 首页 → index.css → 字体。
     # 注意：crossorigin 不能删 —— 字体按 CORS 模式取，少了它会被判定「凭据模式不匹配」而丢弃。
-    # 字体是自托管的简体子集（source/assets/fonts/lxgw-wenkai-subset-400.woff2，953812 B），
+    # 字体是自托管的简体子集（source/assets/fonts/lxgw-screen-subset-400.woff2，1084208 B），
     # 只预载 400 这一档；700 那档只有标题/胶囊用到，让它在 CSS 解析后自己懒加载。
     # 回滚：删掉这一行即可。
-    - <link rel="preload" as="font" type="font/woff2" href="/assets/fonts/lxgw-wenkai-subset-400.woff2" crossorigin>
+    - <link rel="preload" as="font" type="font/woff2" href="/assets/fonts/lxgw-screen-subset-400.woff2" crossorigin>
+    # ── 全屏加载动画：像素小猫（站点独立样式，不改主题 styl）──────────────────────
+    # source/css/page-loader-cat.css + themes/fomalhaut/layout/includes/loading/load_style/pagecat.pug
+    # 视觉移植自 E:\bolg\Firefly-yuan（像素对话框 + 汉堡进度条），围绕 source/assets/images/loading-cat.gif。
+    # 开关是 _config.fomalhaut.yml 的 preloader.load_style: pagecat。
+    # 回滚：把 load_style 改回 heo，或删掉这一行。
+    - <link rel="stylesheet" href="/css/page-loader-cat.css?v=20261019-cat2">
     - <link rel="preconnect" href="https://sdk.51.la">
     - <link rel="preconnect" href="https://sdk.51.la" crossorigin> # 灵雀监控走 CORS
     - <link rel="dns-prefetch" href="https://at.alicdn.com">
@@ -1017,7 +1023,7 @@ inject:
     - <link rel="stylesheet" href="/css/navigation.css?v=20261011-nav3">
     # 导航胶囊化：站名 / 菜单 / 右侧按钮都做成圆角药丸（参照 miraii.cn）。
     # 必须排在 navigation.css 之后才能盖住它的 44x44 / radius:12px 等形状声明。
-    - <link rel="stylesheet" href="/css/nav-pill.css?v=20261019-pill4">
+    - <link rel="stylesheet" href="/css/nav-pill.css?v=20261019-pill7">
     # ── 页脚两段式改版（站点独立样式 + 脚本，不改主题源码）────────────────────────
     # source/css/footer-blocks.css：把 themes/fomalhaut/layout/includes/footer.pug 新版结构
     #   做成「主段（白→透明向上渐变，左品牌 / 右短链导航 + 友链）+ 底栏（实底，左版权徽章 /

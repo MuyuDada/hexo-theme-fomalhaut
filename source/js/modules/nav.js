@@ -52,13 +52,22 @@ function tonav() {
   var pageName = document.getElementById("page-name");
   if (!nameContainer || !menusItems || !pageName) return;
 
+  // 首页的 GLOBAL_CONFIG_SITE.title 就是站名本身，滚下去再弹一遍 #page-name
+  // 会和左侧 #site-name 一字不差地重复（视觉上就是「Muyuの小窝」出现两次）。
+  // 这种情况保留菜单药丸、不切标题；其它页面照旧。
+  var siteNameEl = document.getElementById("site-name");
+  var pageTitle = pageTitleOf();
+  var dupOfSite = !!siteNameEl && siteNameEl.textContent.trim() === pageTitle;
+
   nameContainer.setAttribute("style", "display:none");
   var position = $window.scrollTop();
   $window.on('scroll.fomalNavTitle', function () {
     var scroll = $window.scrollTop();
     if (scroll > position) {
-      nameContainer.setAttribute("style", "");
-      menusItems.setAttribute("style", "display:none!important");
+      if (!dupOfSite) {
+        nameContainer.setAttribute("style", "");
+        menusItems.setAttribute("style", "display:none!important");
+      }
     } else {
       menusItems.setAttribute("style", "");
       nameContainer.setAttribute("style", "display:none");
@@ -67,7 +76,7 @@ function tonav() {
   });
   //修复没有弄右键菜单的童鞋无法回顶部的问题
   // 2026-10-19：原来写死 split(" | Demo")，站点改名后分隔符不再命中，#page-name 会显示整串。
-  pageName.innerText = pageTitleOf();
+  pageName.innerText = pageTitle;
 }
 
 function scrollToTop() {

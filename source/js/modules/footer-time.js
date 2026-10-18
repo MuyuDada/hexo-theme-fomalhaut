@@ -27,9 +27,9 @@ function createtime() {
   var dis = vgFmt(vgd);                  // 千分位格式
   var unit = (vgd / vgAU).toFixed(6);    // 天文单位（1 AU = 149597870.7 km）
   var lt = vgLight(vgd);                 // 信号单程光行时
-  // 网站诞生时间
-  var grt = new Date("08/09/2022 00:00:00");
-  // 年按“满周年”算：2022-08-09 → 2026-08-09 记 4 年，周年之后再数剩余的天/时/分/秒
+  // 网站诞生时间（2026-10-19 按站长要求改成 2026-10-01 起算）
+  var grt = new Date("10/01/2026 00:00:00");
+  // 年按“满周年”算：2026-10-01 → 2027-10-01 记 1 年，周年之后再数剩余的天/时/分/秒
   var years = now.getFullYear() - grt.getFullYear(),
     anniv = new Date(grt.getTime());
   anniv.setFullYear(grt.getFullYear() + years);

@@ -27,3 +27,29 @@ bak/
 # 本地素材、检查产物
 images/
 cdn-check/
+# ===== 2026-10-19 追加：DSH 会话临时产物 =====
+# 截图 / CDP 探查脚本 / hexo server 日志（本仓库根下大量以点开头的临时文件）
+.dbg-*.cjs
+.gen-*.cjs
+.hs.log
+.hs.err
+.multi*.png
+.ft*.png
+.ftv*.png
+.ftz*.png
+.ftx*.png
+.fty*.png
+.ns-*.png
+.nt-*.png
+.ntc-*.png
+.nsc-*.png
+.ld*.png
+.lp*.png
+.vp*.png
+.cat-*.png
+.crop*.png
+.z-*.png
+.bt-*.png
+.c3-*.png
+.mirprof/
+tmpfont/

@@ -1,16 +1,44 @@
-//- script.
-script(async).
+//- 加载遮罩控制器。
+//- 原版有个致命写法：window.addEventListener('load', preloader.endLoading())
+//- —— 括号带上了，等于「立刻执行 endLoading()，再把它返回的 undefined 注册成监听器」。
+//- 结果遮罩在脚本一执行就被立刻收掉，任何 load_style 都看不见（heo 那种纯圆环尤其明显）。
+//- 这里重写成：明确的最短展示时长 + load 事件 + 超时兜底 + 点击跳过。
+script.
   var preloader = {
-    endLoading: () => {
-      document.body.style.overflow = 'auto';
-      document.getElementById('loading-box').classList.add("loaded")
+    MIN_SEEN: 650,
+    _shownAt: 0,
+    _timer: null,
+    _hide: function () {
+      var box = document.getElementById('loading-box');
+      if (!box) return;
+      var seen = Date.now() - preloader._shownAt;
+      var wait = Math.max(0, preloader.MIN_SEEN - seen);
+      clearTimeout(preloader._timer);
+      preloader._timer = setTimeout(function () {
+        document.body.style.overflow = 'auto';
+        box.classList.add('loaded');
+      }, wait);
     },
-    initLoading: () => {
+    initLoading: function () {
+      var box = document.getElementById('loading-box');
+      if (!box) return;
+      clearTimeout(preloader._timer);
       document.body.style.overflow = '';
-      document.getElementById('loading-box').classList.remove("loaded")
-
+      box.classList.remove('loaded');
+      preloader._shownAt = Date.now();
+    },
+    endLoading: function () {
+      preloader._hide();
     }
-  }
-  window.addEventListener('load',preloader.endLoading())
-  setTimeout(function(){preloader.endLoading();}, 5000);
-  document.getElementById('loading-box').addEventListener('click',()=> {preloader.endLoading()})
+  };
+  (function () {
+    var box = document.getElementById('loading-box');
+    if (!box) return;
+    // 首屏的起点按 navigationStart 算：页面本身加载慢时不再额外干等 650ms，
+    // 只有「快到看不见」时才补足展示时长。
+    var nav = (window.performance && performance.timing && performance.timing.navigationStart) || (Date.now() - 650);
+    preloader._shownAt = Math.max(nav, Date.now() - 4000);
+    window.addEventListener('load', function () { preloader.endLoading(); });
+    setTimeout(function () { preloader.endLoading(); }, 6000);
+    box.addEventListener('click', function () { preloader.endLoading(); });
+  })();

@@ -1,11 +1,11 @@
-# hexo-theme-fomalhaut · v1.0.9
+# hexo-theme-fomalhaut · v1.0.10
 
 > 一套「克隆即用」的 Hexo 卡片式博客源码。主题基于 [Butterfly 4.3.1](https://butterfly.js.org/) 深度二次开发，
 > 并把**站点配置**与**主题代码**彻底分开：改配置就能搭起自己的站，升级主题不会冲掉你自己的改动。
 
 ![hexo](https://img.shields.io/badge/Hexo-6.3.0-0e83c?style=flat-square&logo=hexo)
 ![node](https://img.shields.io/badge/Node.js-18%20%7C%2020%20%7C%2022-339933?style=flat-square&logo=nodedotjs)
-![theme](https://img.shields.io/badge/Theme-Fomalhaut%20v1.0.9-6513df?style=flat-square)
+![theme](https://img.shields.io/badge/Theme-Fomalhaut%20v1.0.10-6513df?style=flat-square)
 ![license](https://img.shields.io/badge/License-Apache--2.0-blue?style=flat-square)
 ![stars](https://img.shields.io/github/stars/MuyuDada/hexo-theme-fomalhaut?style=flat-square&logo=github&label=Stars)
 ![forks](https://img.shields.io/github/forks/MuyuDada/hexo-theme-fomalhaut?style=flat-square&logo=github&label=Forks)
@@ -35,6 +35,50 @@
 ---
 
 ## 更新日志
+
+### v1.0.10 — 屏幕阅读版字体 + 像素小猫加载动画 + 导航切换过渡（2026-10-19）
+
+三件事：正文默认字体换成「霞鹜文楷·屏幕阅读版」，全屏加载动画换成像素小猫，导航在滚动切换时的过渡对齐 miraii.cn。
+
+#### 1. 默认字体换成 LXGW WenKai Screen（`themes/fomalhaut/source/css/_custom/custom.css`）
+
+上游 `lxgw/LxgwWenKai-Screen` 的 `v1.522` 发布 `LXGWWenKaiScreen.ttf`（25673994 B）。它的 upem 是 **2048**、ascender 1900 / descender -500，跟旧子集的 1000 / 928 / -256 不同，但 28 个抽样字的 advance 换算到同一 upem 后**逐字一致**（worst 0.0 units），换上去不会撑动版面。
+
+- 子集化：把旧子集的 4752 个码位导出成 `unicodes.txt`，`fontTools.subset --flavor=woff2 --layout-features=kern,liga,vert,locl,ccmp --glyph-names` → `source/assets/fonts/lxgw-screen-subset-400.woff2`（**1084208 B**）；
+- Screen 上游**只有 Regular 一个权重**，没有 Medium/Bold，所以 400 档换 Screen、**700 档继续用旧文楷 Medium**（`lxgw-wenkai-subset-700.woff2`）；
+- 新码位只比旧子集**少 6 个**（U+2680–U+2685 骰子符号，站点不用），其余全覆盖；
+- 三处同步：`custom.css` 的 `@font-face` src、`_config.fomalhaut.yml` 的字体 preload、`source/box/astronomy/voyager.html` 的内联 `@font-face`。
+
+> 验证只能用 CDP `CSS.getPlatformFontsForNode` —— `document.fonts.check()` 对这些字全返回 true（只表示有匹配 face，不代表含该字形），canvas 差分与 `measureText` 同样假阴性。
+
+#### 2. 全屏加载动画换成像素小猫（`source/css/page-loader-cat.css` + `load_style/pagecat.pug` + `loading-js.pug`）
+
+视觉整套移植自 Firefly-yuan 的 `PageLoader`：像素对话框（4 向 `box-shadow` 做描边）+ 会眨眼的小猫 + 顶气泡台阶 + 两颗像素星 + 6 段纵向渐变的汉堡进度条（刻度线 + 芝麻），文案「小猫正在准备汉堡…」「喵～马上就好」。
+
+- 猫图 `source/assets/images/loading-cat.gif`（24878 B，112×112 像素画）；**注意不能写成 `<img>`** —— 主题的 `scripts/filters/post_lazyload.js:13` 会把所有 `<img>` 换成 1×1 占位，改用 `span` 的 `background-image` 绕开；
+- 遮罩底色浅色 `rgba(207,246,247,0.94)` / 深色 `rgba(25,25,25,0.94)`，配 `backdrop-filter: blur(14px) saturate(1.1)`；
+- 新增 `pagecat` 这个 `load_style` 值（`loading.pug` 的 `case` 加分支 + `_config.fomalhaut.yml` 改 `preloader.load_style: pagecat`），原 `heo` 保留可回滚；
+- `#loading-box` 这个 id 与 `window.preloader.initLoading/endLoading` 是硬契约（`pjax.pug`、`source/js/pjax-guard.js` 都依赖），一个都没动；
+- `loading-js.pug` 顺带修了原来的 `window.addEventListener("load", preloader.endLoading())` —— **多了个括号**，加载事件还没来就先执行了，遮罩秒收。改成真正等 `load`，并加 650ms 最短可见时长（否则本地秒开根本看不见动画）。
+
+#### 3. 导航滚动切换的过渡（`source/css/nav-pill.css`）
+
+上一版玻璃条是**硬切**的：滚过阈值那一帧 `::before` 的 alpha 直接跳到 0.82，观感是「啪」地糊上来一整条。对齐 miraii.cn 的曲线 —— `opacity 0.18s ease` + `transform 0.24s cubic-bezier(0.2,0,0,1)`，未滚动态 `opacity:0; translateY(-6px)`，滚动态 `opacity:1; translateY(0)`，两者共用同一条 transition。
+
+三个坑：
+
+- **transition 写在两处、后写的那条赢**：滚动态那条规则特异性更高，光在基态写 transition 不管用，`opacity`/`transform` 必须在滚动态那条里也列一遍，否则一帧内糊满；
+- **深色下多一层实心通栏**：`navigation.css:178-182` 的深色规则带 `[data-theme="dark"]` 前缀，特异性 **(0,3,1)** 高于清除规则的 (0,2,1)，`!important` 压不住 → ≥1200px 深色下滚完还是 `rgba(37,39,42,0.92)` 的一整条板子。补一条 `[data-theme]` 版把特异性抬到同档，靠加载顺序取胜；
+- **菜单药丸也要「化掉」**：miraii 滚动后把 `.menu-shell` 的 `background` 与 `border-color` 双双变透明，只剩文字趴在白条上 —— 这才是「沉浸」的本质。这里照做，文字改用 `navigation.css` 的 `--navigation-fg`（浅色 `#292c30` / 深色 `#eceef0`）。
+
+**顺带修的**：首页往下滚时，`#page-name` 原本会弹出来显示站名，和左侧 `#site-name` 一字不差地重复（「Muyuの小窝」出现两次）。`source/js/modules/nav.js` 里加了一段判断 —— 当 `pageTitleOf()` 的结果与 `#site-name` 文本相同时（即首页），保留菜单药丸、不切标题。
+
+#### 4. 页脚运行时长起点
+
+`source/js/modules/footer-time.js` 的 `grt` 从 `08/09/2022` 改为 **`10/01/2026`**，并把 `_config.fomalhaut.yml` 的 `runtimeshow.publish_date` 同步成 `10/1/2026 00:00:00` —— 小站资讯卡的「已运行 N 天」读的就是这个字段，不同步会跟页脚各说各话。
+
+**测试**：`node --test "tools/tests/*.test.cjs"` → 441 passed / 0 failed。`navigation.test.cjs` 的 `custom.css` SHA256 基线第四次复核更新为 `4d6e0465…09157`（只动 `@font-face` 的 src 与注释，导航规则未动）。
+
 
 ### v1.0.9 — 滚动后的导航变「悬浮玻璃条」（2026-10-19）
 

@@ -317,26 +317,32 @@
 /* —— 阅读字体（正文/标题，400 + 700 两档都有真字体） —— */
 @font-face {
   font-family: LXGW;
-  /* 霞鹜文楷（LXGW WenKai）· SIL OFL 1.1 —— 正文默认字体
-     自托管简体子集：/assets/fonts/lxgw-wenkai-subset-400.woff2（953812 B）
-     源 = LxgwWenKai-Lite v1.530（上游只有 Light/Medium/Regular，没有真 Bold，
-     Medium 的 usWeightClass=500，这里按 700 注册给标题用）。
+  /* 霞鹜文楷·屏幕阅读版（LXGW WenKai Screen）· SIL OFL 1.1 —— 正文默认字体
+     2026-10-19 站长指定把默认字体从「霞鹜文楷 Lite」换成 Screen 版（上游 v1.522）。
+     两者差别：Screen 的 upem 是 2048（Lite 是 1000），ascender/descender 放宽到
+     1900/-500（Lite 是 928/-256），同字号下字面更大、行距更松，适合长时间看屏幕。
+     已核对 28 个抽样字：advance 与旧 400 子集完全一致（差 0 单位），换字体不会撑动版面。
+
+     自托管简体子集：/assets/fonts/lxgw-screen-subset-400.woff2（1084208 B）
+     字符集与旧的 400 子集完全相同（4752 码位），只有 6 个骰子符号 U+2680-2685
+     在 Screen 版里没有字形，会回落系统字体（这几个字符站点根本不用）。
+
+     Screen 版上游也**只有 Regular 一个权重**，所以 700 那档继续沿用旧文楷 Medium
+     （usWeightClass=500，见下面第二段 @font-face），这是实测最好看的组合：
+     正文用 Screen 更透气，标题用 Medium 更精神。
 
      为什么不用 CDN 上的 @fontsource/lxgw-wenkai-tc：那个包是「繁体子集」，
      6681 字形里 GB2312 只覆盖 3837 个，窝/页/宝/为/风/给/电脑/态/载/标签 这些
      简体专有码位全都缺，浏览器只能逐字回落到系统字体 —— 一个词里一半文楷一半雅黑。
-     简体在 @fontsource 上只有 97 段 subset（要 @import 106KB CSS 再拉上百个文件），
-     所以直接自己做子集：站点里出现过的字 + GB2312 一级 3755 字 + 常用标点区，
-     共 5406 个字符、0.91 MB 一个文件，覆盖站点全部正文（只缺 emoji，本就该回落）。
 
-     重新生成（改了文章、加生了生僻字时）：
-       curl -C - -L -o lite-reg.ttf https://ghfast.top/https://github.com/lxgw/LxgwWenKai-Lite/releases/download/v1.530/LXGWWenKaiLite-Regular.ttf
-       python -m fontTools.subset lite-reg.ttf --flavor=woff2 --unicodes-file=charset.txt \
+     重新生成（改了文章、出现生僻字时）：
+       curl -C - -L -o screen.ttf https://ghfast.top/https://github.com/lxgw/LxgwWenKai-Screen/releases/download/v1.522/LXGWWenKaiScreen.ttf
+       python -m fontTools.subset screen.ttf --flavor=woff2 --unicodes-file=unicodes.txt \
          --layout-features=kern,liga,vert,locl,ccmp --name-IDs='*' --glyph-names \
-         --output-file=lxgw-wenkai-subset-400.woff2
-     字符集从哪里来：扫 public 下所有 html/js/json/css 文件去重取 >U+2000 的字符，
-     再并上 GB2312 一级与 0x0020-0x007F / 0x2000-0x206F / 0x3000-0x303F / 0xFF00-0xFF60。 */
-  src: url(/assets/fonts/lxgw-wenkai-subset-400.woff2) format('woff2');
+         --output-file=lxgw-screen-subset-400.woff2
+     字符集怎么来：拿旧 400 子集的 cmap 直接导出成 unicodes.txt（U+XXXX 一行一个），
+     这样换字体不会改变覆盖面，避免又踩一遍缺字的坑。 */
+  src: url(/assets/fonts/lxgw-screen-subset-400.woff2) format('woff2');
   font-weight: 400;
   font-display: swap;
 }

@@ -1,0 +1,25 @@
+//- 像素小猫加载动画（移植自 Firefly-yuan 的 PageLoader，猫咪主题）
+//- 结构约定：外层 id 必须还是 #loading-box —— loading-js.pug 的 preloader 对象、
+//- pjax.pug 的 initLoading/endLoading、source/js/pjax-guard.js 全靠这个 id 找节点。
+//- 视觉（像素对话框 + 汉堡进度条）在 source/css/page-loader-cat.css。
+//-
+//- 猫图为什么用 background-image 而不是 <img>：
+//-   themes/fomalhaut/scripts/filters/post_lazyload.js 的 after_render:html 滤镜会把
+//-   页面里每个 <img> 的 src 换成 1x1 占位 gif + data-lazy-src，遮罩里的猫同样会被换成空白。
+//-   滤镜只认 <img 标签，改用 span + 背景图就完全绕开它，也不依赖 LazyLoad 的扫描时机。
+- var _plImg = theme.preloader.load_image ? theme.preloader.load_image : '/assets/images/loading-cat.gif'
+script.
+  document.documentElement.classList.add('page-loader--js');
+#loading-box.page-loader(data-style='cat')
+  .page-loader__stage
+    .page-loader__bubble
+      span.page-loader__cat(role='img' aria-label='像素小猫' style='background-image:url(' + url_for(_plImg) + ')')
+      span.page-loader__tail(aria-hidden='true')
+      span.page-loader__sparkle.page-loader__sparkle--a(aria-hidden='true')
+      span.page-loader__sparkle.page-loader__sparkle--b(aria-hidden='true')
+    p.page-loader__text 小猫正在准备汉堡…
+    p.page-loader__hint 喵～马上就好
+    .page-loader__burger(aria-hidden='true')
+      .page-loader__burger-ghost
+      .page-loader__burger-fill
+      .page-loader__burger-ticks

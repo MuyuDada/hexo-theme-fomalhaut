@@ -414,12 +414,27 @@ body.read-mode #nav .menus_items .menus_item > a.site-page:hover {
   background: rgba(253, 253, 253, 0.9);
   box-shadow: 0 6px 24px rgba(15, 23, 42, 0.08);
   pointer-events: none;
-  transition: background-color 200ms ease, box-shadow 200ms ease, border-color 200ms ease;
+  /* 【关键】这条 transition 会盖掉下面基态那条 —— 它特异性更高，且 scrolled 时是它
+     在生效。所以 opacity / transform 必须在这里也列出来，否则滚过阈值那一下
+     `::before` 的 opacity 0→1 是直接跳的（实测 down13 帧直接 0→1，一帧内糊满）
+     而 `#nav` 的 translateY 反而在动，观感就是「玻璃条凭空出现 + 导航自己滑动」。 */
+  transition:
+    opacity 0.18s ease,
+    transform 0.24s cubic-bezier(0.2, 0, 0, 1),
+    background-color 200ms ease,
+    box-shadow 200ms ease,
+    border-color 200ms ease;
 }
 
 /* 把 navigation.css:136 那条 `rgba(251,250,247,.96) !important` 通栏关掉。
    注意它还有一层 `@media (min-width:1200px)` 的 `rgba(251,250,247,.92) !important`
-   覆盖（navigation.css:173），本文件排在它之后加载，同特异性 + !important 即可压住。 */
+   覆盖（navigation.css:173），本文件排在它之后加载，同特异性 + !important 即可压住。
+   但【深色那一条压不住】：navigation.css:178-182 写的是
+   `[data-theme="dark"] #page-header.nav-fixed #nav`，多了个属性选择器 →
+   特异性 (0,3,1)，比这里的 (0,2,1) 高一档，!important 也没用。实测后果：
+   ≥1200px 深色下滚动后 #nav 还是被刷成整条 `rgba(37,39,42,0.92)` 实心通栏，
+   白玻璃条虽然在里面，外面却多包了一层深色板 —— 深色下「不沉浸」的元凶。
+   解法：下面那条 `[data-theme]` 版把特异性抬到同档，靠加载顺序取胜。 */
 #page-header.nav-fixed #nav,
 #page-header.nav-visible #nav,
 #page-header.not-top-img #nav {
@@ -427,6 +442,21 @@ body.read-mode #nav .menus_items .menus_item > a.site-page:hover {
   border-bottom: 0 !important;
   box-shadow: none !important;
   opacity: 1 !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+
+/* 抬到 (0,3,1) 去对撞 navigation.css 的深色通栏（见上）。浅色也一并写进来，
+   免得日后主题给浅色也补个 [data-theme] 前缀时又踩同一个坑。 */
+[data-theme="light"] #page-header.nav-fixed #nav,
+[data-theme="light"] #page-header.nav-visible #nav,
+[data-theme="light"] #page-header.not-top-img #nav,
+[data-theme="dark"] #page-header.nav-fixed #nav,
+[data-theme="dark"] #page-header.nav-visible #nav,
+[data-theme="dark"] #page-header.not-top-img #nav {
+  background: transparent !important;
+  border-bottom: 0 !important;
+  box-shadow: none !important;
   -webkit-backdrop-filter: none !important;
   backdrop-filter: none !important;
 }
@@ -464,6 +494,44 @@ body.read-mode #nav .menus_items .menus_item > a.site-page:hover {
   background: transparent !important;
   border-color: transparent !important;
   box-shadow: none !important;
+}
+
+/* 菜单药丸同样「化掉」。miraii.cn 滚动态做的是把 .menu-shell 的
+   background 与 border-color 双双变透明，只剩纯文字趴在白条上 —— 这才是
+   「沉浸」的本质。这里照做：底、描边、投影全清，文字改用 navigation.css
+   的 --navigation-fg（浅色 #292c30 / 深色 #eceef0），跟着玻璃条一起变。
+   ≤800px 时菜单本来就收进汉堡了，这段自然不生效。 */
+#page-header.nav-fixed #nav .menus_items,
+#page-header.nav-visible #nav .menus_items,
+#page-header.not-top-img #nav .menus_items {
+  background: transparent !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+}
+
+#page-header.nav-fixed #nav .menus_items .menus_item > a.site-page,
+#page-header.nav-visible #nav .menus_items .menus_item > a.site-page,
+#page-header.not-top-img #nav .menus_items .menus_item > a.site-page {
+  color: var(--navigation-fg) !important;
+}
+
+#page-header.nav-fixed #nav .menus_items .menus_item > a.site-page:hover,
+#page-header.nav-visible #nav .menus_items .menus_item > a.site-page:hover,
+#page-header.not-top-img #nav .menus_items .menus_item > a.site-page:hover,
+#page-header.nav-fixed #nav .menus_items .menus_item > a.site-page:focus-visible,
+#page-header.nav-visible #nav .menus_items .menus_item > a.site-page:focus-visible,
+#page-header.not-top-img #nav .menus_items .menus_item > a.site-page:focus-visible {
+  background: rgba(15, 23, 42, 0.06) !important;
+  color: var(--theme-color) !important;
+}
+
+[data-theme="dark"] #page-header.nav-fixed #nav .menus_items .menus_item > a.site-page:hover,
+[data-theme="dark"] #page-header.nav-visible #nav .menus_items .menus_item > a.site-page:hover,
+[data-theme="dark"] #page-header.not-top-img #nav .menus_items .menus_item > a.site-page:hover,
+[data-theme="dark"] #page-header.nav-fixed #nav .menus_items .menus_item > a.site-page:focus-visible,
+[data-theme="dark"] #page-header.nav-visible #nav .menus_items .menus_item > a.site-page:focus-visible,
+[data-theme="dark"] #page-header.not-top-img #nav .menus_items .menus_item > a.site-page:focus-visible {
+  background: rgba(255, 255, 255, 0.08) !important;
 }
 
 /* hover：一层几乎看不见的白灰衬底 + 主题色文字，比整块变色克制得多 */
@@ -551,6 +619,133 @@ body.read-mode #nav .menus_items .menus_item > a.site-page:hover {
   #page-header.nav-fixed #nav::before,
   #page-header.nav-visible #nav::before,
   #page-header.not-top-img #nav::before {
+    display: none;
+  }
+}
+/* ------------------------------ 切换过渡：跟 miraii.cn 对齐 ------------------------------ */
+/* 【问题】
+ *   首屏（#nav 处于 `position:absolute; opacity:0` 的入场态）滚过阈值后，主题在
+ *   ~1 帧内给 #page-header 挂上 `.nav-fixed`：#nav 从 absolute/top:0 变成
+ *   fixed/top:-60px + translateY(58px)，同时白底 ::before 从 `content:none` 直接
+ *   变出一块 82% 不透明的实心玻璃。实测 26 帧里从第一帧起 bg alpha 就是 0.82，
+ *   没有任何渐变过程 —— 观感上是「啪」地糊上来一整条，这就是「不够沉浸」。
+ *   顺带一个硬性障碍：`themes/fomalhaut/source/css/_custom/custom.css:1978`
+ *   把 `#nav` 的 transition 钉成了 `none !important`，所以位移那一段本来也没过渡。
+ *
+ * 【miraii.cn 的曲线】（2026-10-19 CDP 实测）
+ *   `div.header-inner::before`：`transition: opacity .18s, transform .24s
+ *   cubic-bezier(.2,0,0,1)`，transform 从 `translateY(-6px)` → `translateY(0)`；
+ *   `.menu-shell`：`opacity .18s, transform .24s cubic-bezier(.2,0,0,1),
+ *   border-color .2s, background-color .2s`；切状态后 300ms 内 opacity 0→1 走完。
+ *
+ * 【这里的做法】
+ *   白底不再「有无」，改成常驻元素 + 两个开关量：
+ *     - 用 `@keyframes ft-nav-in` 之类不行（类切换只触发一次，回滚不播放），
+ *       改用 `animation` 也不方便控制淡出，直接给 ::before 一个 opacity 过渡，
+ *       未滚动态 `opacity:0; transform:translateY(-6px)`，滚动态
+ *       `opacity:1; transform:translateY(0)`，两者共用同一条 transition。
+ *     - `content` 必须两种状态都存在（否则 content:none 时根本没有盒子可过渡），
+ *       所以把 `content:""` 提到无条件规则里。
+ *     - 位移那一段：`#nav` 的 `transition: none !important` 来自 custom.css，
+ *       本文件排在所有 CSS 之后，用 `transition: transform .28s
+ *       cubic-bezier(.2,0,0,1) !important` 同特异性 + !important 覆盖；
+ *       只声明 transform，避免把主题 opacity 的入场动画一起拉长。
+ *   另外把胶囊底（站名 / .menus_items / 右侧圆钮）的底与描边 transition 对齐到
+ *   同一条曲线，让「胶囊化掉 → 只剩文字」这一下和玻璃条同步淡出。
+ * ========================================================================== */
+
+/* 无条件持有盒子，两种状态之间才能插值 */
+#nav::before {
+  content: "";
+  position: absolute;
+  top: 6px;
+  bottom: 6px;
+  left: 24px;
+  right: 24px;
+  z-index: -1;
+  box-sizing: border-box;
+  border: 1px solid transparent;
+  border-radius: 16px;
+  background: rgba(253, 253, 253, 0.82);
+  box-shadow: 0 0 0 rgba(15, 23, 42, 0);
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(-6px);
+  transition:
+    opacity 0.18s ease,
+    transform 0.24s cubic-bezier(0.2, 0, 0, 1),
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+#page-header.nav-fixed #nav::before,
+#page-header.nav-visible #nav::before,
+#page-header.not-top-img #nav::before {
+  content: "";
+  opacity: 1;
+  transform: translateY(0);
+  border-color: rgba(15, 23, 42, 0.06);
+  box-shadow: 0 6px 24px rgba(15, 23, 42, 0.08);
+}
+
+/* 位移过渡：盖掉 custom.css:1978 的 `transition: none !important`。
+   只写 transform —— 主题靠 #nav 的 opacity 做首屏入场，别把它一起拖慢。 */
+#nav {
+  transition: transform 0.28s cubic-bezier(0.2, 0, 0, 1) !important;
+  -webkit-transition: transform 0.28s cubic-bezier(0.2, 0, 0, 1) !important;
+}
+
+/* 胶囊底同步淡出：站名 / 菜单药丸 / 右侧圆钮的 background 与 border 都吃同一条曲线 */
+#nav > #blog_name > #site-name,
+#nav .menus_items,
+#nav #nav-right > #search-button > a.search,
+#nav #nav-right > #meihua-button,
+#nav #nav-right > #nightmode-button,
+#nav #nav-right > #toggle-menu > a {
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    color 0.2s ease !important;
+}
+
+/* 深色：玻璃条同样从透明淡入 */
+[data-theme="dark"] #nav::before {
+  background: rgba(30, 32, 35, 0.78);
+  border-color: transparent;
+  box-shadow: 0 0 0 rgba(0, 0, 0, 0);
+}
+
+[data-theme="dark"] #page-header.nav-fixed #nav::before,
+[data-theme="dark"] #page-header.nav-visible #nav::before,
+[data-theme="dark"] #page-header.not-top-img #nav::before {
+  opacity: 1;
+  transform: translateY(0);
+  border-color: rgba(255, 255, 255, 0.07);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.32);
+}
+
+@media screen and (max-width: 768px) {
+  #nav::before {
+    left: 12px;
+    right: 12px;
+    border-radius: 14px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #nav::before {
+    transition: none;
+  }
+
+  #nav {
+    transition: none !important;
+    -webkit-transition: none !important;
+  }
+}
+
+@media print {
+  #nav::before {
     display: none;
   }
 }
