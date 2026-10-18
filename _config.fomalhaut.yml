@@ -804,7 +804,7 @@ busuanzi:
 # Formal: Month/Day/Year Time or Year/Month/Day Time
 runtimeshow:
   enable: false
-  publish_date: 8/9/2022 00:00:00
+  publish_date: 1/10/2026 00:00:00
 
 # Aside widget - Newest Comments
 newest_comments:
@@ -1373,22 +1373,23 @@ lantern:
 # 注意：本文件已被 git 跟踪，Key 写在这里会进仓库 —— 建议把 Key 单独放到
 #       站点根目录的 .ai-chat-key（已加进 .gitignore），下面 api_key 留空即可。
 ai_chat:
-  enable: true                 # 总开关：false 则不注入按钮和面板
+  enable: true # 总开关：false 则不注入按钮和面板
   api_base: https://api.deepseek.com
-  api_key: ''                  # 直接写 Key（不推荐，会进 git）
-  api_key_file: .ai-chat-key   # 或从文件读；相对站点根目录
-  model: deepseek-chat    # 换模型只改这一行。deepseek-flash 是「思考型」模型：它先吐一大段 reasoning，
-                          # 这段也要算进 max_tokens；问它「代码写得怎样」这类需要琢磨的问题时，思考会把额度吃光、
-                          # 正文一个字都吐不出来（流正常结束但 finish_reason=length）。页面助手追求快而稳，用 chat。
+  api_key: "" # 直接写 Key（不推荐，会进 git）
+  api_key_file: .ai-chat-key # 或从文件读；相对站点根目录
+  model:
+    deepseek-chat # 换模型只改这一行。deepseek-flash 是「思考型」模型：它先吐一大段 reasoning，
+    # 这段也要算进 max_tokens；问它「代码写得怎样」这类需要琢磨的问题时，思考会把额度吃光、
+    # 正文一个字都吐不出来（流正常结束但 finish_reason=length）。页面助手追求快而稳，用 chat。
   temperature: 0.7
-  max_tokens: 8192            # 单次回复上限（含思考 token）。8192 是给「万一用回思考型模型」留的余量
-  max_history: 12              # 每次带给模型的历史轮数（不含本页正文）
-  max_page_chars: 32000        # 页面正文上限（字符）。超长文章取「开头 60% + 结尾 35%」，中间部分只把小节标题给模型
+  max_tokens: 8192 # 单次回复上限（含思考 token）。8192 是给「万一用回思考型模型」留的余量
+  max_history: 12 # 每次带给模型的历史轮数（不含本页正文）
+  max_page_chars: 32000 # 页面正文上限（字符）。超长文章取「开头 60% + 结尾 35%」，中间部分只把小节标题给模型
   storage_key: ai_chat_history_v1
-  panel_width: 460              # 面板宽度（需求 440-500px）
+  panel_width: 460 # 面板宽度（需求 440-500px）
   panel_height: 640
-  panel_right: 88              # 面板右边缘离屏幕右边的距离（避开按钮列）
-  timeout_ms: 10000            # 超过这么久还没吐出第一个字就提示「请求超时」（毫秒）
+  panel_right: 88 # 面板右边缘离屏幕右边的距离（避开按钮列）
+  timeout_ms: 10000 # 超过这么久还没吐出第一个字就提示「请求超时」（毫秒）
   welcome: 你好，我是这个页面的 AI 助手。可以帮你总结当前页面、解释名词、回答关于本页的问题。
   first_question: 请用中文总结这个页面的内容：先用一句话概括，再列 3-5 条要点。
   system_prompt: |
