@@ -971,13 +971,16 @@ inject:
     - <link rel="preconnect" href="https://registry.npmmirror.com" crossorigin> # FontAwesome 字体走 CORS
     - <link rel="preconnect" href="https://npm.elemecdn.com">
     - <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin> # 字体 / 图片走公共 CDN
-    # 字体预加载：默认正文用霞鹜文楷，而它的 @font-face 写在 index.css 里，
-    # 不 preload 的话浏览器要等 CSS 解析完才发现它，关键链就成了 首页 → index.css → 字体。
-    # 注意：crossorigin 不能删 —— 字体按 CORS 模式取，少了它会被判定「凭据模式不匹配」而丢弃。
-    # 字体是自托管的简体子集（source/assets/fonts/lxgw-screen-subset-400.woff2，1084208 B），
-    # 只预载 400 这一档；700 那档只有标题/胶囊用到，让它在 CSS 解析后自己懒加载。
-    # 回滚：删掉这一行即可。
-    - <link rel="preload" as="font" type="font/woff2" href="/assets/fonts/lxgw-screen-subset-400.woff2" crossorigin>
+    # ── 正文字体：霞鹜文楷·屏幕阅读版（LXGW WenKai Screen）官方分片方案 ──────────
+    # 97 个 @font-face，每片自带 unicode-range，浏览器只下载本页真正用到的片
+    # （实测首页 25 片 / 1374 KB）。清单 CSS 自托管在
+    # source/assets/fonts/lxgw-screen-cdn/lxgwwenkaiscreen.css（110791 B），
+    # 但里面的 url() 已改成 jsDelivr 绝对地址 —— 只有这份 CSS 跟仓库走。
+    # 为什么用 <link> 不写进 custom.css 的 @import：custom.css 被打包进 index.css，
+    # 而 @import 必须排在所有规则之前，写在第 338 行会被浏览器整条忽略。
+    # 这一行同时替代了原来的字体 preload（分片方案下预载单个文件没有意义，
+    # 反而会白下一份浏览器用不到的整包）。回滚：删掉这一行 + 恢复 custom.css 的 @font-face。
+    - <link rel="stylesheet" href="/assets/fonts/lxgw-screen-cdn/lxgwwenkaiscreen.css?v=20261019-cdnfont1">
     # ── 全屏加载动画：像素小猫（站点独立样式，不改主题 styl）──────────────────────
     # source/css/page-loader-cat.css + themes/fomalhaut/layout/includes/loading/load_style/pagecat.pug
     # 视觉移植自 E:\bolg\Firefly-yuan（像素对话框 + 汉堡进度条），围绕 source/assets/images/loading-cat.gif。

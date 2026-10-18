@@ -91,12 +91,14 @@ const originalThemeHashes = {
   // 缺 窝/页/宝/为/风/给/电脑/态/载/标签 等简体字）换成自托管简体子集
   // source/assets/fonts/lxgw-wenkai-subset-{400,700}.woff2，两处 src 与注释一并改写。
   // 导航相关规则依然未动。
-  // 2026-10-19（v1.0.10）四复核：按站长要求把正文默认字体从「霞鹜文楷 Lite」换成
-  // 「霞鹜文楷·屏幕阅读版」（LXGW WenKai Screen v1.522），400 档 src 改指
-  // source/assets/fonts/lxgw-screen-subset-400.woff2（1084208 B，码位与旧子集相同），
-  // 700 档继续用旧文楷 Medium（Screen 上游只有 Regular）。只动了 @font-face 的 src
-  // 与注释，导航相关规则依然未动。
-  'themes/fomalhaut/source/css/_custom/custom.css': '4d6e046563c9d6465c88a1064558825ece10dac7e57e0674f8ef511a77609157',
+  // 2026-10-19（v1.0.11）五复核：正文 400 档改走 jsDelivr 的官方分片方案
+  // （lxgw-wenkai-screen-webfont@1.7.0，97 个 @font-face 各带 unicode-range，
+  // 清单 CSS 自托管在 source/assets/fonts/lxgw-screen-cdn/lxgwwenkaiscreen.css）。
+  // 该处 @font-face 被注释说明替代，清单由 _config.fomalhaut.yml 的 inject.head
+  // 用 <link> 引入（@import 在 index.css 里位置非法会被浏览器丢弃）。
+  // 700 档同时精简成「全站 80 页实际粗体字」的子集，970548 B → 223132 B。
+  // 导航相关规则依然未动。
+  'themes/fomalhaut/source/css/_custom/custom.css': 'af283326fa871d3338be5f9e9cd17f0d1dbc7d2164641cd8960d412771fd81bc',
   'themes/fomalhaut/source/js/main.js': '375868d3a5ee55a31a5e676168c105a82c9bf9235840471521d799090fe5891e'
 };
 

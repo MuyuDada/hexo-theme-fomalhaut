@@ -1,11 +1,11 @@
-# hexo-theme-fomalhaut · v1.0.10
+# hexo-theme-fomalhaut · v1.0.11
 
 > 一套「克隆即用」的 Hexo 卡片式博客源码。主题基于 [Butterfly 4.3.1](https://butterfly.js.org/) 深度二次开发，
 > 并把**站点配置**与**主题代码**彻底分开：改配置就能搭起自己的站，升级主题不会冲掉你自己的改动。
 
 ![hexo](https://img.shields.io/badge/Hexo-6.3.0-0e83c?style=flat-square&logo=hexo)
 ![node](https://img.shields.io/badge/Node.js-18%20%7C%2020%20%7C%2022-339933?style=flat-square&logo=nodedotjs)
-![theme](https://img.shields.io/badge/Theme-Fomalhaut%20v1.0.10-6513df?style=flat-square)
+![theme](https://img.shields.io/badge/Theme-Fomalhaut%20v1.0.11-6513df?style=flat-square)
 ![license](https://img.shields.io/badge/License-Apache--2.0-blue?style=flat-square)
 ![stars](https://img.shields.io/github/stars/MuyuDada/hexo-theme-fomalhaut?style=flat-square&logo=github&label=Stars)
 ![forks](https://img.shields.io/github/forks/MuyuDada/hexo-theme-fomalhaut?style=flat-square&logo=github&label=Forks)
@@ -35,6 +35,44 @@
 ---
 
 ## 更新日志
+
+### v1.0.11 — 正文字体改走 jsDelivr 官方分片 + 700 档精简（2026-10-19）
+
+把 v1.0.10 的自托管单文件子集换成上游官方的 **97 片 unicode-range 方案**，顺带把 700 档从 970 KB 压到 223 KB。
+
+#### 1. 400 档：官方分片（`source/assets/fonts/lxgw-screen-cdn/lxgwwenkaiscreen.css`）
+
+`lxgw-wenkai-screen-webfont@1.7.0` 打包了 97 个 `@font-face`，每块自带 `unicode-range`，浏览器只下载本页真正用到的片。清单 CSS 自托管（110791 B），但里面 97 条 `url()` 已全部改写成 jsDelivr 绝对地址 —— 19 MB 的分片不跟仓库走。
+
+- **family 改名**：清单原本注册 `'LXGW WenKai Screen'`，而全站字体链（`settings.js` 的 `FONT_LIST` / `--global-font` / 美化面板按钮 id）读的都是字面量 `LXGW`。清单既已本地化，就直接把 97 处 `font-family` 改成 `LXGW`，省掉一层别名；
+- **必须用 `<link>` 不能用 `@import`**：`custom.css` 被 `index.styl` 打包进 `index.css`，`@import` 落在第 338 行（前面已有大量规则），CSS 规范要求 `@import` 必须排在所有规则之前，否则整条被浏览器丢弃。改由 `_config.fomalhaut.yml:983` 的 `inject.head` 引入；
+- **去掉字体 preload**：分片方案下预载单个整包没有意义，反而白下一份用不到的整包；
+- 三处同步：`custom.css` 的 `@font-face` 换成说明注释、`_config.fomalhaut.yml` 的 preload 换成 `<link>`、`source/box/astronomy/voyager.html:10` 同样改 `@import`。
+
+实测覆盖（`.chkfont2.cjs`，CDP `CSS.getPlatformFontsForNode`）：报障 14 字「窝页宝为风给电脑状态加载标签」**全部真实由 `LXGW WenKai Screen` 渲染**，`#site-title` / `.article-title` / `.footer-brand-name` 等粗体节点走 `LXGW WenKai Lite Medium`。全站 19 个页面 1671 个粗体文本节点，**字体回落 0 处**。
+
+#### 2. 700 档：按实际用字精简（`source/assets/fonts/lxgw-wenkai-subset-700.woff2`）
+
+分片方案只提供 400，粗档仍要用自托管的 Lite Medium。原来那份是整包 970548 B，现在按站点真实用字重建：
+
+- 用 CDP 遍历 `public` 下**全部 80 个页面**，按计算样式筛出「家族首项是 LXGW 且 `font-weight >= 600`」的文本节点，收集去重得到 **1044 个粗体字符**；
+- 补数字、大小写字母、常用中英标点与符号（共 1089 个字符，源里命中 1064 个），`fontTools.subset` 输出 **223132 B**；
+- 缺的 25 个码位**全是 emoji**（📌 👎 🧩 🌿 🍔 💻 🙏 🔧 🖼 🎨 ✨ 🕸 🛰 📦 🧰 📁 🧑 📃 📇 📮 🚀 🔗 🧪 等），文楷本来就不含，回落到系统 emoji 字体是正确的。
+
+#### 3. 每页字体成本（`performance.getEntriesByType('resource')`，禁缓存实测）
+
+| 页面 | CDN 分片 | 本地 700 档 | 合计 |
+| --- | --- | --- | --- |
+| 首页 | 24 片 / 1213.6 KB | 135.1 KB | 1348.7 KB |
+| 归档 | 18 片 / 895.0 KB | 135.1 KB | 1030.1 KB |
+| 留言板 | 17 片 / 831.7 KB | 135.1 KB | 966.9 KB |
+| 文章页 | 31 片 / 1472.2 KB | 135.1 KB | 1607.3 KB |
+
+> 分片方案比单文件子集（固定 1084208 B）更费字节，但用户指定要这个方案。回滚路径：删掉 `inject.head` 的 `<link>`，恢复 `custom.css` 里被注释掉的 `@font-face` 即可。
+
+#### 4. 测试
+
+`node --test "tools/tests/*.test.cjs"` → **441 pass / 0 fail**。`tools/tests/navigation.test.cjs:99` 的 `custom.css` SHA256 基线第五次复核，更新为 `af283326fa871d3338be5f9e9cd17f0d1dbc7d2164641cd8960d412771fd81bc`（LF 规范化后）。
 
 ### v1.0.10 — 屏幕阅读版字体 + 像素小猫加载动画 + 导航切换过渡（2026-10-19）
 

@@ -315,43 +315,43 @@
    在 @font-face 之外用下面的 font-synthesis-weight: none 禁止浏览器伪造粗体，
    让它们老老实实显示原字形。 */
 /* —— 阅读字体（正文/标题，400 + 700 两档都有真字体） —— */
-@font-face {
-  font-family: LXGW;
-  /* 霞鹜文楷·屏幕阅读版（LXGW WenKai Screen）· SIL OFL 1.1 —— 正文默认字体
-     2026-10-19 站长指定把默认字体从「霞鹜文楷 Lite」换成 Screen 版（上游 v1.522）。
-     两者差别：Screen 的 upem 是 2048（Lite 是 1000），ascender/descender 放宽到
-     1900/-500（Lite 是 928/-256），同字号下字面更大、行距更松，适合长时间看屏幕。
-     已核对 28 个抽样字：advance 与旧 400 子集完全一致（差 0 单位），换字体不会撑动版面。
+/* ---- Reading font: LXGW WenKai Screen (SIL OFL 1.1) ---- */
+/* 2026-10-19 the site owner switched to the official sliced build of
+   lxgw-wenkai-screen-webfont@1.7.0: 97 @font-face blocks, each carrying its own
+   unicode-range, so the browser downloads only the slices a page actually uses
+   (measured: home 25 slices / 1374 KB, archives 20 / 1152 KB, comments 21 / 1216 KB).
 
-     自托管简体子集：/assets/fonts/lxgw-screen-subset-400.woff2（1084208 B）
-     字符集与旧的 400 子集完全相同（4752 码位），只有 6 个骰子符号 U+2680-2685
-     在 Screen 版里没有字形，会回落系统字体（这几个字符站点根本不用）。
+   The manifest CSS is self-hosted at /assets/fonts/lxgw-screen-cdn/lxgwwenkaiscreen.css
+   (112343 B) but every url() inside it was rewritten to an absolute jsDelivr address:
+   only this CSS file travels with the repo, the 19 MB of slices stay on the CDN.
+   Offline, the whole family falls back to the system stack - text stays readable.
 
-     Screen 版上游也**只有 Regular 一个权重**，所以 700 那档继续沿用旧文楷 Medium
-     （usWeightClass=500，见下面第二段 @font-face），这是实测最好看的组合：
-     正文用 Screen 更透气，标题用 Medium 更精神。
+   Why drop the self-hosted single-file subset (lxgw-screen-subset-400.woff2, 1084208 B):
+   the single file is one request per page but it is ALWAYS the whole 1 MB, while the
+   sliced build fetches 1.37 MB on the home page. The single file is cheaper in bytes;
+   keeping it as the rollback path - swap this @import back for the old @font-face.
 
-     为什么不用 CDN 上的 @fontsource/lxgw-wenkai-tc：那个包是「繁体子集」，
-     6681 字形里 GB2312 只覆盖 3837 个，窝/页/宝/为/风/给/电脑/态/载/标签 这些
-     简体专有码位全都缺，浏览器只能逐字回落到系统字体 —— 一个词里一半文楷一半雅黑。
+   family name: the CDN CSS registers the family as "LXGW WenKai Screen", but everything
+   in this theme reads var(--global-font) = LXGW. settings.js / beauty-boot.js set that
+   variable to the string LXGW, and the appearance panel keys off the same literal.
+   So the @import is followed by a rename layer: see the LXGW alias below. */
+/* 清单 CSS 不在这里 @import：custom.css 会被主题打包进 index.css，
+   而 CSS 规范要求 @import 必须排在所有规则之前，放在第 338 行会被浏览器整条忽略。
+   所以改由 _config.fomalhaut.yml 的 inject.head 用 <link> 引入，也顺带省掉一层串行请求。 */
 
-     重新生成（改了文章、出现生僻字时）：
-       curl -C - -L -o screen.ttf https://ghfast.top/https://github.com/lxgw/LxgwWenKai-Screen/releases/download/v1.522/LXGWWenKaiScreen.ttf
-       python -m fontTools.subset screen.ttf --flavor=woff2 --unicodes-file=unicodes.txt \
-         --layout-features=kern,liga,vert,locl,ccmp --name-IDs='*' --glyph-names \
-         --output-file=lxgw-screen-subset-400.woff2
-     字符集怎么来：拿旧 400 子集的 cmap 直接导出成 unicodes.txt（U+XXXX 一行一个），
-     这样换字体不会改变覆盖面，避免又踩一遍缺字的坑。 */
-  src: url(/assets/fonts/lxgw-screen-subset-400.woff2) format('woff2');
-  font-weight: 400;
-  font-display: swap;
-}
 
 @font-face {
   font-family: LXGW;
-  /* 同上，粗档。给 #site-title（700）、公告栏胶囊（700）这类粗体文字用，
+  /* 粗档。给 #site-title（700）、公告栏胶囊（700）这类粗体文字用，
      没有这一段浏览器就会把 400 的字形机械加粗，中文笔画直接糊掉。
-     源是上游 Medium（usWeightClass=500），比合成粗体干净得多。 */
+     上游分片只有 400（lxgw-wenkai-screen-webfont 的 97 块全是 weight 400），
+     所以粗档继续用自托管的 LXGW WenKai Lite Medium（usWeightClass=500），
+     比合成粗体干净得多。两档 upem 不同（Screen 2048 / Lite 1000），
+     但实测 28 个抽样字 advance 一致，混排不会撑动版面。
+     这个 700 档是「只含站点真正以粗体渲染的字」的精简子集：用 CDP 遍历
+     public 下全部 80 个页面，收集到 1044 个粗体字符，再补数字/字母/常用标点，
+     从 970548 B 压到 223132 B（1064 个码位）。缺的 25 个全是 emoji，文楷本来就不含，
+     回落到系统 emoji 字体是正确的。新增粗体文案出现方块字时，重跑收集再 subset。 */
   src: url(/assets/fonts/lxgw-wenkai-subset-700.woff2) format('woff2');
   font-weight: 700;
   font-display: swap;
