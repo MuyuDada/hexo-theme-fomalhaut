@@ -36,6 +36,11 @@ SAFETY = (
     + '×÷≈≠≤≥→←↑↓↔√∞°′″℃'
 )
 
+# 运行时才生成的文案：收集脚本扫到的是「采集那一刻」的 DOM，
+# 相对时间这类文案会随时间变化（1 分钟内是「刚刚」，之后变成「N 分钟前」），
+# 不能指望某次采集正好命中。这里把它们固定进安全集。
+DYNAMIC = '刚刚秒钟分时天昨今日年月前后来回'
+
 dry = '--dry-run' in sys.argv
 
 if not os.path.exists(SRC_FONT):
@@ -48,7 +53,7 @@ old_cmap = set(TTFont(OUT_FONT).getBestCmap()) if os.path.exists(OUT_FONT) else 
 old_size = os.path.getsize(OUT_FONT) if os.path.exists(OUT_FONT) else 0
 
 # 统一用码位（int）做集合运算：cmap 的键是 int，收集结果与安全集是字符
-wanted = collected | old_cmap | {ord(ch) for ch in SAFETY}
+wanted = collected | old_cmap | {ord(ch) for ch in SAFETY + DYNAMIC}
 src = TTFont(SRC_FONT)
 src_cmap = set(src.getBestCmap())
 usable = sorted(wanted & src_cmap)

@@ -1,11 +1,11 @@
-# hexo-theme-fomalhaut · v1.0.14
+# hexo-theme-fomalhaut · v1.0.15
 
 > 一套「克隆即用」的 Hexo 卡片式博客源码。主题基于 [Butterfly 4.3.1](https://butterfly.js.org/) 深度二次开发，
 > 并把**站点配置**与**主题代码**彻底分开：改配置就能搭起自己的站，升级主题不会冲掉你自己的改动。
 
 ![hexo](https://img.shields.io/badge/Hexo-6.3.0-0e83c?style=flat-square&logo=hexo)
 ![node](https://img.shields.io/badge/Node.js-18%20%7C%2020%20%7C%2022-339933?style=flat-square&logo=nodedotjs)
-![theme](https://img.shields.io/badge/Theme-Fomalhaut%20v1.0.14-6513df?style=flat-square)
+![theme](https://img.shields.io/badge/Theme-Fomalhaut%20v1.0.15-6513df?style=flat-square)
 ![license](https://img.shields.io/badge/License-Apache--2.0-blue?style=flat-square)
 ![stars](https://img.shields.io/github/stars/MuyuDada/hexo-theme-fomalhaut?style=flat-square&logo=github&label=Stars)
 ![forks](https://img.shields.io/github/forks/MuyuDada/hexo-theme-fomalhaut?style=flat-square&logo=github&label=Forks)
@@ -35,6 +35,36 @@
 ---
 
 ## 更新日志
+
+### v1.0.15 — 美化面板字体统一：懒渲染面板纳入收集 + 两处硬编码系统字体（2026-10-24）
+
+v1.0.13 修完正文缺字后，美化设置面板里还是一堆字不一样。查下来是两类问题叠在一起：
+
+**一、面板里的粗体标签整片回落**
+
+`氛围特效 / 霓虹彩灯 / 萤火虫微光 / 昼夜切换 / 霞鹜文楷 / 站酷快乐体 / 龙藏体 …` 计算样式明明是 `LXGW` + `weight:600`，实际却由微软雅黑渲染 —— 700 档子集里没有这些字。
+
+原因是面板由 `createWinbox()` 在**点开时才**创建，页面加载完的 DOM 里根本没有这些节点。收集脚本只扫首屏，自然一个都收不到。
+
+收集器补了采集前钩子（默认先 `createWinbox()`）：
+
+```bash
+node tools/collect-bold-chars.cjs --json .bold-chars.json   # 1156 个粗体字（原 1124）
+python tools/subset-bold-font.py                            # 1192 码位 / 261912 B
+```
+
+相对时间这类 JS 动态文案（1 分钟内是「刚刚」，之后变「N 分钟前」）没法靠某一次采集命中，改成固定进安全集。
+
+**二、两处 CSS 直接把字体写死**
+
+| 位置 | 原值 | 现象 |
+| --- | --- | --- |
+| `.settings .ap-current`（「当前 · 霞鹜文楷」） | `system-ui, sans-serif` | 整行都是系统字体 |
+| `.winbox .wb-title`（标题栏「美化设置」） | `Arial, sans-serif` | 中文落到 Noto Sans SC |
+
+标题栏那处有个坑：WinBox 是**运行时**才往 head 里注入 `.wb-title{font-family:Arial,…}` 的 `<style>`，排在 `index.css` 之后，同特异性直接压过我们 —— 选择器必须写成 `.winbox .wb-title`（0,2,0）。
+
+复核（CDP `getPlatformFontsForNode`，面板打开状态下）：微软雅黑节点 **16 → 0**，只剩 emoji 与 Font Awesome 图标。
 
 ### v1.0.14 — 修好线上小猫加载图 404：`images/` 规则误伤 `source/assets/images/`（2026-10-24）
 

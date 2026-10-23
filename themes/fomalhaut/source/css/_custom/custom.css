@@ -349,15 +349,18 @@
      比合成粗体干净得多。两档 upem 不同（Screen 2048 / Lite 1000），
      但实测 28 个抽样字 advance 一致，混排不会撑动版面。
      这个 700 档是「只含站点真正以粗体渲染的字」的精简子集：用 CDP 遍历
-     public 下全部 110 个页面（tools/collect-bold-chars.cjs），收集到 1124 个粗体字符，
-     与旧子集、数字/字母/常用标点合并后共 1160 个码位、254124 B。
+     public 下全部 110 个页面（tools/collect-bold-chars.cjs，采集前会先 createWinbox()
+     把美化面板拉起来），收集到 1156 个粗体字符，与旧子集、数字/字母/常用标点、
+     以及 JS 动态生成的相对时间文案合并后共 1192 个码位、261912 B。
      缺的 28 个是 emoji，文楷本来就不含，回落到系统 emoji 字体是正确的。
      2026-10-24 补记：上一版是按 80 个页面收集的，之后新增文章里
      缝 / 透 / 允 / 批 / 契 / 阴 六个粗体字不在子集内，页面上这几个字会掉到
      系统微软雅黑，跟周围的文楷明显不一样（CDP 的 getPlatformFontsForNode 可复现）。
-     现已重跑收集并用 tools/subset-bold-font.py 重建。新增粗体文案后若出现
+     同一轮还发现美化面板的粗体标签（氛围特效 / 霓虹彩灯 / 霞鹜文楷 / 站酷快乐体 …）
+     整片回落 —— 面板是点开时 WinBox 才创建的，页面加载时 DOM 里根本没有这些节点，
+     只扫首屏必然漏。收集脚本已支持采集前执行钩子。新增粗体文案后若出现
      「个别字字形不一样」，照这两个脚本再跑一遍即可。 */
-  src: url(/assets/fonts/lxgw-wenkai-subset-700.woff2?v=20261024-bold2) format('woff2');
+  src: url(/assets/fonts/lxgw-wenkai-subset-700.woff2?v=20261024-bold3) format('woff2');
   font-weight: 700;
   font-display: swap;
 }
@@ -1437,6 +1440,16 @@ button#go-up:hover #percent {
 .winbox {
   border-radius: 12px;
   overflow: hidden;
+}
+
+/* WinBox 自带的样式把标题栏写死成 Arial, sans-serif，中文会掉到系统字体
+   （Windows 上是 Noto Sans SC / 微软雅黑），跟面板正文的霞鹜文楷明显不是一个笔触。
+   这里接管成站点字体链。权重保持默认 400 —— 改成 600 会牵动 700 档子集，
+   而标题栏文案会随面板标题变化，不适合进精简子集。
+   选择器必须是 .winbox .wb-title（0,2,0）：WinBox 在运行时才往 head 里注入
+   .wb-title{font-family:Arial,...} 的 <style>，排在 index.css 之后，同特异性会压过我们。 */
+.winbox .wb-title {
+  font-family: var(--global-font), -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif;
 }
 
 .wb-body {

@@ -798,7 +798,7 @@ html[data-theme="dark"] #fps {
 .settings .ap-font-option[aria-pressed="true"],.settings .ap-bg-option[aria-pressed="true"],.settings .ap-tabs .ap-btn[aria-pressed="true"] { border-color:var(--theme-color); background:color-mix(in srgb,var(--theme-color) 12%,var(--ap-surface)); box-shadow:inset 0 0 0 1px var(--theme-color); }
 .settings .ap-font-option[aria-pressed="true"] .ap-check { display:block; }
 .settings .ap-preview { margin-top:16px; padding:16px 18px; border:1px solid var(--ap-border); border-radius:12px; background:var(--ap-soft); min-width:0; }
-.settings .ap-current { margin:0 0 10px!important; font-size:.8em; opacity:.78; font-family:system-ui,sans-serif; }
+.settings .ap-current { margin:0 0 10px!important; font-size:.8em; opacity:.78; font-family:var(--global-font),system-ui,sans-serif; }
 .settings .ap-text-sample { font-size:18px; line-height:1.85; margin:0!important; overflow-wrap:anywhere; }
 .settings #article-container .ap-code-sample { margin:0; padding:0; background:transparent; color:inherit; font-size:14px; line-height:1.8; white-space:pre-wrap; overflow-wrap:anywhere; border-radius:0; }
 .settings .ap-status { min-height:1.7em; margin:10px 0 0!important; font-size:.8em; line-height:1.7; opacity:.82; overflow-wrap:anywhere; }

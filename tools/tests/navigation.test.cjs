@@ -102,7 +102,11 @@ const originalThemeHashes = {
   // （1044 → 1124 个粗体字，1064 → 1160 码位，223132 → 254124 B），补上
   // 缝/透/允/批/契/阴 等上一轮漏掉的字；该处 src 加了 ?v=20261024-bold2
   // 缓存串，注释同步改写。导航相关规则依旧未动。
-  'themes/fomalhaut/source/css/_custom/custom.css': 'f3cb0c1c5ea99b9db872cd66f0aec9c4f97c3e2e1dce4b90dd3481d8988de5e8',
+  // 2026-10-24（v1.0.15）七复核：收集器补上「采集前先 createWinbox()」，
+  // 把点开才渲染的美化面板也纳入（1156 个粗体字 / 1192 码位 / 261912 B，缓存串
+  // 改 bold3）；另加 .winbox .wb-title 接管 WinBox 注入的 Arial 标题栏。
+  // 导航相关规则依旧未动。
+  'themes/fomalhaut/source/css/_custom/custom.css': '90c078a1938489e0a50183f6731f2e5f8aa8626035abd8aa55900ccc8029acad',
   'themes/fomalhaut/source/js/main.js': '375868d3a5ee55a31a5e676168c105a82c9bf9235840471521d799090fe5891e'
 };
 

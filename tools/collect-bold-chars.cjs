@@ -9,10 +9,16 @@
  *       font-family 与 font-weight，只保留「家族首项是 LXGW 且 weight >= 600」
  *       的字符。代码块（--code-font 打头）天然被排除。
  *
+ * 懒渲染 UI 也要覆盖：美化设置面板是点开时才 WinBox 创建的，页面加载时 DOM 里
+ *       根本没有这些节点 —— 只扫首屏会漏掉面板里的粗体字（v1.0.15 就是这么漏的）。
+ *       所以每页采集前会先执行 PRE_HOOK（默认调用 createWinbox()），再用 --pre 覆盖。
+ *
  * 用法：
  *   node tools/collect-bold-chars.cjs                 # 用 public/ 目录，输出到 stdout
  *   node tools/collect-bold-chars.cjs --json out.json # 同时写一份 JSON
  *   node tools/collect-bold-chars.cjs --limit 5       # 只跑前 5 页，调试用
+ *   node tools/collect-bold-chars.cjs --no-pre        # 不打开懒渲染面板
+ *   node tools/collect-bold-chars.cjs --pre 'openX()' # 自定义采集前脚本
  *
  * 前置：public/ 必须是最新构建（npx hexo clean && npx hexo generate）。
  * 依赖：本机 Chrome / Edge；Node 22+（用内置 WebSocket）。
@@ -34,6 +40,13 @@ const argOf = (name, def) => {
 };
 const limit = Number(argOf('--limit', '0')) || 0;
 const jsonOut = argOf('--json', '');
+const noPre = argv.includes('--no-pre');
+const PRE_HOOK = noPre ? '' : argOf('--pre', `(function(){
+  try {
+    if (typeof createWinbox === 'function' && !document.getElementById('meihuaBox')) createWinbox();
+    return 'ok';
+  } catch (e) { return 'err: ' + e.message; }
+})()`);
 
 const CHROME_CANDIDATES = [
   'C:/Program Files/Google/Chrome/Application/chrome.exe',
@@ -178,6 +191,13 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
         await sleep(200);
       }
       if (!ready) throw new Error('页面加载超时（' + expectPath + '）');
+
+      // 采集前先把懒渲染的面板拉起来（美化设置是 WinBox，点开才有 DOM）
+      if (PRE_HOOK) {
+        const pre = await rpc(ws, 'Runtime.evaluate', { expression: PRE_HOOK, returnByValue: true }, sessionId);
+        if (pre.exceptionDetails) console.error('  ! pre hook 报错: ' + expectPath);
+        await sleep(1400);
+      }
 
       const { result, exceptionDetails } = await rpc(ws, 'Runtime.evaluate', { expression: COLLECT_EXPR, returnByValue: true }, sessionId);
       if (exceptionDetails) throw new Error('页面内脚本报错: ' + (exceptionDetails.text || ''));
