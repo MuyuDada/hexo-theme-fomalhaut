@@ -64,3 +64,6 @@ tmpfont/
 .chk-*.cjs
 .slice*.cjs
 .variant.cjs
+
+# ===== 2026-10-24 追加：粗体字收集产物（tools/collect-bold-chars.cjs 生成，可再生） =====
+.bold-chars.json

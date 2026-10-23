@@ -98,7 +98,11 @@ const originalThemeHashes = {
   // 用 <link> 引入（@import 在 index.css 里位置非法会被浏览器丢弃）。
   // 700 档同时精简成「全站 80 页实际粗体字」的子集，970548 B → 223132 B。
   // 导航相关规则依然未动。
-  'themes/fomalhaut/source/css/_custom/custom.css': 'af283326fa871d3338be5f9e9cd17f0d1dbc7d2164641cd8960d412771fd81bc',
+  // 2026-10-24（v1.0.13）六复核：700 档子集按 110 页重新收集后重建
+  // （1044 → 1124 个粗体字，1064 → 1160 码位，223132 → 254124 B），补上
+  // 缝/透/允/批/契/阴 等上一轮漏掉的字；该处 src 加了 ?v=20261024-bold2
+  // 缓存串，注释同步改写。导航相关规则依旧未动。
+  'themes/fomalhaut/source/css/_custom/custom.css': 'f3cb0c1c5ea99b9db872cd66f0aec9c4f97c3e2e1dce4b90dd3481d8988de5e8',
   'themes/fomalhaut/source/js/main.js': '375868d3a5ee55a31a5e676168c105a82c9bf9235840471521d799090fe5891e'
 };
 

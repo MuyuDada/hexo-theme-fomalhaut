@@ -1,11 +1,11 @@
-# hexo-theme-fomalhaut · v1.0.12
+# hexo-theme-fomalhaut · v1.0.13
 
 > 一套「克隆即用」的 Hexo 卡片式博客源码。主题基于 [Butterfly 4.3.1](https://butterfly.js.org/) 深度二次开发，
 > 并把**站点配置**与**主题代码**彻底分开：改配置就能搭起自己的站，升级主题不会冲掉你自己的改动。
 
 ![hexo](https://img.shields.io/badge/Hexo-6.3.0-0e83c?style=flat-square&logo=hexo)
 ![node](https://img.shields.io/badge/Node.js-18%20%7C%2020%20%7C%2022-339933?style=flat-square&logo=nodedotjs)
-![theme](https://img.shields.io/badge/Theme-Fomalhaut%20v1.0.12-6513df?style=flat-square)
+![theme](https://img.shields.io/badge/Theme-Fomalhaut%20v1.0.13-6513df?style=flat-square)
 ![license](https://img.shields.io/badge/License-Apache--2.0-blue?style=flat-square)
 ![stars](https://img.shields.io/github/stars/MuyuDada/hexo-theme-fomalhaut?style=flat-square&logo=github&label=Stars)
 ![forks](https://img.shields.io/github/forks/MuyuDada/hexo-theme-fomalhaut?style=flat-square&logo=github&label=Forks)
@@ -35,6 +35,34 @@
 ---
 
 ## 更新日志
+
+### v1.0.13 — 粗体缺字修复：700 档子集按 110 页重建（2026-10-24）
+
+正文 400 档走官方 97 片 `unicode-range`，缺字会自动落到别的片；**700 档不是**——它是「只含站点实际粗体字」的自托管子集，子集里没有的字会直接掉到系统字体，于是页面上就出现「个别字跟旁边不一样」。
+
+上一版按 80 个页面收集。之后新增的文章带进了新的粗体字，`/posts/3ab5b430` 上就有六个字被微软雅黑接管：
+
+```
+缝 透 允 批 契 阴
+```
+
+用 `CSS.getPlatformFontsForNode` 复现（`document.fonts.check()` 对缺字一律返回 true，不能用来判断）：
+
+```
+[Microsoft YaHei(1)] 允许容器把它压到「能折行的宽度」
+```
+
+重跑收集 + 重建子集：110 个页面、1124 个粗体字、1160 个码位、**254124 B**（+31 KB）。缺的 28 个仍是 emoji，文楷本来就没有。顺手给 `src` 补了 `?v=` 缓存串。
+
+流程固化成两个脚本，以后新增粗体文案照跑即可：
+
+```bash
+npx hexo clean && npx hexo generate
+node tools/collect-bold-chars.cjs --json .bold-chars.json   # CDP 遍历全站，取 computedStyle 粗体节点
+python tools/subset-bold-font.py                            # 合并旧码位后重新 subset
+```
+
+`node --test "tools/tests/*.test.cjs"` → **441 pass / 0 fail**（`custom.css` 的基线哈希已同步）。
 
 ### v1.0.12 — 文章封面与资料卡背景改走随机图片 API（2026-10-19）
 

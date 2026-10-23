@@ -349,10 +349,15 @@
      比合成粗体干净得多。两档 upem 不同（Screen 2048 / Lite 1000），
      但实测 28 个抽样字 advance 一致，混排不会撑动版面。
      这个 700 档是「只含站点真正以粗体渲染的字」的精简子集：用 CDP 遍历
-     public 下全部 80 个页面，收集到 1044 个粗体字符，再补数字/字母/常用标点，
-     从 970548 B 压到 223132 B（1064 个码位）。缺的 25 个全是 emoji，文楷本来就不含，
-     回落到系统 emoji 字体是正确的。新增粗体文案出现方块字时，重跑收集再 subset。 */
-  src: url(/assets/fonts/lxgw-wenkai-subset-700.woff2) format('woff2');
+     public 下全部 110 个页面（tools/collect-bold-chars.cjs），收集到 1124 个粗体字符，
+     与旧子集、数字/字母/常用标点合并后共 1160 个码位、254124 B。
+     缺的 28 个是 emoji，文楷本来就不含，回落到系统 emoji 字体是正确的。
+     2026-10-24 补记：上一版是按 80 个页面收集的，之后新增文章里
+     缝 / 透 / 允 / 批 / 契 / 阴 六个粗体字不在子集内，页面上这几个字会掉到
+     系统微软雅黑，跟周围的文楷明显不一样（CDP 的 getPlatformFontsForNode 可复现）。
+     现已重跑收集并用 tools/subset-bold-font.py 重建。新增粗体文案后若出现
+     「个别字字形不一样」，照这两个脚本再跑一遍即可。 */
+  src: url(/assets/fonts/lxgw-wenkai-subset-700.woff2?v=20261024-bold2) format('woff2');
   font-weight: 700;
   font-display: swap;
 }
