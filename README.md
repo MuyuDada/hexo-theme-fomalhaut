@@ -1,11 +1,11 @@
-# hexo-theme-fomalhaut · v1.0.13
+# hexo-theme-fomalhaut · v1.0.14
 
 > 一套「克隆即用」的 Hexo 卡片式博客源码。主题基于 [Butterfly 4.3.1](https://butterfly.js.org/) 深度二次开发，
 > 并把**站点配置**与**主题代码**彻底分开：改配置就能搭起自己的站，升级主题不会冲掉你自己的改动。
 
 ![hexo](https://img.shields.io/badge/Hexo-6.3.0-0e83c?style=flat-square&logo=hexo)
 ![node](https://img.shields.io/badge/Node.js-18%20%7C%2020%20%7C%2022-339933?style=flat-square&logo=nodedotjs)
-![theme](https://img.shields.io/badge/Theme-Fomalhaut%20v1.0.13-6513df?style=flat-square)
+![theme](https://img.shields.io/badge/Theme-Fomalhaut%20v1.0.14-6513df?style=flat-square)
 ![license](https://img.shields.io/badge/License-Apache--2.0-blue?style=flat-square)
 ![stars](https://img.shields.io/github/stars/MuyuDada/hexo-theme-fomalhaut?style=flat-square&logo=github&label=Stars)
 ![forks](https://img.shields.io/github/forks/MuyuDada/hexo-theme-fomalhaut?style=flat-square&logo=github&label=Forks)
@@ -35,6 +35,26 @@
 ---
 
 ## 更新日志
+
+### v1.0.14 — 修好线上小猫加载图 404：`images/` 规则误伤 `source/assets/images/`（2026-10-24）
+
+全屏加载动画的像素小猫在生产环境**一直没显示过**，本地却完全正常。原因是它压根没进仓库：
+
+```
+.gitignore:28  images/      ← 匹配任意层级的 images 目录
+source/assets/images/loading-cat.gif   → 被静默忽略，从未提交
+```
+
+本地文件在磁盘上，所以 `hexo generate` 照样拷进 `public/`；Netlify 从仓库构建，自然拿不到：
+
+```bash
+curl -o /dev/null -w '%{http_code}' https://muyublog.netlify.app/assets/images/loading-cat.gif
+# 404
+```
+
+改法是把规则锚定到根目录（`images/` → `/images/`），再把文件补进仓库。顺手核了一遍 `source/assets` 下 46 个文件与 git 跟踪数，只有这一个漏网。
+
+> 这类问题不会报错也不会进 CI —— 构建通过、页面正常，只是少一张图。以后加 `source/` 下的静态资源，记得 `git status` 里能看到它。
 
 ### v1.0.13 — 粗体缺字修复：700 档子集按 110 页重建（2026-10-24）
 
